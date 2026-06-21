@@ -3,6 +3,9 @@ export interface Product {
   name: string
   price: number
   sku: string
+  description?: string
+  created_at?: number
+  updated_at?: number
 }
 
 export interface ApiResponse<T> {
@@ -15,4 +18,10 @@ export interface ApiResponse<T> {
 export interface ProductListData {
   total: number
   list: Product[]
+}
+
+export interface ProductCursorData {
+  list: Product[]
+  next_cursor: number | null
+  has_more: boolean
 }
