@@ -220,7 +220,7 @@ export function InfiniteProductList() {
                 }
 
                 return (
-                  <div className="mx-auto max-w-4xl">
+                  <div>
                     <InfiniteLoader
                       isRowLoaded={isRowLoaded}
                       loadMoreRows={loadMoreRows}

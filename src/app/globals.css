@@ -4,6 +4,11 @@
 
 @custom-variant dark (&:is(.dark *));
 
+.ReactVirtualized__Grid:focus,
+.ReactVirtualized__List:focus {
+  outline: none;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

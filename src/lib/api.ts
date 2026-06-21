@@ -1,4 +1,5 @@
 import type { ApiResponse, Product, ProductCursorData, ProductListData } from '@/types/product'
+import type { LoginRequest, LoginResponseData } from '@/types/auth'
 
 const API_BASE = '/api/v1'
 const API_BASE_SERVER = process.env.API_BASE_SERVER || 'http://localhost:8080/api/v1'
@@ -56,6 +57,27 @@ export async function fetchProductById(id: number): Promise<Product> {
 
   if (json.code !== 0) {
     throw new Error(`API error: ${json.message}`)
+  }
+
+  return json.data
+}
+
+export async function login(data: LoginRequest): Promise<LoginResponseData> {
+  const res = await fetch(`${API_BASE}/auth/login/password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  })
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => null)
+    throw new Error(err?.message || `Login failed: ${res.status}`)
+  }
+
+  const json: ApiResponse<LoginResponseData> = await res.json()
+
+  if (json.code !== 0) {
+    throw new Error(json.message)
   }
 
   return json.data
