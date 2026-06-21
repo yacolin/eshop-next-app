@@ -18,6 +18,7 @@ import {
   CardFooter,
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import Link from 'next/link'
 
 const PAGE_SIZE = 20
 const ROW_HEIGHT = 260
@@ -55,8 +56,8 @@ function ProductCard({ product }: { product: Product }) {
         <p className="mt-1 text-xs text-muted-foreground">SKU: {product.sku}</p>
       </CardContent>
       <CardFooter>
-        <Button variant="outline" size="sm" className="w-full cursor-pointer">
-          View Details
+        <Button variant="outline" size="sm" className="w-full cursor-pointer" asChild>
+          <Link href={`/products/${product.id}`}>View Details</Link>
         </Button>
       </CardFooter>
     </Card>
