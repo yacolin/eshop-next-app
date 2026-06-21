@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
+import { ArrowUp } from 'lucide-react'
 
 const PAGE_SIZE = 20
 const ROW_HEIGHT = 260
@@ -70,6 +71,7 @@ export function InfiniteProductList() {
   const [hasMore, setHasMore] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [initialLoading, setInitialLoading] = useState(true)
+  const [showBackToTop, setShowBackToTop] = useState(false)
   const loadingRef = useRef(false)
 
   useEffect(() => {
@@ -92,6 +94,12 @@ export function InfiniteProductList() {
     return () => {
       cancelled = true
     }
+  }, [])
+
+  useEffect(() => {
+    const onScroll = () => setShowBackToTop(window.scrollY > 800)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
   const loadMoreRows = useCallback(async () => {
@@ -161,86 +169,98 @@ export function InfiniteProductList() {
   }
 
   return (
-    <div className="px-4">
-      <WindowScroller>
-        {({ height, isScrolling, scrollTop, onChildScroll }) => (
-          <AutoSizer disableHeight>
-            {({ width }) => {
-              const cols = getColumnCount(width)
-              const cardWidth = Math.min((width - GAP * (cols - 1)) / cols, MAX_CARD_WIDTH)
-              const visualRowCount = Math.ceil(products.length / cols)
-              const rowCount = hasMore ? visualRowCount + 1 : visualRowCount
+    <>
+      <div className="px-4">
+        <WindowScroller>
+          {({ height, isScrolling, scrollTop, onChildScroll }) => (
+            <AutoSizer disableHeight>
+              {({ width }) => {
+                const cols = getColumnCount(width)
+                const cardWidth = Math.min((width - GAP * (cols - 1)) / cols, MAX_CARD_WIDTH)
+                const visualRowCount = Math.ceil(products.length / cols)
+                const rowCount = hasMore ? visualRowCount + 1 : visualRowCount
 
-              function isRowLoaded({ index }: Index) {
-                return index < visualRowCount
-              }
+                function isRowLoaded({ index }: Index) {
+                  return index < visualRowCount
+                }
 
-              function rowRenderer({
-                index,
-                key,
-                style,
-              }: ListRowProps) {
-                const startIdx = index * cols
-                const rowProducts = products.slice(startIdx, startIdx + cols)
+                function rowRenderer({
+                  index,
+                  key,
+                  style,
+                }: ListRowProps) {
+                  const startIdx = index * cols
+                  const rowProducts = products.slice(startIdx, startIdx + cols)
 
-                // Sentinel row — show loading indicator
-                if (rowProducts.length === 0) {
-                  return (
-                    <div key={key} style={style} className="flex items-center justify-center">
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <div className="size-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
-                        Loading more...
+                  // Sentinel row — show loading indicator
+                  if (rowProducts.length === 0) {
+                    return (
+                      <div key={key} style={style} className="flex items-center justify-center">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <div className="size-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
+                          Loading more...
+                        </div>
                       </div>
+                    )
+                  }
+
+                  return (
+                    <div key={key} style={style} className="flex justify-center gap-4 py-2">
+                      {rowProducts.map((product) => (
+                        <div
+                          key={product.id}
+                          style={{ width: cardWidth }}
+                          className="flex-shrink-0"
+                        >
+                          <ProductCard product={product} />
+                        </div>
+                      ))}
                     </div>
                   )
                 }
 
                 return (
-                  <div key={key} style={style} className="flex justify-center gap-4 py-2">
-                    {rowProducts.map((product) => (
-                      <div
-                        key={product.id}
-                        style={{ width: cardWidth }}
-                        className="flex-shrink-0"
-                      >
-                        <ProductCard product={product} />
-                      </div>
-                    ))}
+                  <div className="mx-auto max-w-4xl">
+                    <InfiniteLoader
+                      isRowLoaded={isRowLoaded}
+                      loadMoreRows={loadMoreRows}
+                      rowCount={rowCount}
+                      threshold={1}
+                    >
+                      {({ onRowsRendered, registerChild }) => (
+                        <List
+                          ref={registerChild as any}
+                          autoHeight
+                          height={height}
+                          isScrolling={isScrolling}
+                          onScroll={onChildScroll}
+                          scrollTop={scrollTop}
+                          width={width}
+                          rowCount={rowCount}
+                          rowHeight={ROW_HEIGHT}
+                          rowRenderer={rowRenderer}
+                          onRowsRendered={onRowsRendered}
+                          overscanRowCount={2}
+                        />
+                      )}
+                    </InfiniteLoader>
                   </div>
                 )
-              }
+              }}
+            </AutoSizer>
+          )}
+        </WindowScroller>
+      </div>
 
-              return (
-                <div className="mx-auto max-w-4xl">
-                  <InfiniteLoader
-                    isRowLoaded={isRowLoaded}
-                    loadMoreRows={loadMoreRows}
-                    rowCount={rowCount}
-                    threshold={1}
-                  >
-                    {({ onRowsRendered, registerChild }) => (
-                      <List
-                        ref={registerChild as any}
-                        autoHeight
-                        height={height}
-                        isScrolling={isScrolling}
-                        onScroll={onChildScroll}
-                        scrollTop={scrollTop}
-                        width={width}
-                        rowCount={rowCount}
-                        rowHeight={ROW_HEIGHT}
-                        rowRenderer={rowRenderer}
-                        onRowsRendered={onRowsRendered}
-                        overscanRowCount={2}
-                      />
-                    )}
-                  </InfiniteLoader>
-                </div>
-              )
-            }}
-          </AutoSizer>
-        )}
-      </WindowScroller>
-    </div>
+      {showBackToTop && (
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className="fixed bottom-8 right-8 z-50 flex size-10 cursor-pointer items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-colors hover:bg-primary/80"
+          aria-label="Back to top"
+        >
+          <ArrowUp className="size-5" />
+        </button>
+      )}
+    </>
   )
 }
