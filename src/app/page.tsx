@@ -136,7 +136,7 @@ export default function Home() {
             </span>
           </div>
           <Link
-            href="/"
+            href="/products"
             className="flex items-center gap-0.5 text-xs text-muted-foreground hover:text-foreground"
           >
             View All <ChevronRight className="size-3" />
@@ -151,8 +151,21 @@ export default function Home() {
                   href={`/products/${p.id}`}
                   className="group rounded-xl bg-card p-3 shadow-xs transition-shadow hover:shadow-md"
                 >
-                  <div className="mb-2 flex aspect-square items-center justify-center rounded-lg bg-gradient-to-br from-primary/5 via-muted to-primary/10">
-                    <Zap className="size-8 text-muted-foreground/20" />
+                  <div className={`mb-2 flex aspect-square items-center justify-center rounded-lg bg-gradient-to-br ${
+                    [
+                      "from-blue-500/20 via-purple-500/10 to-pink-500/20",
+                      "from-emerald-500/20 via-teal-500/10 to-cyan-500/20",
+                      "from-amber-500/20 via-orange-500/10 to-red-500/20",
+                      "from-indigo-500/20 via-violet-500/10 to-purple-500/20",
+                      "from-rose-500/20 via-pink-500/10 to-fuchsia-500/20",
+                      "from-sky-500/20 via-blue-500/10 to-indigo-500/20",
+                      "from-lime-500/20 via-green-500/10 to-emerald-500/20",
+                      "from-orange-500/20 via-yellow-500/10 to-amber-500/20",
+                    ][p.id % 8]
+                  }`}>
+                    <div className="flex size-10 items-center justify-center rounded-lg bg-background/40 backdrop-blur-sm">
+                      <Zap className="size-5 text-foreground/30" />
+                    </div>
                   </div>
                   <p className="truncate text-sm font-medium group-hover:text-primary">
                     {p.name}
