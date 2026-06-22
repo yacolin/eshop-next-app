@@ -32,9 +32,7 @@ const palettes = [
   ["from-orange-500/20", "via-yellow-500/10", "to-amber-500/20"],
 ];
 
-const iconList = [
-  Smartphone, Monitor, Shirt, HomeIcon, Gamepad2, BookOpen, Bike, Car,
-];
+const iconList = [Smartphone, Monitor, Shirt, HomeIcon, Gamepad2, BookOpen, Bike, Car];
 
 export function ProductCard({
   product,
@@ -62,9 +60,7 @@ export function ProductCard({
           </p>
         </Link>
         <div className="flex items-baseline gap-1.5">
-          <span className="text-sm font-bold text-primary">
-            {formatPrice(product.price)}
-          </span>
+          <span className="text-sm font-bold text-primary">{formatPrice(product.price)}</span>
         </div>
         <div className="flex items-center justify-between pt-1">
           <p className="text-[11px] text-muted-foreground">SKU: {product.sku}</p>

@@ -1,10 +1,10 @@
-'use client'
+"use client";
 
-import { useState, useEffect, useMemo, use } from 'react'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-import { useCart } from '@/contexts/cart-context'
+import { useState, useEffect, useMemo, use } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { useCart } from "@/contexts/cart-context";
 import {
   ShoppingCart,
   Minus,
@@ -17,107 +17,107 @@ import {
   ShieldCheck,
   Zap,
   ZoomIn,
-} from 'lucide-react'
-import type { Product } from '@/types/product'
+} from "lucide-react";
+import type { Product } from "@/types/product";
 
 interface Props {
-  params: Promise<{ id: string }>
+  params: Promise<{ id: string }>;
 }
 
 function formatPrice(cents: number) {
-  return `¥${(cents / 100).toLocaleString('zh-CN', {
+  return `¥${(cents / 100).toLocaleString("zh-CN", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  })}`
+  })}`;
 }
 
 export default function ProductDetailPage({ params }: Props) {
-  const { id } = use(params)
-  const productId = Number(id)
-  const { addItem } = useCart()
-  const router = useRouter()
+  const { id } = use(params);
+  const productId = Number(id);
+  const { addItem } = useCart();
+  const router = useRouter();
 
-  const [product, setProduct] = useState<Product | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [quantity, setQuantity] = useState(1)
-  const [adding, setAdding] = useState(false)
-  const [activeTab, setActiveTab] = useState<'description' | 'specs'>('description')
-  const [selectedImage, setSelectedImage] = useState(0)
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [quantity, setQuantity] = useState(1);
+  const [adding, setAdding] = useState(false);
+  const [activeTab, setActiveTab] = useState<"description" | "specs">("description");
+  const [selectedImage, setSelectedImage] = useState(0);
 
   // Deterministic gradient colors per product — same every render
   const imageColors = useMemo(() => {
     const palettes = [
-      ['from-blue-500/20', 'via-purple-500/10', 'to-pink-500/20'],
-      ['from-emerald-500/20', 'via-teal-500/10', 'to-cyan-500/20'],
-      ['from-amber-500/20', 'via-orange-500/10', 'to-red-500/20'],
-      ['from-indigo-500/20', 'via-violet-500/10', 'to-purple-500/20'],
-    ]
+      ["from-blue-500/20", "via-purple-500/10", "to-pink-500/20"],
+      ["from-emerald-500/20", "via-teal-500/10", "to-cyan-500/20"],
+      ["from-amber-500/20", "via-orange-500/10", "to-red-500/20"],
+      ["from-indigo-500/20", "via-violet-500/10", "to-purple-500/20"],
+    ];
     // Rotate palette based on product id so each product has its own set
-    const offset = productId % palettes.length
-    return palettes.map((_, i) => palettes[(i + offset) % palettes.length])
-  }, [productId])
+    const offset = productId % palettes.length;
+    return palettes.map((_, i) => palettes[(i + offset) % palettes.length]);
+  }, [productId]);
 
   useEffect(() => {
-    let cancelled = false
+    let cancelled = false;
 
     async function load() {
-      setLoading(true)
-      setError(null)
+      setLoading(true);
+      setError(null);
       try {
-        const res = await fetch(`/api/v1/products/cache/${productId}`)
-        if (cancelled) return
+        const res = await fetch(`/api/v1/products/cache/${productId}`);
+        if (cancelled) return;
 
         if (!res.ok) {
-          setError(`Failed to load product (${res.status})`)
-          return
+          setError(`Failed to load product (${res.status})`);
+          return;
         }
 
-        const json = await res.json()
-        if (cancelled) return
+        const json = await res.json();
+        if (cancelled) return;
 
         if (json.code !== 0) {
-          setError(json.message || 'Failed to load product')
-          return
+          setError(json.message || "Failed to load product");
+          return;
         }
 
-        setProduct(json.data)
+        setProduct(json.data);
       } catch (e) {
         if (!cancelled) {
-          setError(e instanceof Error ? e.message : 'Unknown error')
+          setError(e instanceof Error ? e.message : "Unknown error");
         }
       } finally {
-        if (!cancelled) setLoading(false)
+        if (!cancelled) setLoading(false);
       }
     }
 
     if (!isNaN(productId)) {
-      load()
+      load();
     } else {
-      setError('Invalid product ID')
-      setLoading(false)
+      setError("Invalid product ID");
+      setLoading(false);
     }
 
     return () => {
-      cancelled = true
-    }
-  }, [productId])
+      cancelled = true;
+    };
+  }, [productId]);
 
   async function handleAddToCart() {
-    if (!product || adding) return
-    setAdding(true)
+    if (!product || adding) return;
+    setAdding(true);
     try {
       for (let i = 0; i < quantity; i++) {
-        await addItem(product.id, product.sku)
+        await addItem(product.id, product.sku);
       }
     } finally {
-      setAdding(false)
+      setAdding(false);
     }
   }
 
   function handleBuyNow() {
-    if (!product) return
-    handleAddToCart().then(() => router.push('/'))
+    if (!product) return;
+    handleAddToCart().then(() => router.push("/"));
   }
 
   if (loading) {
@@ -140,7 +140,7 @@ export default function ProductDetailPage({ params }: Props) {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   if (error || !product) {
@@ -148,7 +148,7 @@ export default function ProductDetailPage({ params }: Props) {
       <div className="flex min-h-screen items-center justify-center bg-zinc-50 p-4 dark:bg-black">
         <div className="w-full max-w-md text-center">
           <Package className="mx-auto mb-4 size-16 text-muted-foreground/30" />
-          <p className="text-destructive mb-1">{error || 'Product not found'}</p>
+          <p className="text-destructive mb-1">{error || "Product not found"}</p>
           <p className="mb-4 text-sm text-muted-foreground">
             The product you are looking for does not exist or has been removed.
           </p>
@@ -157,7 +157,7 @@ export default function ProductDetailPage({ params }: Props) {
           </Button>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -181,7 +181,7 @@ export default function ProductDetailPage({ params }: Props) {
           {/* ── Left: Image gallery ── */}
           <div className="space-y-3">
             <div
-              className={`group relative flex aspect-square items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br ${imageColors[selectedImage].join(' ')}`}
+              className={`group relative flex aspect-square items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br ${imageColors[selectedImage].join(" ")}`}
             >
               <Package className="size-28 text-muted-foreground/20" />
               {/* TODO: Hover to zoom — <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100">
@@ -199,12 +199,12 @@ export default function ProductDetailPage({ params }: Props) {
                   onClick={() => setSelectedImage(i)}
                   className={`aspect-square w-16 cursor-pointer overflow-hidden rounded-lg border-2 transition-all ${
                     i === selectedImage
-                      ? 'border-primary ring-1 ring-primary/30'
-                      : 'border-border hover:border-muted-foreground/30'
+                      ? "border-primary ring-1 ring-primary/30"
+                      : "border-border hover:border-muted-foreground/30"
                   }`}
                 >
                   <div
-                    className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${imageColors[i].join(' ')}`}
+                    className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${imageColors[i].join(" ")}`}
                   >
                     <Package className="size-6 text-muted-foreground/20" />
                   </div>
@@ -221,16 +221,12 @@ export default function ProductDetailPage({ params }: Props) {
                 <Package className="size-3" />
                 {product.sku}
               </div>
-              <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
-                {product.name}
-              </h1>
+              <h1 className="text-2xl font-bold tracking-tight md:text-3xl">{product.name}</h1>
             </div>
 
             {/* Price */}
             <div className="rounded-xl bg-gradient-to-r from-primary/10 to-transparent px-5 py-4">
-              <span className="text-4xl font-bold text-primary">
-                {formatPrice(product.price)}
-              </span>
+              <span className="text-4xl font-bold text-primary">{formatPrice(product.price)}</span>
             </div>
 
             {/* Shipping */}
@@ -281,7 +277,7 @@ export default function ProductDetailPage({ params }: Props) {
                 disabled={adding}
               >
                 <ShoppingCart className="size-4" />
-                {adding ? 'Adding...' : 'Add to Cart'}
+                {adding ? "Adding..." : "Add to Cart"}
               </Button>
               <Button
                 size="lg"
@@ -317,21 +313,21 @@ export default function ProductDetailPage({ params }: Props) {
           {/* Tabs */}
           <div className="flex border-b">
             <button
-              onClick={() => setActiveTab('description')}
+              onClick={() => setActiveTab("description")}
               className={`flex-1 cursor-pointer px-4 py-3 text-sm font-medium transition-colors ${
-                activeTab === 'description'
-                  ? 'border-b-2 border-primary text-foreground'
-                  : 'text-muted-foreground hover:text-foreground'
+                activeTab === "description"
+                  ? "border-b-2 border-primary text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               Description
             </button>
             <button
-              onClick={() => setActiveTab('specs')}
+              onClick={() => setActiveTab("specs")}
               className={`flex-1 cursor-pointer px-4 py-3 text-sm font-medium transition-colors ${
-                activeTab === 'specs'
-                  ? 'border-b-2 border-primary text-foreground'
-                  : 'text-muted-foreground hover:text-foreground'
+                activeTab === "specs"
+                  ? "border-b-2 border-primary text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               Specifications
@@ -340,11 +336,11 @@ export default function ProductDetailPage({ params }: Props) {
 
           {/* Tab content */}
           <div className="px-6 py-5">
-            {activeTab === 'description' ? (
+            {activeTab === "description" ? (
               <div>
                 <h3 className="mb-3 text-base font-medium">{product.name}</h3>
                 <p className="text-sm leading-relaxed text-muted-foreground">
-                  {product.description || 'No description available.'}
+                  {product.description || "No description available."}
                 </p>
               </div>
             ) : (
@@ -355,9 +351,7 @@ export default function ProductDetailPage({ params }: Props) {
                 </div>
                 <div className="flex border-b py-2 text-sm">
                   <span className="w-28 shrink-0 text-muted-foreground">Price</span>
-                  <span className="font-semibold text-primary">
-                    {formatPrice(product.price)}
-                  </span>
+                  <span className="font-semibold text-primary">{formatPrice(product.price)}</span>
                 </div>
                 <div className="flex border-b py-2 text-sm">
                   <span className="w-28 shrink-0 text-muted-foreground">Product ID</span>
@@ -367,10 +361,10 @@ export default function ProductDetailPage({ params }: Props) {
                   <div className="flex border-b py-2 text-sm">
                     <span className="w-28 shrink-0 text-muted-foreground">Listed</span>
                     <span className="text-xs">
-                      {new Date(product.created_at * 1000).toLocaleDateString('zh-CN', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
+                      {new Date(product.created_at * 1000).toLocaleDateString("zh-CN", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
                       })}
                     </span>
                   </div>
@@ -379,10 +373,10 @@ export default function ProductDetailPage({ params }: Props) {
                   <div className="flex py-2 text-sm">
                     <span className="w-28 shrink-0 text-muted-foreground">Updated</span>
                     <span className="text-xs">
-                      {new Date(product.updated_at * 1000).toLocaleDateString('zh-CN', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
+                      {new Date(product.updated_at * 1000).toLocaleDateString("zh-CN", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
                       })}
                     </span>
                   </div>
@@ -394,11 +388,16 @@ export default function ProductDetailPage({ params }: Props) {
 
         {/* Back link */}
         <div className="mt-8 text-center">
-          <Button variant="ghost" size="sm" className="cursor-pointer text-muted-foreground" asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="cursor-pointer text-muted-foreground"
+            asChild
+          >
             <Link href="/">&larr; Continue Shopping</Link>
           </Button>
         </div>
       </div>
     </div>
-  )
+  );
 }

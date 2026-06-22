@@ -11,18 +11,12 @@ function formatTime(seconds: number) {
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
   const s = seconds % 60;
-  return [
-    String(h).padStart(2, "0"),
-    String(m).padStart(2, "0"),
-    String(s).padStart(2, "0"),
-  ];
+  return [String(h).padStart(2, "0"), String(m).padStart(2, "0"), String(s).padStart(2, "0")];
 }
 
 export function FlashSaleSection() {
   const [timeLeft, setTimeLeft] = useState(0);
-  const [saleItems, setSaleItems] = useState<
-    { product: Product; activity: FlashActivity }[]
-  >([]);
+  const [saleItems, setSaleItems] = useState<{ product: Product; activity: FlashActivity }[]>([]);
 
   // Fetch flash sale products
   useEffect(() => {
@@ -54,9 +48,7 @@ export function FlashSaleSection() {
         setSaleItems(merged);
 
         if (merged.length > 0) {
-          const earliestEnd = Math.min(
-            ...merged.map((m) => m.activity.end_time),
-          );
+          const earliestEnd = Math.min(...merged.map((m) => m.activity.end_time));
           setTimeLeft(Math.max(0, Math.floor((earliestEnd - Date.now()) / 1000)));
         }
       } catch {
@@ -109,10 +101,7 @@ export function FlashSaleSection() {
               />
             ))
           : Array.from({ length: 4 }).map((_, i) => (
-              <div
-                key={i}
-                className="animate-pulse rounded-xl bg-card p-3 shadow-xs"
-              >
+              <div key={i} className="animate-pulse rounded-xl bg-card p-3 shadow-xs">
                 <div className="mb-2 aspect-square rounded-lg bg-muted" />
                 <div className="h-4 w-3/4 rounded bg-muted" />
                 <div className="mt-2 h-4 w-1/2 rounded bg-muted" />

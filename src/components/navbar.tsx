@@ -1,11 +1,11 @@
-'use client'
+"use client";
 
-import Link from 'next/link'
-import { useAuth } from '@/contexts/auth-context'
-import { Button } from '@/components/ui/button'
+import Link from "next/link";
+import { useAuth } from "@/contexts/auth-context";
+import { Button } from "@/components/ui/button";
 
 export function Navbar() {
-  const { isAuthenticated, username, logout, loading } = useAuth()
+  const { isAuthenticated, username, logout, loading } = useAuth();
 
   return (
     <header className="sticky top-0 z-40 border-b bg-background">
@@ -30,5 +30,5 @@ export function Navbar() {
         </nav>
       </div>
     </header>
-  )
+  );
 }

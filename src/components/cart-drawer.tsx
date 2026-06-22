@@ -1,27 +1,21 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { ShoppingCart, Minus, Plus, Trash2 } from 'lucide-react'
-import { useCart } from '@/contexts/cart-context'
-import { Button } from '@/components/ui/button'
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet'
+import { useState } from "react";
+import { ShoppingCart, Minus, Plus, Trash2 } from "lucide-react";
+import { useCart } from "@/contexts/cart-context";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 function formatPrice(cents: number) {
-  return `¥${(cents / 100).toLocaleString('zh-CN', {
+  return `¥${(cents / 100).toLocaleString("zh-CN", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  })}`
+  })}`;
 }
 
 export function CartDrawer() {
-  const [open, setOpen] = useState(false)
-  const { items, removeItem, updateQuantity, clearCart, totalItems, totalPrice } =
-    useCart()
+  const [open, setOpen] = useState(false);
+  const { items, removeItem, updateQuantity, clearCart, totalItems, totalPrice } = useCart();
 
   return (
     <>
@@ -34,7 +28,7 @@ export function CartDrawer() {
         <ShoppingCart className="size-5" />
         {totalItems > 0 && (
           <span className="absolute -right-1 -top-1 flex size-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
-            {totalItems > 99 ? '99+' : totalItems}
+            {totalItems > 99 ? "99+" : totalItems}
           </span>
         )}
       </button>
@@ -61,23 +55,16 @@ export function CartDrawer() {
             <>
               <div className="flex-1 space-y-3 overflow-y-auto px-4">
                 {items.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-start gap-3 rounded-lg border p-3"
-                  >
+                  <div key={item.id} className="flex items-start gap-3 rounded-lg border p-3">
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium">
-                        {item.product_name}
-                      </p>
+                      <p className="truncate text-sm font-medium">{item.product_name}</p>
                       <p className="text-sm font-semibold text-primary">
                         {formatPrice(item.price)}
                       </p>
                     </div>
                     <div className="flex items-center gap-1">
                       <button
-                        onClick={() =>
-                          updateQuantity(item.id, item.quantity - 1)
-                        }
+                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
                         className="flex size-7 cursor-pointer items-center justify-center rounded-md border transition-colors hover:bg-muted"
                         aria-label="Decrease quantity"
                       >
@@ -87,9 +74,7 @@ export function CartDrawer() {
                         {item.quantity}
                       </span>
                       <button
-                        onClick={() =>
-                          updateQuantity(item.id, item.quantity + 1)
-                        }
+                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
                         className="flex size-7 cursor-pointer items-center justify-center rounded-md border transition-colors hover:bg-muted"
                         aria-label="Increase quantity"
                       >
@@ -110,9 +95,7 @@ export function CartDrawer() {
               <div className="border-t px-4 py-4">
                 <div className="mb-3 flex items-center justify-between">
                   <span className="text-sm font-medium">Total</span>
-                  <span className="text-lg font-bold text-primary">
-                    {formatPrice(totalPrice)}
-                  </span>
+                  <span className="text-lg font-bold text-primary">{formatPrice(totalPrice)}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button className="flex-1 cursor-pointer" size="lg">
@@ -132,5 +115,5 @@ export function CartDrawer() {
         </SheetContent>
       </Sheet>
     </>
-  )
+  );
 }

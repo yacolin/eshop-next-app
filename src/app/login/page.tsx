@@ -1,11 +1,11 @@
-'use client'
+"use client";
 
-import { useState, type FormEvent } from 'react'
-import Link from 'next/link'
-import { useAuth } from '@/contexts/auth-context'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { useState, type FormEvent } from "react";
+import Link from "next/link";
+import { useAuth } from "@/contexts/auth-context";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Card,
   CardHeader,
@@ -13,61 +13,58 @@ import {
   CardDescription,
   CardContent,
   CardFooter,
-} from '@/components/ui/card'
+} from "@/components/ui/card";
 
-const CREDENTIALS_KEY = 'saved_credentials'
+const CREDENTIALS_KEY = "saved_credentials";
 
 function loadSaved(): { username: string; password: string } | null {
-  if (typeof window === 'undefined') return null
+  if (typeof window === "undefined") return null;
   try {
-    const raw = localStorage.getItem(CREDENTIALS_KEY)
-    return raw ? JSON.parse(raw) : null
+    const raw = localStorage.getItem(CREDENTIALS_KEY);
+    return raw ? JSON.parse(raw) : null;
   } catch {
-    return null
+    return null;
   }
 }
 
 function saveCredentials(username: string, password: string) {
-  localStorage.setItem(
-    CREDENTIALS_KEY,
-    JSON.stringify({ username, password }),
-  )
+  localStorage.setItem(CREDENTIALS_KEY, JSON.stringify({ username, password }));
 }
 
 function clearCredentials() {
-  localStorage.removeItem(CREDENTIALS_KEY)
+  localStorage.removeItem(CREDENTIALS_KEY);
 }
 
 export default function LoginPage() {
-  const { login } = useAuth()
-  const saved = loadSaved()
-  const [username, setUsername] = useState(saved?.username ?? '')
-  const [password, setPassword] = useState(saved?.password ?? '')
-  const [remember, setRemember] = useState(!!saved)
-  const [error, setError] = useState<string | null>(null)
-  const [submitting, setSubmitting] = useState(false)
+  const { login } = useAuth();
+  const saved = loadSaved();
+  const [username, setUsername] = useState(saved?.username ?? "");
+  const [password, setPassword] = useState(saved?.password ?? "");
+  const [remember, setRemember] = useState(!!saved);
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
-    e.preventDefault()
+    e.preventDefault();
     if (!username.trim() || !password.trim()) {
-      setError('Please enter username and password')
-      return
+      setError("Please enter username and password");
+      return;
     }
 
-    setSubmitting(true)
-    setError(null)
+    setSubmitting(true);
+    setError(null);
 
     try {
       if (remember) {
-        saveCredentials(username.trim(), password)
+        saveCredentials(username.trim(), password);
       } else {
-        clearCredentials()
+        clearCredentials();
       }
-      await login({ username: username.trim(), password })
+      await login({ username: username.trim(), password });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed')
+      setError(err instanceof Error ? err.message : "Login failed");
     } finally {
-      setSubmitting(false)
+      setSubmitting(false);
     }
   }
 
@@ -117,17 +114,15 @@ export default function LoginPage() {
               Remember me
             </label>
 
-            {error && (
-              <p className="text-sm text-destructive">{error}</p>
-            )}
+            {error && <p className="text-sm text-destructive">{error}</p>}
           </CardContent>
 
           <CardFooter className="flex flex-col gap-3 px-4 py-2.5">
             <Button type="submit" className="w-full cursor-pointer" disabled={submitting}>
-              {submitting ? 'Logging in...' : 'Login'}
+              {submitting ? "Logging in..." : "Login"}
             </Button>
             <p className="text-xs text-muted-foreground">
-              Don&apos;t have an account?{' '}
+              Don&apos;t have an account?{" "}
               <Link href="/register" className="text-primary hover:underline">
                 Register
               </Link>
@@ -136,5 +131,5 @@ export default function LoginPage() {
         </form>
       </Card>
     </div>
-  )
+  );
 }

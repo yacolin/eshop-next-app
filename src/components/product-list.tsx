@@ -1,28 +1,22 @@
-import { fetchProducts } from '@/lib/api'
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardFooter,
-} from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { fetchProducts } from "@/lib/api";
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 function formatPrice(cents: number) {
-  return `¥${(cents / 100).toLocaleString('zh-CN', {
+  return `¥${(cents / 100).toLocaleString("zh-CN", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  })}`
+  })}`;
 }
 
 export async function ProductList() {
-  let products: Awaited<ReturnType<typeof fetchProducts>>
-  let error: string | null = null
+  let products: Awaited<ReturnType<typeof fetchProducts>>;
+  let error: string | null = null;
 
   try {
-    products = await fetchProducts()
+    products = await fetchProducts();
   } catch (e) {
-    error = e instanceof Error ? e.message : 'Unknown error'
+    error = e instanceof Error ? e.message : "Unknown error";
   }
 
   if (error) {
@@ -33,16 +27,14 @@ export async function ProductList() {
           <p className="mt-1 text-sm">{error}</p>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
     <div className="w-full max-w-4xl">
       <div className="mb-6 flex items-center justify-between">
         <h2 className="text-2xl font-bold text-foreground">Products</h2>
-        <span className="text-sm text-muted-foreground">
-          Total: {products!.total} items
-        </span>
+        <span className="text-sm text-muted-foreground">Total: {products!.total} items</span>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -52,12 +44,8 @@ export async function ProductList() {
               <CardTitle>{product.name}</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-primary">
-                {formatPrice(product.price)}
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                SKU: {product.sku}
-              </p>
+              <p className="text-2xl font-bold text-primary">{formatPrice(product.price)}</p>
+              <p className="mt-1 text-xs text-muted-foreground">SKU: {product.sku}</p>
             </CardContent>
             <CardFooter>
               <Button variant="outline" size="sm" className="w-full">
@@ -68,5 +56,5 @@ export async function ProductList() {
         ))}
       </div>
     </div>
-  )
+  );
 }

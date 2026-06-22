@@ -48,9 +48,7 @@ export function FlashSaleCard({
           <Zap className="size-5 text-foreground/30" />
         </div>
       </div>
-      <p className="truncate text-sm font-medium group-hover:text-primary">
-        {product.name}
-      </p>
+      <p className="truncate text-sm font-medium group-hover:text-primary">{product.name}</p>
       <div className="mt-1 flex items-baseline gap-1.5">
         <span className="text-sm font-bold text-destructive">
           {formatPrice(activity.flash_price)}
@@ -73,18 +71,12 @@ export function FlashSaleCard({
             {activity.status === "active" ? "Ending soon" : "Upcoming"}
           </span>
           <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-destructive/10">
-            <div
-              className="h-full rounded-full bg-destructive"
-              style={{ width: `${soldPct}%` }}
-            />
+            <div className="h-full rounded-full bg-destructive" style={{ width: `${soldPct}%` }} />
           </div>
         </div>
       ) : (
         <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-destructive/10">
-          <div
-            className="h-full rounded-full bg-destructive"
-            style={{ width: `${soldPct}%` }}
-          />
+          <div className="h-full rounded-full bg-destructive" style={{ width: `${soldPct}%` }} />
         </div>
       )}
     </Link>

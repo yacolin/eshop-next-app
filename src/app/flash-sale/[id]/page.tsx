@@ -122,11 +122,7 @@ export default function FlashSaleDetailPage({ params }: Props) {
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
     const s = seconds % 60;
-    return [
-      String(h).padStart(2, "0"),
-      String(m).padStart(2, "0"),
-      String(s).padStart(2, "0"),
-    ];
+    return [String(h).padStart(2, "0"), String(m).padStart(2, "0"), String(s).padStart(2, "0")];
   }
 
   const [hh, mm, ss] = formatTime(timeLeft);
@@ -188,10 +184,7 @@ export default function FlashSaleDetailPage({ params }: Props) {
             Home
           </Link>
           <ChevronRight className="size-3.5" />
-          <Link
-            href="/flash-sale"
-            className="transition-colors hover:text-foreground"
-          >
+          <Link href="/flash-sale" className="transition-colors hover:text-foreground">
             Flash Sale
           </Link>
           <ChevronRight className="size-3.5" />
@@ -235,9 +228,7 @@ export default function FlashSaleDetailPage({ params }: Props) {
                 <Package className="size-3" />
                 {product.sku}
               </div>
-              <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
-                {product.name}
-              </h1>
+              <h1 className="text-2xl font-bold tracking-tight md:text-3xl">{product.name}</h1>
             </div>
 
             {/* Flash Price */}
@@ -342,15 +333,11 @@ export default function FlashSaleDetailPage({ params }: Props) {
               </div>
               <div className="flex justify-between">
                 <span>Start Time</span>
-                <span>
-                  {new Date(activity.start_time).toLocaleString("zh-CN")}
-                </span>
+                <span>{new Date(activity.start_time).toLocaleString("zh-CN")}</span>
               </div>
               <div className="flex justify-between">
                 <span>End Time</span>
-                <span>
-                  {new Date(activity.end_time).toLocaleString("zh-CN")}
-                </span>
+                <span>{new Date(activity.end_time).toLocaleString("zh-CN")}</span>
               </div>
             </div>
           </div>

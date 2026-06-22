@@ -9,9 +9,7 @@ import { fetchProductsCursor, fetchFlashActivities } from "@/lib/api";
 import type { Product, FlashActivity } from "@/types/product";
 
 export default function FlashSalePage() {
-  const [items, setItems] = useState<
-    { product: Product; activity: FlashActivity }[]
-  >([]);
+  const [items, setItems] = useState<{ product: Product; activity: FlashActivity }[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,22 +22,19 @@ export default function FlashSalePage() {
   const [productsNext, setProductsNext] = useState<number | null>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
-  const buildItems = useCallback(
-    (acts: FlashActivity[], prodMap: Map<number, Product>) => {
-      const seen = new Set<number>();
-      return acts
-        .filter((a) => {
-          if (seen.has(a.product_id)) return false;
-          seen.add(a.product_id);
-          return prodMap.has(a.product_id);
-        })
-        .map((a) => ({
-          product: prodMap.get(a.product_id)!,
-          activity: a,
-        }));
-    },
-    [],
-  );
+  const buildItems = useCallback((acts: FlashActivity[], prodMap: Map<number, Product>) => {
+    const seen = new Set<number>();
+    return acts
+      .filter((a) => {
+        if (seen.has(a.product_id)) return false;
+        seen.add(a.product_id);
+        return prodMap.has(a.product_id);
+      })
+      .map((a) => ({
+        product: prodMap.get(a.product_id)!,
+        activity: a,
+      }));
+  }, []);
 
   // Initial load: fetch activities + enough products to cover them
   useEffect(() => {
@@ -181,10 +176,7 @@ export default function FlashSalePage() {
         {loading ? (
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             {Array.from({ length: 8 }).map((_, i) => (
-              <div
-                key={i}
-                className="animate-pulse rounded-xl bg-card p-3 shadow-xs"
-              >
+              <div key={i} className="animate-pulse rounded-xl bg-card p-3 shadow-xs">
                 <div className="mb-2 aspect-square rounded-lg bg-muted" />
                 <div className="h-4 w-3/4 rounded bg-muted" />
                 <div className="mt-2 h-4 w-1/2 rounded bg-muted" />

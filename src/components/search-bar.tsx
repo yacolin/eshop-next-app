@@ -1,18 +1,18 @@
-'use client'
+"use client";
 
-import { useState, type FormEvent } from 'react'
-import { useRouter } from 'next/navigation'
-import { Input } from '@/components/ui/input'
-import { Search } from 'lucide-react'
+import { useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
 
 export function SearchBar() {
-  const [query, setQuery] = useState('')
-  const router = useRouter()
+  const [query, setQuery] = useState("");
+  const router = useRouter();
 
   function handleSubmit(e: FormEvent) {
-    e.preventDefault()
+    e.preventDefault();
     if (query.trim()) {
-      router.push(`/?search=${encodeURIComponent(query.trim())}`)
+      router.push(`/?search=${encodeURIComponent(query.trim())}`);
     }
   }
 
@@ -26,5 +26,5 @@ export function SearchBar() {
         className="h-10 rounded-xl border-border/60 bg-card pl-9 text-sm shadow-xs"
       />
     </form>
-  )
+  );
 }

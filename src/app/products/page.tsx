@@ -1,8 +1,8 @@
-'use client'
+"use client";
 
-import Link from 'next/link'
-import { ChevronRight, Home } from 'lucide-react'
-import { InfiniteProductList } from '@/components/infinite-product-list'
+import Link from "next/link";
+import { ChevronRight, Home } from "lucide-react";
+import { InfiniteProductList } from "@/components/infinite-product-list";
 
 export default function ProductsPage() {
   return (
@@ -25,5 +25,5 @@ export default function ProductsPage() {
         <InfiniteProductList />
       </div>
     </div>
-  )
+  );
 }

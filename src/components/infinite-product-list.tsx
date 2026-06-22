@@ -1,21 +1,11 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import {
-  AutoSizer,
-  List,
-  InfiniteLoader,
-  WindowScroller,
-} from "react-virtualized";
+import { AutoSizer, List, InfiniteLoader, WindowScroller } from "react-virtualized";
 import type { ListRowProps, Index } from "react-virtualized";
 import { fetchProductsCursor } from "@/lib/api";
 import type { Product } from "@/types/product";
-import {
-  Card,
-  CardHeader,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card";
+import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import Link from "next/link";
 import { useCart } from "@/contexts/cart-context";
 import { ProductCard } from "@/components/product-card";
@@ -138,10 +128,7 @@ export function InfiniteProductList({ categoryId }: { categoryId?: number }) {
             <AutoSizer disableHeight>
               {({ width }) => {
                 const cols = getColumnCount(width);
-                const cardWidth = Math.min(
-                  (width - GAP * (cols - 1)) / cols,
-                  MAX_CARD_WIDTH,
-                );
+                const cardWidth = Math.min((width - GAP * (cols - 1)) / cols, MAX_CARD_WIDTH);
                 const visualRowCount = Math.ceil(products.length / cols);
                 const rowCount = hasMore ? visualRowCount + 1 : visualRowCount;
 
@@ -156,11 +143,7 @@ export function InfiniteProductList({ categoryId }: { categoryId?: number }) {
                   // Sentinel row — show loading indicator
                   if (rowProducts.length === 0) {
                     return (
-                      <div
-                        key={key}
-                        style={style}
-                        className="flex items-center justify-center"
-                      >
+                      <div key={key} style={style} className="flex items-center justify-center">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <div className="size-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
                           Loading more...
@@ -170,21 +153,14 @@ export function InfiniteProductList({ categoryId }: { categoryId?: number }) {
                   }
 
                   return (
-                    <div
-                      key={key}
-                      style={style}
-                      className="flex justify-start gap-4 py-2"
-                    >
+                    <div key={key} style={style} className="flex justify-start gap-4 py-2">
                       {rowProducts.map((product) => (
                         <div
                           key={product.id}
                           style={{ width: cardWidth }}
                           className="flex-shrink-0 mx-[1px]"
                         >
-                          <ProductCard
-                            product={product}
-                            onAddToCart={handleAddToCart}
-                          />
+                          <ProductCard product={product} onAddToCart={handleAddToCart} />
                         </div>
                       ))}
                     </div>
