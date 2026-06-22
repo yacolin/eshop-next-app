@@ -173,7 +173,7 @@ export default function FlashSaleDetailPage({ params }: Props) {
     );
   }
 
-  const discount = Math.round((1 - activity.flash_price / product.price) * 100);
+  const discount = Math.max(0, Math.round((1 - activity.flash_price / product.price) * 100));
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-black">
