@@ -15,10 +15,35 @@ import {
   CardFooter,
 } from '@/components/ui/card'
 
+const CREDENTIALS_KEY = 'saved_credentials'
+
+function loadSaved(): { username: string; password: string } | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = localStorage.getItem(CREDENTIALS_KEY)
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    return null
+  }
+}
+
+function saveCredentials(username: string, password: string) {
+  localStorage.setItem(
+    CREDENTIALS_KEY,
+    JSON.stringify({ username, password }),
+  )
+}
+
+function clearCredentials() {
+  localStorage.removeItem(CREDENTIALS_KEY)
+}
+
 export default function LoginPage() {
   const { login } = useAuth()
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
+  const saved = loadSaved()
+  const [username, setUsername] = useState(saved?.username ?? '')
+  const [password, setPassword] = useState(saved?.password ?? '')
+  const [remember, setRemember] = useState(!!saved)
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
@@ -33,6 +58,11 @@ export default function LoginPage() {
     setError(null)
 
     try {
+      if (remember) {
+        saveCredentials(username.trim(), password)
+      } else {
+        clearCredentials()
+      }
       await login({ username: username.trim(), password })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed')
@@ -76,6 +106,16 @@ export default function LoginPage() {
                 autoComplete="current-password"
               />
             </div>
+
+            <label className="flex cursor-pointer items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={remember}
+                onChange={(e) => setRemember(e.target.checked)}
+                className="size-4 rounded border-border accent-primary"
+              />
+              Remember me
+            </label>
 
             {error && (
               <p className="text-sm text-destructive">{error}</p>
