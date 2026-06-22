@@ -119,9 +119,14 @@ export default function FlashSaleDetailPage({ params }: Props) {
         setProduct(detail.product);
         setSkus(detail.skus);
 
-        // Auto-select if single SKU
-        if (detail.skus.length === 1 && detail.skus[0].spec) {
-          setSelectedAttrs(detail.skus[0].spec);
+        // Auto-select first option of each attribute group
+        const attrs = buildAttributeOptions(detail.skus);
+        if (attrs.length > 0) {
+          const initial: Record<string, string> = {};
+          attrs.forEach((attr) => {
+            initial[attr.name] = attr.values[0];
+          });
+          setSelectedAttrs(initial);
         }
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : "Unknown error");

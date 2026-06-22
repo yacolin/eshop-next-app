@@ -106,9 +106,14 @@ export default function ProductDetailPage({ params }: Props) {
         const data = await fetchProductDetail(productId);
         if (cancelled) return;
         setDetail(data);
-        // Auto-select first SKU if only one or no attributes
-        if (data.skus.length === 1 && data.skus[0].spec) {
-          setSelectedAttrs(data.skus[0].spec);
+        // Auto-select first option of each attribute group
+        const attrs = buildAttributeOptions(data.skus);
+        if (attrs.length > 0) {
+          const initial: Record<string, string> = {};
+          attrs.forEach((attr) => {
+            initial[attr.name] = attr.values[0];
+          });
+          setSelectedAttrs(initial);
         }
       } catch (e) {
         if (!cancelled) {
