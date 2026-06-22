@@ -43,7 +43,7 @@ export function CategoriesBar() {
 
   if (categories.length === 0) {
     return (
-      <div className="mx-4 mt-5 md:mx-auto md:max-w-5xl">
+      <div className="mx-4 mt-5 md:mx-auto md:max-w-6xl">
         <div className="grid grid-cols-4 gap-3 md:grid-cols-5 md:gap-4">
           {Array.from({ length: 10 }).map((_, i) => (
             <div
@@ -60,14 +60,14 @@ export function CategoriesBar() {
   }
 
   return (
-    <section className="mx-4 mt-5 md:mx-auto md:max-w-5xl">
+    <section className="mx-4 mt-5 md:mx-auto md:max-w-6xl">
       <div className="grid grid-cols-4 gap-3 md:grid-cols-5 md:gap-4">
         {categories.map((cat) => {
           const Icon = iconMap[cat.name] || Smartphone
           return (
             <Link
               key={cat.id}
-              href={`/?category=${cat.id}`}
+              href={`/category/${cat.id}`}
               className="flex flex-col items-center gap-1.5 rounded-xl bg-card px-2 py-4 text-center text-xs text-muted-foreground shadow-xs transition-colors hover:bg-accent hover:text-accent-foreground"
             >
               <Icon className="size-6" />

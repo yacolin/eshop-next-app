@@ -9,7 +9,7 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-40 border-b bg-background">
-      <div className="mx-auto flex h-14 max-w-4xl items-center justify-between px-4">
+      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
         <Link href="/" className="text-lg font-bold tracking-tight">
           E-Shop
         </Link>

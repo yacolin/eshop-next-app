@@ -24,11 +24,14 @@ export async function fetchProducts(): Promise<ProductListData> {
 }
 
 export async function fetchProductsCursor(
-  cursor: number | null = null
+  cursor: number | null = null,
+  categoryId?: number,
 ): Promise<ProductCursorData> {
-  const url = cursor
-    ? `${API_BASE}/products/cursor?cursor=${cursor}`
-    : `${API_BASE}/products/cursor`
+  const params = new URLSearchParams()
+  if (cursor) params.set('cursor', String(cursor))
+  if (categoryId) params.set('category_id', String(categoryId))
+  const qs = params.toString()
+  const url = qs ? `${API_BASE}/products/cursor?${qs}` : `${API_BASE}/products/cursor`
 
   const res = await fetch(url, { cache: 'no-store' })
 
