@@ -25,3 +25,17 @@ export interface ProductCursorData {
   next_cursor: number | null
   has_more: boolean
 }
+
+export interface Category {
+  id: number
+  name: string
+  description?: string
+  parent_id: number | null
+  created_at: number
+  updated_at: number
+}
+
+export interface CategoryListData {
+  total: number
+  list: Category[]
+}

@@ -3,36 +3,12 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { InfiniteProductList } from '@/components/infinite-product-list'
+import { SearchBar } from '@/components/search-bar'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import {
-  Smartphone,
-  Laptop,
-  Shirt,
-  HomeIcon,
-  Gamepad2,
-  BookOpen,
-  Bike,
-  Car,
-  Search,
-  Zap,
-  ChevronRight,
-  ArrowRight,
-  Clock,
-} from 'lucide-react'
+import { Zap, ChevronRight, ArrowRight, Clock } from 'lucide-react'
 import { fetchProductsCursor } from '@/lib/api'
 import type { Product } from '@/types/product'
-
-const categories = [
-  { icon: Smartphone, label: 'Phones', href: '/' },
-  { icon: Laptop, label: 'Laptops', href: '/' },
-  { icon: Shirt, label: 'Fashion', href: '/' },
-  { icon: HomeIcon, label: 'Home & Garden', href: '/' },
-  { icon: Gamepad2, label: 'Gaming', href: '/' },
-  { icon: BookOpen, label: 'Books', href: '/' },
-  { icon: Bike, label: 'Sports', href: '/' },
-  { icon: Car, label: 'Auto', href: '/' },
-]
+import { CategoriesBar } from '@/components/categories-bar'
 
 const bannerSlides = [
   {
@@ -108,13 +84,7 @@ export default function Home() {
     <div className="bg-zinc-50 dark:bg-black">
       {/* ─── Search Bar ─── */}
       <div className="mx-4 mt-4 md:mx-auto md:max-w-5xl">
-        <div className="relative">
-          <Search className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Search products..."
-            className="h-10 rounded-xl border-border/60 bg-card pl-9 text-sm shadow-xs"
-          />
-        </div>
+        <SearchBar />
       </div>
 
       {/* ─── Hero Banner ─── */}
@@ -150,20 +120,7 @@ export default function Home() {
       </section>
 
       {/* ─── Categories ─── */}
-      <section className="mx-4 mt-5 md:mx-auto md:max-w-5xl">
-        <div className="grid grid-cols-4 gap-3 md:grid-cols-8 md:gap-4">
-          {categories.map((cat) => (
-            <Link
-              key={cat.label}
-              href={cat.href}
-              className="flex flex-col items-center gap-1.5 rounded-xl bg-card px-2 py-4 text-center text-xs text-muted-foreground shadow-xs transition-colors hover:bg-accent hover:text-accent-foreground"
-            >
-              <cat.icon className="size-6" />
-              <span className="leading-tight">{cat.label}</span>
-            </Link>
-          ))}
-        </div>
-      </section>
+      <CategoriesBar />
 
       {/* ─── Flash Sale ─── */}
       <section className="mx-4 mt-7 md:mx-auto md:max-w-5xl">
