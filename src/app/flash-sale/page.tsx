@@ -2,28 +2,11 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
-import { ChevronRight, Home, Zap, Clock, Loader2, AlertCircle } from "lucide-react";
+import { ChevronRight, Home, Zap, Loader2, AlertCircle } from "lucide-react";
 import { BackToTop } from "@/components/back-to-top";
+import { FlashSaleCard } from "@/components/flash-sale-card";
 import { fetchProductsCursor, fetchFlashActivities } from "@/lib/api";
 import type { Product, FlashActivity } from "@/types/product";
-
-function formatPrice(cents: number) {
-  return `¥${(cents / 100).toLocaleString("zh-CN", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
-}
-
-const palettes = [
-  "from-blue-500/20 via-purple-500/10 to-pink-500/20",
-  "from-emerald-500/20 via-teal-500/10 to-cyan-500/20",
-  "from-amber-500/20 via-orange-500/10 to-red-500/20",
-  "from-indigo-500/20 via-violet-500/10 to-purple-500/20",
-  "from-rose-500/20 via-pink-500/10 to-fuchsia-500/20",
-  "from-sky-500/20 via-blue-500/10 to-indigo-500/20",
-  "from-lime-500/20 via-green-500/10 to-emerald-500/20",
-  "from-orange-500/20 via-yellow-500/10 to-amber-500/20",
-];
 
 export default function FlashSalePage() {
   const [items, setItems] = useState<
@@ -221,58 +204,14 @@ export default function FlashSalePage() {
         ) : (
           <>
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-              {items.map((item) => {
-                const p = item.product;
-                const a = item.activity;
-                const soldPct =
-                  a.total_stock > 0
-                    ? Math.min(100, Math.round((a.sold_stock / a.total_stock) * 100))
-                    : 0;
-                return (
-                  <Link
-                    key={a.id}
-                    href={`/flash-sale/${a.id}`}
-                    className="group rounded-xl bg-card p-3 shadow-xs transition-shadow hover:shadow-md"
-                  >
-                    <div
-                      className={`mb-2 flex aspect-square items-center justify-center rounded-lg bg-gradient-to-br ${palettes[p.id % 8]}`}
-                    >
-                      <div className="flex size-10 items-center justify-center rounded-lg bg-background/40 backdrop-blur-sm">
-                        <Zap className="size-5 text-foreground/30" />
-                      </div>
-                    </div>
-                    <p className="truncate text-sm font-medium group-hover:text-primary">
-                      {p.name}
-                    </p>
-                    <div className="mt-1 flex items-baseline gap-1.5">
-                      <span className="text-sm font-bold text-destructive">
-                        {formatPrice(a.flash_price)}
-                      </span>
-                      <span className="text-xs text-muted-foreground line-through">
-                        {formatPrice(p.price)}
-                      </span>
-                    </div>
-                    <div className="mt-2 flex items-center gap-1.5">
-                      <span
-                        className={`inline-flex items-center gap-0.5 rounded px-1 py-0.5 text-[10px] font-medium ${
-                          a.status === "active"
-                            ? "bg-destructive/10 text-destructive"
-                            : "bg-muted text-muted-foreground"
-                        }`}
-                      >
-                        <Clock className="size-2.5" />
-                        {a.status === "active" ? "Ending soon" : "Upcoming"}
-                      </span>
-                      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-destructive/10">
-                        <div
-                          className="h-full rounded-full bg-destructive"
-                          style={{ width: `${soldPct}%` }}
-                        />
-                      </div>
-                    </div>
-                  </Link>
-                );
-              })}
+              {items.map((item) => (
+                <FlashSaleCard
+                  key={item.activity.id}
+                  product={item.product}
+                  activity={item.activity}
+                  showStatus
+                />
+              ))}
             </div>
 
             {/* Sentinel + loading indicator */}

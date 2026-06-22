@@ -31,14 +31,6 @@ function formatPrice(cents: number) {
   })}`
 }
 
-function calcOriginalPrice(price: number): number {
-  return Math.round(price * 1.25 / 10) * 10
-}
-
-function calcDiscount(price: number): number {
-  return Math.round((1 - price / calcOriginalPrice(price)) * 100)
-}
-
 export default function ProductDetailPage({ params }: Props) {
   const { id } = use(params)
   const productId = Number(id)
@@ -168,9 +160,6 @@ export default function ProductDetailPage({ params }: Props) {
     )
   }
 
-  const originalPrice = calcOriginalPrice(product.price)
-  const discount = calcDiscount(product.price)
-
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-black">
       <div className="mx-auto max-w-5xl px-4 py-6">
@@ -239,21 +228,9 @@ export default function ProductDetailPage({ params }: Props) {
 
             {/* Price */}
             <div className="rounded-xl bg-gradient-to-r from-primary/10 to-transparent px-5 py-4">
-              <div className="flex items-baseline gap-3">
-                <span className="text-4xl font-bold text-primary">
-                  {formatPrice(product.price)}
-                </span>
-                {originalPrice > product.price && (
-                  <>
-                    <span className="text-sm text-muted-foreground line-through">
-                      {formatPrice(originalPrice)}
-                    </span>
-                    <span className="rounded-md bg-destructive/10 px-1.5 py-0.5 text-xs font-semibold text-destructive">
-                      -{discount}%
-                    </span>
-                  </>
-                )}
-              </div>
+              <span className="text-4xl font-bold text-primary">
+                {formatPrice(product.price)}
+              </span>
             </div>
 
             {/* Shipping */}

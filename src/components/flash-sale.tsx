@@ -4,14 +4,8 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Zap, ChevronRight, Clock } from "lucide-react";
 import { fetchProductsCursor, fetchFlashActivities } from "@/lib/api";
+import { FlashSaleCard } from "@/components/flash-sale-card";
 import type { Product, FlashActivity } from "@/types/product";
-
-function formatPrice(cents: number) {
-  return `¥${(cents / 100).toLocaleString("zh-CN", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
-}
 
 function formatTime(seconds: number) {
   const h = Math.floor(seconds / 3600);
@@ -23,17 +17,6 @@ function formatTime(seconds: number) {
     String(s).padStart(2, "0"),
   ];
 }
-
-const palettes = [
-  "from-blue-500/20 via-purple-500/10 to-pink-500/20",
-  "from-emerald-500/20 via-teal-500/10 to-cyan-500/20",
-  "from-amber-500/20 via-orange-500/10 to-red-500/20",
-  "from-indigo-500/20 via-violet-500/10 to-purple-500/20",
-  "from-rose-500/20 via-pink-500/10 to-fuchsia-500/20",
-  "from-sky-500/20 via-blue-500/10 to-indigo-500/20",
-  "from-lime-500/20 via-green-500/10 to-emerald-500/20",
-  "from-orange-500/20 via-yellow-500/10 to-amber-500/20",
-];
 
 export function FlashSaleSection() {
   const [timeLeft, setTimeLeft] = useState(0);
@@ -118,46 +101,13 @@ export function FlashSaleSection() {
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         {saleItems.length > 0
-          ? saleItems.map((item) => {
-              const p = item.product;
-              const a = item.activity;
-              const soldPct =
-                a.total_stock > 0
-                  ? Math.min(100, Math.round((a.sold_stock / a.total_stock) * 100))
-                  : 0;
-              return (
-                <Link
-                  key={a.id}
-                  href={`/flash-sale/${a.id}`}
-                  className="group rounded-xl bg-card p-3 shadow-xs transition-shadow hover:shadow-md"
-                >
-                  <div
-                    className={`mb-2 flex aspect-square items-center justify-center rounded-lg bg-gradient-to-br ${palettes[p.id % 8]}`}
-                  >
-                    <div className="flex size-10 items-center justify-center rounded-lg bg-background/40 backdrop-blur-sm">
-                      <Zap className="size-5 text-foreground/30" />
-                    </div>
-                  </div>
-                  <p className="truncate text-sm font-medium group-hover:text-primary">
-                    {p.name}
-                  </p>
-                  <div className="mt-1 flex items-baseline gap-1.5">
-                    <span className="text-sm font-bold text-destructive">
-                      {formatPrice(a.flash_price)}
-                    </span>
-                    <span className="text-xs text-muted-foreground line-through">
-                      {formatPrice(p.price)}
-                    </span>
-                  </div>
-                  <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-destructive/10">
-                    <div
-                      className="h-full rounded-full bg-destructive"
-                      style={{ width: `${soldPct}%` }}
-                    />
-                  </div>
-                </Link>
-              );
-            })
+          ? saleItems.map((item) => (
+              <FlashSaleCard
+                key={item.activity.id}
+                product={item.product}
+                activity={item.activity}
+              />
+            ))
           : Array.from({ length: 4 }).map((_, i) => (
               <div
                 key={i}
