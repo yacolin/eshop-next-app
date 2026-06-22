@@ -16,10 +16,18 @@ import {
   CardTitle,
   CardContent,
   CardFooter,
+  CardAction,
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { ArrowUp } from 'lucide-react'
+import { ArrowUp, ShoppingCart, Plus, Minus, Trash2 } from 'lucide-react'
+import { useCart } from '@/contexts/cart-context'
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet'
 
 const PAGE_SIZE = 20
 const ROW_HEIGHT = 260
@@ -33,17 +41,28 @@ function formatPrice(cents: number) {
   })}`
 }
 
-function getColumnCount(width: number) {
-  if (width >= 1024) return 3
-  if (width >= 640) return 2
-  return 1
-}
-
-function ProductCard({ product }: { product: Product }) {
+function ProductCard({
+  product,
+  onAddToCart,
+}: {
+  product: Product
+  onAddToCart: (product: Product) => void
+}) {
   return (
     <Card className="flex h-full flex-col">
       <CardHeader>
         <CardTitle className="truncate">{product.name}</CardTitle>
+        <CardAction>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="cursor-pointer"
+            onClick={() => onAddToCart(product)}
+            aria-label="Add to cart"
+          >
+            <ShoppingCart className="size-4" />
+          </Button>
+        </CardAction>
       </CardHeader>
       <CardContent className="flex-1">
         <p className="text-2xl font-bold text-primary">
@@ -72,7 +91,10 @@ export function InfiniteProductList() {
   const [error, setError] = useState<string | null>(null)
   const [initialLoading, setInitialLoading] = useState(true)
   const [showBackToTop, setShowBackToTop] = useState(false)
+  const [cartOpen, setCartOpen] = useState(false)
   const loadingRef = useRef(false)
+  const { items, addItem, removeItem, updateQuantity, clearCart, totalItems, totalPrice } =
+    useCart()
 
   useEffect(() => {
     let cancelled = false
@@ -116,6 +138,13 @@ export function InfiniteProductList() {
       loadingRef.current = false
     }
   }, [nextCursor, hasMore])
+
+  const handleAddToCart = useCallback(
+    (product: Product) => {
+      addItem(product)
+    },
+    [addItem],
+  )
 
   // Loading state
   if (initialLoading) {
@@ -176,7 +205,10 @@ export function InfiniteProductList() {
             <AutoSizer disableHeight>
               {({ width }) => {
                 const cols = getColumnCount(width)
-                const cardWidth = Math.min((width - GAP * (cols - 1)) / cols, MAX_CARD_WIDTH)
+                const cardWidth = Math.min(
+                  (width - GAP * (cols - 1)) / cols,
+                  MAX_CARD_WIDTH,
+                )
                 const visualRowCount = Math.ceil(products.length / cols)
                 const rowCount = hasMore ? visualRowCount + 1 : visualRowCount
 
@@ -184,18 +216,18 @@ export function InfiniteProductList() {
                   return index < visualRowCount
                 }
 
-                function rowRenderer({
-                  index,
-                  key,
-                  style,
-                }: ListRowProps) {
+                function rowRenderer({ index, key, style }: ListRowProps) {
                   const startIdx = index * cols
                   const rowProducts = products.slice(startIdx, startIdx + cols)
 
                   // Sentinel row — show loading indicator
                   if (rowProducts.length === 0) {
                     return (
-                      <div key={key} style={style} className="flex items-center justify-center">
+                      <div
+                        key={key}
+                        style={style}
+                        className="flex items-center justify-center"
+                      >
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <div className="size-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
                           Loading more...
@@ -205,14 +237,21 @@ export function InfiniteProductList() {
                   }
 
                   return (
-                    <div key={key} style={style} className="flex justify-center gap-4 py-2">
+                    <div
+                      key={key}
+                      style={style}
+                      className="flex justify-center gap-4 py-2"
+                    >
                       {rowProducts.map((product) => (
                         <div
                           key={product.id}
                           style={{ width: cardWidth }}
                           className="flex-shrink-0"
                         >
-                          <ProductCard product={product} />
+                          <ProductCard
+                            product={product}
+                            onAddToCart={handleAddToCart}
+                          />
                         </div>
                       ))}
                     </div>
@@ -252,6 +291,21 @@ export function InfiniteProductList() {
         </WindowScroller>
       </div>
 
+      {/* Floating cart button */}
+      <button
+        onClick={() => setCartOpen(true)}
+        className="fixed bottom-24 right-8 z-50 flex size-12 cursor-pointer items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-colors hover:bg-primary/80"
+        aria-label="Open cart"
+      >
+        <ShoppingCart className="size-5" />
+        {totalItems > 0 && (
+          <span className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-destructive text-[11px] font-bold text-destructive-foreground">
+            {totalItems > 99 ? '99+' : totalItems}
+          </span>
+        )}
+      </button>
+
+      {/* Back to top button */}
       {showBackToTop && (
         <button
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
@@ -261,6 +315,105 @@ export function InfiniteProductList() {
           <ArrowUp className="size-5" />
         </button>
       )}
+
+      {/* Cart Drawer */}
+      <Sheet open={cartOpen} onOpenChange={setCartOpen}>
+        <SheetContent side="right">
+          <SheetHeader>
+            <SheetTitle>
+              Shopping Cart
+              {totalItems > 0 && (
+                <span className="ml-2 text-sm font-normal text-muted-foreground">
+                  ({totalItems} items)
+                </span>
+              )}
+            </SheetTitle>
+          </SheetHeader>
+
+          {items.length === 0 ? (
+            <div className="flex flex-1 items-center justify-center p-4">
+              <p className="text-sm text-muted-foreground">Your cart is empty</p>
+            </div>
+          ) : (
+            <>
+              <div className="flex-1 space-y-3 overflow-y-auto px-4">
+                {items.map((item) => (
+                  <div
+                    key={item.product.id}
+                    className="flex items-start gap-3 rounded-lg border p-3"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="truncate text-sm font-medium">
+                        {item.product.name}
+                      </p>
+                      <p className="text-sm font-semibold text-primary">
+                        {formatPrice(item.product.price)}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() =>
+                          updateQuantity(item.product.id, item.quantity - 1)
+                        }
+                        className="flex size-7 cursor-pointer items-center justify-center rounded-md border transition-colors hover:bg-muted"
+                        aria-label="Decrease quantity"
+                      >
+                        <Minus className="size-3" />
+                      </button>
+                      <span className="flex size-7 items-center justify-center text-sm font-medium tabular-nums">
+                        {item.quantity}
+                      </span>
+                      <button
+                        onClick={() =>
+                          updateQuantity(item.product.id, item.quantity + 1)
+                        }
+                        className="flex size-7 cursor-pointer items-center justify-center rounded-md border transition-colors hover:bg-muted"
+                        aria-label="Increase quantity"
+                      >
+                        <Plus className="size-3" />
+                      </button>
+                    </div>
+                    <button
+                      onClick={() => removeItem(item.product.id)}
+                      className="flex size-7 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                      aria-label="Remove item"
+                    >
+                      <Trash2 className="size-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              <div className="border-t px-4 py-4">
+                <div className="mb-3 flex items-center justify-between">
+                  <span className="text-sm font-medium">Total</span>
+                  <span className="text-lg font-bold text-primary">
+                    {formatPrice(totalPrice)}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button className="flex-1 cursor-pointer" size="lg">
+                    Checkout
+                  </Button>
+                  <button
+                    onClick={clearCart}
+                    className="flex size-9 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                    aria-label="Clear all items"
+                  >
+                    <Trash2 className="size-4" />
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
     </>
   )
+}
+
+function getColumnCount(width: number) {
+  if (width >= 1024) return 3
+  if (width >= 640) return 2
+  return 1
 }
