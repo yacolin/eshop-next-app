@@ -1,65 +1,142 @@
 'use client'
 
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react'
-import type { Product } from '@/types/product'
-
-export interface CartItem {
-  product: Product
-  quantity: number
-}
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  type ReactNode,
+} from 'react'
+import type { CartItemData } from '@/types/cart'
+import {
+  fetchCart as apiFetchCart,
+  addToCart as apiAddToCart,
+  updateCartItem as apiUpdateCartItem,
+  removeCartItem as apiRemoveCartItem,
+  clearCart as apiClearCart,
+} from '@/lib/api'
 
 interface CartContextValue {
-  items: CartItem[]
-  addItem: (product: Product) => void
-  removeItem: (productId: number) => void
-  updateQuantity: (productId: number, quantity: number) => void
-  clearCart: () => void
+  items: CartItemData[]
+  loading: boolean
+  error: string | null
+  addItem: (productId: number, sku?: string) => Promise<void>
+  removeItem: (itemId: number) => Promise<void>
+  updateQuantity: (itemId: number, quantity: number) => Promise<void>
+  clearCart: () => Promise<void>
   totalItems: number
   totalPrice: number
 }
 
 const CartContext = createContext<CartContextValue | null>(null)
 
+function getUserId(): number | null {
+  if (typeof window === 'undefined') return null
+  const val = localStorage.getItem('user_id')
+  return val ? Number(val) : null
+}
+
+function getSessionId(): string | null {
+  if (typeof window === 'undefined') return null
+  let id = localStorage.getItem('cart_session_id')
+  if (!id) {
+    id = crypto.randomUUID()
+    localStorage.setItem('cart_session_id', id)
+  }
+  return id
+}
+
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>([])
+  const [items, setItems] = useState<CartItemData[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const addItem = useCallback((product: Product) => {
-    setItems((prev) => {
-      const existing = prev.find((item) => item.product.id === product.id)
-      if (existing) {
-        return prev.map((item) =>
-          item.product.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item,
-        )
-      }
-      return [...prev, { product, quantity: 1 }]
-    })
-  }, [])
-
-  const removeItem = useCallback((productId: number) => {
-    setItems((prev) => prev.filter((item) => item.product.id !== productId))
-  }, [])
-
-  const updateQuantity = useCallback((productId: number, quantity: number) => {
-    if (quantity <= 0) {
-      setItems((prev) => prev.filter((item) => item.product.id !== productId))
-      return
+  const loadCart = useCallback(async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const userId = getUserId()
+      const sessionId = getSessionId()
+      const cart = await apiFetchCart(userId, sessionId)
+      setItems(cart.items)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to load cart')
+    } finally {
+      setLoading(false)
     }
-    setItems((prev) =>
-      prev.map((item) =>
-        item.product.id === productId ? { ...item, quantity } : item,
-      ),
-    )
   }, [])
 
-  const clearCart = useCallback(() => {
-    setItems([])
+  useEffect(() => {
+    loadCart()
+  }, [loadCart])
+
+  const addItem = useCallback(async (productId: number, sku?: string) => {
+    try {
+      setError(null)
+      const userId = getUserId()
+      const sessionId = getSessionId()
+      const cart = await apiAddToCart(
+        { product_id: productId, quantity: 1, sku },
+        userId,
+        sessionId,
+      )
+      setItems(cart.items)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to add item')
+    }
+  }, [])
+
+  const removeItem = useCallback(async (itemId: number) => {
+    try {
+      setError(null)
+      const userId = getUserId()
+      const sessionId = getSessionId()
+      const cart = await apiRemoveCartItem(itemId, userId, sessionId)
+      setItems(cart.items)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to remove item')
+    }
+  }, [])
+
+  const updateQuantity = useCallback(
+    async (itemId: number, quantity: number) => {
+      if (quantity <= 0) {
+        return removeItem(itemId)
+      }
+      try {
+        setError(null)
+        const userId = getUserId()
+        const sessionId = getSessionId()
+        const cart = await apiUpdateCartItem(
+          itemId,
+          { quantity },
+          userId,
+          sessionId,
+        )
+        setItems(cart.items)
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Failed to update quantity')
+      }
+    },
+    [removeItem],
+  )
+
+  const clearCartAction = useCallback(async () => {
+    try {
+      setError(null)
+      const userId = getUserId()
+      const sessionId = getSessionId()
+      await apiClearCart(userId, sessionId)
+      setItems([])
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to clear cart')
+    }
   }, [])
 
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0)
   const totalPrice = items.reduce(
-    (sum, item) => sum + item.product.price * item.quantity,
+    (sum, item) => sum + item.price * item.quantity,
     0,
   )
 
@@ -67,10 +144,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
     <CartContext.Provider
       value={{
         items,
+        loading,
+        error,
         addItem,
         removeItem,
         updateQuantity,
-        clearCart,
+        clearCart: clearCartAction,
         totalItems,
         totalPrice,
       }}

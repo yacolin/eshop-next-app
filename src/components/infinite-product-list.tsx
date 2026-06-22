@@ -141,7 +141,7 @@ export function InfiniteProductList() {
 
   const handleAddToCart = useCallback(
     (product: Product) => {
-      addItem(product)
+      addItem(product.id, product.sku)
     },
     [addItem],
   )
@@ -339,21 +339,21 @@ export function InfiniteProductList() {
               <div className="flex-1 space-y-3 overflow-y-auto px-4">
                 {items.map((item) => (
                   <div
-                    key={item.product.id}
+                    key={item.id}
                     className="flex items-start gap-3 rounded-lg border p-3"
                   >
                     <div className="flex-1 min-w-0">
                       <p className="truncate text-sm font-medium">
-                        {item.product.name}
+                        {item.product_name}
                       </p>
                       <p className="text-sm font-semibold text-primary">
-                        {formatPrice(item.product.price)}
+                        {formatPrice(item.price)}
                       </p>
                     </div>
                     <div className="flex items-center gap-1">
                       <button
                         onClick={() =>
-                          updateQuantity(item.product.id, item.quantity - 1)
+                          updateQuantity(item.id, item.quantity - 1)
                         }
                         className="flex size-7 cursor-pointer items-center justify-center rounded-md border transition-colors hover:bg-muted"
                         aria-label="Decrease quantity"
@@ -365,7 +365,7 @@ export function InfiniteProductList() {
                       </span>
                       <button
                         onClick={() =>
-                          updateQuantity(item.product.id, item.quantity + 1)
+                          updateQuantity(item.id, item.quantity + 1)
                         }
                         className="flex size-7 cursor-pointer items-center justify-center rounded-md border transition-colors hover:bg-muted"
                         aria-label="Increase quantity"
@@ -374,7 +374,7 @@ export function InfiniteProductList() {
                       </button>
                     </div>
                     <button
-                      onClick={() => removeItem(item.product.id)}
+                      onClick={() => removeItem(item.id)}
                       className="flex size-7 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
                       aria-label="Remove item"
                     >
