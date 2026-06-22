@@ -1,5 +1,6 @@
 export interface CartItemData {
   id: number;
+  sku_id: number;
   product_id: number;
   quantity: number;
   price: number;
@@ -17,9 +18,8 @@ export interface CartData {
 }
 
 export interface AddToCartRequest {
-  product_id: number;
+  sku_id: number;
   quantity: number;
-  sku?: string;
 }
 
 export interface UpdateCartItemRequest {

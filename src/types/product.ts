@@ -1,11 +1,33 @@
 export interface Product {
   id: number;
   name: string;
+  min_price: number;
+}
+
+export interface ProductResponse {
+  id: number;
+  name: string;
+  description: string;
+  min_price: number;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface SKUResponse {
+  id: number;
+  product_id: number;
+  name: string;
   price: number;
-  sku: string;
-  description?: string;
-  created_at?: number;
-  updated_at?: number;
+  sku_code: string;
+  image?: string;
+  spec?: Record<string, string>;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface ProductDetailResponse {
+  product: ProductResponse;
+  skus: SKUResponse[];
 }
 
 export interface ApiResponse<T> {

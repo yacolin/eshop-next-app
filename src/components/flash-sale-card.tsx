@@ -54,7 +54,7 @@ export function FlashSaleCard({
           {formatPrice(activity.flash_price)}
         </span>
         <span className="text-xs text-muted-foreground line-through">
-          {formatPrice(product.price)}
+          {formatPrice(product.min_price)}
         </span>
       </div>
 

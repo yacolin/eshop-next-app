@@ -1,17 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import {
-  ShoppingCart,
-  Smartphone,
-  Monitor,
-  Shirt,
-  HomeIcon,
-  Gamepad2,
-  BookOpen,
-  Bike,
-  Car,
-} from "lucide-react";
+import { Smartphone, Monitor, Shirt, HomeIcon, Gamepad2, BookOpen, Bike, Car } from "lucide-react";
 import type { Product } from "@/types/product";
 
 function formatPrice(cents: number) {
@@ -34,45 +24,29 @@ const palettes = [
 
 const iconList = [Smartphone, Monitor, Shirt, HomeIcon, Gamepad2, BookOpen, Bike, Car];
 
-export function ProductCard({
-  product,
-  onAddToCart,
-}: {
-  product: Product;
-  onAddToCart: (product: Product) => void;
-}) {
+export function ProductCard({ product }: { product: Product }) {
   const gradient = palettes[product.id % palettes.length];
   const ImgIcon = iconList[product.id % iconList.length];
 
   return (
-    <div className="group rounded-xl bg-card shadow-xs ring-1 ring-foreground/10 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:ring-primary/20">
-      <Link
-        href={`/products/${product.id}`}
-        className={`flex h-32 items-center justify-center rounded-t-xl bg-gradient-to-br ${gradient.join(" ")}`}
-      >
-        <ImgIcon className="size-10 text-muted-foreground/25" />
-      </Link>
+    <Link href={`/products/${product.id}`}>
+      <div className="group rounded-xl bg-card shadow-xs ring-1 ring-foreground/10 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:ring-primary/20">
+        <div
+          className={`flex h-32 items-center justify-center rounded-t-xl bg-gradient-to-br ${gradient.join(" ")}`}
+        >
+          <ImgIcon className="size-10 text-muted-foreground/25" />
+        </div>
 
-      <div className="space-y-1 p-3">
-        <Link href={`/products/${product.id}`}>
+        <div className="space-y-1 p-3">
           <p className="truncate text-sm font-medium transition-colors group-hover:text-primary">
             {product.name}
           </p>
-        </Link>
-        <div className="flex items-baseline gap-1.5">
-          <span className="text-sm font-bold text-primary">{formatPrice(product.price)}</span>
-        </div>
-        <div className="flex items-center justify-between pt-1">
-          <p className="text-[11px] text-muted-foreground">SKU: {product.sku}</p>
-          <button
-            onClick={() => onAddToCart(product)}
-            className="flex size-7 cursor-pointer items-center justify-center rounded-md bg-primary text-primary-foreground transition-colors hover:bg-primary/80"
-            aria-label="Add to cart"
-          >
-            <ShoppingCart className="size-3" />
-          </button>
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-sm font-bold text-primary">{formatPrice(product.min_price)}</span>
+          </div>
+          <p className="pt-1 text-[11px] text-muted-foreground">Free shipping</p>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }

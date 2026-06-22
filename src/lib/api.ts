@@ -6,6 +6,7 @@ import type {
   CategoryListData,
   FlashActivity,
   FlashActivityCursorData,
+  ProductDetailResponse,
 } from "@/types/product";
 import type { LoginRequest, LoginResponseData } from "@/types/auth";
 import type { CartData, AddToCartRequest, UpdateCartItemRequest } from "@/types/cart";
@@ -66,6 +67,24 @@ export async function fetchProductById(id: number): Promise<Product> {
   }
 
   const json: ApiResponse<Product> = await res.json();
+
+  if (json.code !== 0) {
+    throw new Error(`API error: ${json.message}`);
+  }
+
+  return json.data;
+}
+
+export async function fetchProductDetail(id: number): Promise<ProductDetailResponse> {
+  const res = await fetch(`${API_BASE}/products/${id}/detail`, {
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch product detail: ${res.status}`);
+  }
+
+  const json: ApiResponse<ProductDetailResponse> = await res.json();
 
   if (json.code !== 0) {
     throw new Error(`API error: ${json.message}`);

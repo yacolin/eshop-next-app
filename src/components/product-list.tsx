@@ -44,8 +44,7 @@ export async function ProductList() {
               <CardTitle>{product.name}</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-primary">{formatPrice(product.price)}</p>
-              <p className="mt-1 text-xs text-muted-foreground">SKU: {product.sku}</p>
+              <p className="text-2xl font-bold text-primary">{formatPrice(product.min_price)}</p>
             </CardContent>
             <CardFooter>
               <Button variant="outline" size="sm" className="w-full">

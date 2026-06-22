@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, use } from "react";
+import { useState, useEffect, useMemo, use, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -18,8 +18,8 @@ import {
   Zap,
   Clock,
 } from "lucide-react";
-import { fetchFlashActivityById } from "@/lib/api";
-import type { Product, FlashActivity } from "@/types/product";
+import { fetchFlashActivityById, fetchProductDetail } from "@/lib/api";
+import type { FlashActivity, SKUResponse, ProductResponse } from "@/types/product";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -30,6 +30,39 @@ function formatPrice(cents: number) {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`;
+}
+
+function buildAttributeOptions(skus: SKUResponse[]) {
+  const attrMap = new Map<string, Set<string>>();
+  for (const sku of skus) {
+    if (!sku.spec) continue;
+    for (const [key, value] of Object.entries(sku.spec)) {
+      if (!attrMap.has(key)) attrMap.set(key, new Set());
+      attrMap.get(key)!.add(value);
+    }
+  }
+  return Array.from(attrMap.entries()).map(([name, values]) => ({
+    name,
+    values: Array.from(values),
+  }));
+}
+
+function findMatchingSku(
+  skus: SKUResponse[],
+  selected: Record<string, string>,
+  attrOptions: { name: string; values: string[] }[],
+): SKUResponse | null {
+  const keys = Object.keys(selected);
+  if (keys.length === 0 && attrOptions.length === 0) {
+    return skus.find((sku) => !sku.spec || Object.keys(sku.spec).length === 0) ?? null;
+  }
+  if (keys.length === 0) return null;
+  return (
+    skus.find((sku) => {
+      if (!sku.spec) return false;
+      return keys.every((key) => sku.spec![key] === selected[key]);
+    }) ?? null
+  );
 }
 
 const palettes = [
@@ -46,19 +79,27 @@ export default function FlashSaleDetailPage({ params }: Props) {
   const router = useRouter();
 
   const [activity, setActivity] = useState<FlashActivity | null>(null);
-  const [product, setProduct] = useState<Product | null>(null);
+  const [product, setProduct] = useState<ProductResponse | null>(null);
+  const [skus, setSkus] = useState<SKUResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [adding, setAdding] = useState(false);
   const [timeLeft, setTimeLeft] = useState(0);
+  const [selectedAttrs, setSelectedAttrs] = useState<Record<string, string>>({});
+  const [selectedImage, setSelectedImage] = useState(0);
+
+  // Scroll to top on mount — prevent inherited scroll from list page
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const imageColors = useMemo(() => {
     const offset = (product?.id ?? activityId) % palettes.length;
     return palettes.map((_, i) => palettes[(i + offset) % palettes.length]);
   }, [product?.id, activityId]);
 
-  // Fetch activity + product
+  // Fetch activity + product detail
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -70,18 +111,18 @@ export default function FlashSaleDetailPage({ params }: Props) {
         if (cancelled) return;
         setActivity(act);
 
-        // Set countdown
         const remaining = Math.max(0, Math.floor((act.end_time - Date.now()) / 1000));
         setTimeLeft(remaining);
 
-        // Fetch product
-        const res = await fetch(`/api/v1/products/cache/${act.product_id}`);
+        const detail = await fetchProductDetail(act.product_id);
         if (cancelled) return;
-        if (!res.ok) throw new Error(`Failed to load product (${res.status})`);
-        const json = await res.json();
-        if (cancelled) return;
-        if (json.code !== 0) throw new Error(json.message || "Failed to load product");
-        setProduct(json.data);
+        setProduct(detail.product);
+        setSkus(detail.skus);
+
+        // Auto-select if single SKU
+        if (detail.skus.length === 1 && detail.skus[0].spec) {
+          setSelectedAttrs(detail.skus[0].spec);
+        }
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : "Unknown error");
       } finally {
@@ -101,12 +142,36 @@ export default function FlashSaleDetailPage({ params }: Props) {
     return () => clearInterval(t);
   }, []);
 
+  const attrOptions = useMemo(() => buildAttributeOptions(skus), [skus]);
+
+  const matchedSku = useMemo(
+    () => findMatchingSku(skus, selectedAttrs, attrOptions),
+    [skus, selectedAttrs, attrOptions],
+  );
+
+  const allSelected = useMemo(
+    () => attrOptions.length === 0 || attrOptions.every((opt) => selectedAttrs[opt.name]),
+    [attrOptions, selectedAttrs],
+  );
+
+  const handleAttrSelect = useCallback((attrName: string, value: string) => {
+    setSelectedAttrs((prev) => {
+      const next = { ...prev };
+      if (next[attrName] === value) {
+        delete next[attrName];
+      } else {
+        next[attrName] = value;
+      }
+      return next;
+    });
+  }, []);
+
   async function handleAddToCart() {
-    if (!product || adding) return;
+    if (!product || !matchedSku || adding) return;
     setAdding(true);
     try {
       for (let i = 0; i < quantity; i++) {
-        await addItem(product.id, product.sku);
+        await addItem(matchedSku.id);
       }
     } finally {
       setAdding(false);
@@ -131,6 +196,15 @@ export default function FlashSaleDetailPage({ params }: Props) {
       ? Math.min(100, Math.round((activity.sold_stock / activity.total_stock) * 100))
       : 0;
 
+  const originalPrice = matchedSku?.price ?? product?.min_price ?? 0;
+  const discount =
+    activity && originalPrice > 0
+      ? Math.max(0, Math.round((1 - activity.flash_price / originalPrice) * 100))
+      : 0;
+
+  const canAddToCart = matchedSku != null && allSelected;
+
+  // Loading state
   if (loading) {
     return (
       <div className="min-h-screen bg-zinc-50 p-4 dark:bg-black">
@@ -152,6 +226,7 @@ export default function FlashSaleDetailPage({ params }: Props) {
     );
   }
 
+  // Error state
   if (error || !product || !activity) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-zinc-50 p-4 dark:bg-black">
@@ -168,8 +243,6 @@ export default function FlashSaleDetailPage({ params }: Props) {
       </div>
     );
   }
-
-  const discount = Math.max(0, Math.round((1 - activity.flash_price / product.price) * 100));
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-black">
@@ -194,11 +267,34 @@ export default function FlashSaleDetailPage({ params }: Props) {
         {/* ─── Main section ─── */}
         <div className="grid gap-8 md:grid-cols-2">
           {/* ── Left: Image ── */}
-          <div className="space-y-3">
+          <div className="space-y-2">
             <div
-              className={`flex aspect-square items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br ${imageColors[0].join(" ")}`}
+              className={`flex aspect-square items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br ${imageColors[selectedImage].join(" ")}`}
             >
               <Zap className="size-28 text-muted-foreground/20" />
+            </div>
+            {/* 4 fixed thumbnail slots — purely visual, switch main image */}
+            <div className="flex gap-2">
+              {imageColors.map((colors, idx) => {
+                const isActive = selectedImage === idx;
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => setSelectedImage(idx)}
+                    className={`aspect-square w-20 cursor-pointer overflow-hidden rounded-lg border-2 transition-all ${
+                      isActive
+                        ? "border-primary ring-1 ring-primary/30"
+                        : "border-border hover:border-muted-foreground/30"
+                    }`}
+                  >
+                    <div
+                      className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${colors.join(" ")}`}
+                    >
+                      <Package className="size-6 text-muted-foreground/20" />
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -222,14 +318,8 @@ export default function FlashSaleDetailPage({ params }: Props) {
               </span>
             </div>
 
-            {/* SKU + Name */}
-            <div>
-              <div className="mb-2 inline-flex items-center gap-1 rounded-md bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
-                <Package className="size-3" />
-                {product.sku}
-              </div>
-              <h1 className="text-2xl font-bold tracking-tight md:text-3xl">{product.name}</h1>
-            </div>
+            {/* Name */}
+            <h1 className="text-2xl font-bold tracking-tight md:text-3xl">{product.name}</h1>
 
             {/* Flash Price */}
             <div className="rounded-xl bg-gradient-to-r from-destructive/10 to-transparent px-5 py-4">
@@ -238,12 +328,57 @@ export default function FlashSaleDetailPage({ params }: Props) {
                   {formatPrice(activity.flash_price)}
                 </span>
                 <span className="text-sm text-muted-foreground line-through">
-                  {formatPrice(product.price)}
+                  {formatPrice(originalPrice)}
                 </span>
-                <span className="rounded-md bg-destructive/10 px-1.5 py-0.5 text-xs font-semibold text-destructive">
-                  -{discount}%
-                </span>
+                {discount > 0 && (
+                  <span className="rounded-md bg-destructive/10 px-1.5 py-0.5 text-xs font-semibold text-destructive">
+                    -{discount}%
+                  </span>
+                )}
               </div>
+            </div>
+
+            {/* SKU Attribute Selectors — always reserve space to prevent layout shift */}
+            <div className="min-h-[120px] space-y-4">
+              {attrOptions.length > 0 ? (
+                <>
+                  {attrOptions.map((attr) => (
+                    <div key={attr.name}>
+                      <p className="mb-2 text-sm font-medium">{attr.name}</p>
+                      <div className="flex flex-wrap gap-2">
+                        {attr.values.map((value) => {
+                          const isSelected = selectedAttrs[attr.name] === value;
+                          const isAvailable = skus.some((sku) => sku.spec?.[attr.name] === value);
+                          return (
+                            <button
+                              key={value}
+                              onClick={() => isAvailable && handleAttrSelect(attr.name, value)}
+                              disabled={!isAvailable}
+                              className={`cursor-pointer rounded-lg border px-4 py-2 text-sm font-medium transition-all ${
+                                isSelected
+                                  ? "border-primary bg-primary text-primary-foreground"
+                                  : isAvailable
+                                    ? "border-border hover:border-primary hover:text-primary"
+                                    : "cursor-not-allowed border-border/50 text-muted-foreground/40 line-through"
+                              }`}
+                            >
+                              {value}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                  {/* Always reserve SKU info line to prevent layout shift */}
+                  <div className="h-5 text-xs text-muted-foreground">
+                    {matchedSku && (
+                      <>
+                        SKU: <span className="font-mono">{matchedSku.sku_code}</span>
+                      </>
+                    )}
+                  </div>
+                </>
+              ) : null}
             </div>
 
             {/* Stock progress */}
@@ -291,16 +426,20 @@ export default function FlashSaleDetailPage({ params }: Props) {
                 size="lg"
                 className="flex-1 cursor-pointer gap-2"
                 onClick={handleAddToCart}
-                disabled={adding || activity.status !== "active"}
+                disabled={adding || !canAddToCart || activity.status !== "active"}
               >
                 <ShoppingCart className="size-4" />
-                {adding ? "Adding..." : "Add to Cart"}
+                {adding
+                  ? "Adding..."
+                  : !allSelected && attrOptions.length > 0
+                    ? "Select Specs"
+                    : "Add to Cart"}
               </Button>
               <Button
                 size="lg"
                 className="flex-1 cursor-pointer gap-2"
                 onClick={handleBuyNow}
-                disabled={adding || activity.status !== "active"}
+                disabled={adding || !canAddToCart || activity.status !== "active"}
               >
                 <Zap className="size-4" />
                 Buy Now
@@ -354,6 +493,33 @@ export default function FlashSaleDetailPage({ params }: Props) {
             </p>
           </div>
         </div>
+
+        {/* All SKU table */}
+        {skus.length > 0 && (
+          <div className="mt-6 rounded-xl border bg-card">
+            <div className="border-b px-6 py-3">
+              <h3 className="text-sm font-medium">All Variants ({skus.length})</h3>
+            </div>
+            <div className="divide-y px-6 py-2">
+              {skus.map((sku) => (
+                <div key={sku.id} className="flex items-center justify-between py-2.5 text-sm">
+                  <div className="flex items-center gap-3">
+                    <span className="font-mono text-xs text-muted-foreground">{sku.sku_code}</span>
+                    <span className="text-xs">{sku.name}</span>
+                    {sku.spec && Object.keys(sku.spec).length > 0 && (
+                      <span className="text-xs text-muted-foreground">
+                        {Object.entries(sku.spec)
+                          .map(([k, v]) => `${k}:${v}`)
+                          .join(", ")}
+                      </span>
+                    )}
+                  </div>
+                  <span className="font-medium text-primary">{formatPrice(sku.price)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Back link */}
         <div className="mt-8 text-center">

@@ -6,8 +6,6 @@ import type { ListRowProps, Index } from "react-virtualized";
 import { fetchProductsCursor } from "@/lib/api";
 import type { Product } from "@/types/product";
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
-import Link from "next/link";
-import { useCart } from "@/contexts/cart-context";
 import { ProductCard } from "@/components/product-card";
 import { BackToTop } from "@/components/back-to-top";
 
@@ -23,7 +21,6 @@ export function InfiniteProductList({ categoryId }: { categoryId?: number }) {
   const [error, setError] = useState<string | null>(null);
   const [initialLoading, setInitialLoading] = useState(true);
   const loadingRef = useRef(false);
-  const { addItem } = useCart();
 
   useEffect(() => {
     let cancelled = false;
@@ -61,13 +58,6 @@ export function InfiniteProductList({ categoryId }: { categoryId?: number }) {
       loadingRef.current = false;
     }
   }, [nextCursor, hasMore, categoryId]);
-
-  const handleAddToCart = useCallback(
-    (product: Product) => {
-      addItem(product.id, product.sku);
-    },
-    [addItem],
-  );
 
   // Loading state
   if (initialLoading) {
@@ -160,7 +150,7 @@ export function InfiniteProductList({ categoryId }: { categoryId?: number }) {
                           style={{ width: cardWidth }}
                           className="flex-shrink-0 mx-[1px]"
                         >
-                          <ProductCard product={product} onAddToCart={handleAddToCart} />
+                          <ProductCard product={product} />
                         </div>
                       ))}
                     </div>

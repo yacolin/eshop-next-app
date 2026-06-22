@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, use } from "react";
+import { useState, useEffect, useMemo, use, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -16,9 +16,9 @@ import {
   RotateCcw,
   ShieldCheck,
   Zap,
-  ZoomIn,
 } from "lucide-react";
-import type { Product } from "@/types/product";
+import { fetchProductDetail } from "@/lib/api";
+import type { ProductDetailResponse, SKUResponse } from "@/types/product";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -31,57 +31,85 @@ function formatPrice(cents: number) {
   })}`;
 }
 
+function buildAttributeOptions(skus: SKUResponse[]) {
+  const attrMap = new Map<string, Set<string>>();
+  for (const sku of skus) {
+    if (!sku.spec) continue;
+    for (const [key, value] of Object.entries(sku.spec)) {
+      if (!attrMap.has(key)) attrMap.set(key, new Set());
+      attrMap.get(key)!.add(value);
+    }
+  }
+  return Array.from(attrMap.entries()).map(([name, values]) => ({
+    name,
+    values: Array.from(values),
+  }));
+}
+
+function findMatchingSku(
+  skus: SKUResponse[],
+  selected: Record<string, string>,
+  attrOptions: { name: string; values: string[] }[],
+): SKUResponse | null {
+  const keys = Object.keys(selected);
+  // No attributes on any SKU and nothing selected — auto-pick first SKU
+  if (keys.length === 0 && attrOptions.length === 0) {
+    return skus.find((sku) => !sku.spec || Object.keys(sku.spec).length === 0) ?? null;
+  }
+  if (keys.length === 0) return null;
+  return (
+    skus.find((sku) => {
+      if (!sku.spec) return false;
+      return keys.every((key) => sku.spec![key] === selected[key]);
+    }) ?? null
+  );
+}
+
+const palettes = [
+  ["from-blue-500/20", "via-purple-500/10", "to-pink-500/20"],
+  ["from-emerald-500/20", "via-teal-500/10", "to-cyan-500/20"],
+  ["from-amber-500/20", "via-orange-500/10", "to-red-500/20"],
+  ["from-indigo-500/20", "via-violet-500/10", "to-purple-500/20"],
+];
+
 export default function ProductDetailPage({ params }: Props) {
   const { id } = use(params);
   const productId = Number(id);
   const { addItem } = useCart();
   const router = useRouter();
 
-  const [product, setProduct] = useState<Product | null>(null);
+  // Scroll to top on mount — prevent inherited scroll from list page
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  const [detail, setDetail] = useState<ProductDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [adding, setAdding] = useState(false);
   const [activeTab, setActiveTab] = useState<"description" | "specs">("description");
+  const [selectedAttrs, setSelectedAttrs] = useState<Record<string, string>>({});
   const [selectedImage, setSelectedImage] = useState(0);
 
-  // Deterministic gradient colors per product — same every render
   const imageColors = useMemo(() => {
-    const palettes = [
-      ["from-blue-500/20", "via-purple-500/10", "to-pink-500/20"],
-      ["from-emerald-500/20", "via-teal-500/10", "to-cyan-500/20"],
-      ["from-amber-500/20", "via-orange-500/10", "to-red-500/20"],
-      ["from-indigo-500/20", "via-violet-500/10", "to-purple-500/20"],
-    ];
-    // Rotate palette based on product id so each product has its own set
     const offset = productId % palettes.length;
     return palettes.map((_, i) => palettes[(i + offset) % palettes.length]);
   }, [productId]);
 
   useEffect(() => {
     let cancelled = false;
-
-    async function load() {
+    (async () => {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`/api/v1/products/cache/${productId}`);
+        const data = await fetchProductDetail(productId);
         if (cancelled) return;
-
-        if (!res.ok) {
-          setError(`Failed to load product (${res.status})`);
-          return;
+        setDetail(data);
+        // Auto-select first SKU if only one or no attributes
+        if (data.skus.length === 1 && data.skus[0].spec) {
+          setSelectedAttrs(data.skus[0].spec);
         }
-
-        const json = await res.json();
-        if (cancelled) return;
-
-        if (json.code !== 0) {
-          setError(json.message || "Failed to load product");
-          return;
-        }
-
-        setProduct(json.data);
       } catch (e) {
         if (!cancelled) {
           setError(e instanceof Error ? e.message : "Unknown error");
@@ -89,26 +117,43 @@ export default function ProductDetailPage({ params }: Props) {
       } finally {
         if (!cancelled) setLoading(false);
       }
-    }
-
-    if (!isNaN(productId)) {
-      load();
-    } else {
-      setError("Invalid product ID");
-      setLoading(false);
-    }
-
+    })();
     return () => {
       cancelled = true;
     };
   }, [productId]);
 
+  const attrOptions = useMemo(() => (detail ? buildAttributeOptions(detail.skus) : []), [detail]);
+
+  const matchedSku = useMemo(
+    () => (detail ? findMatchingSku(detail.skus, selectedAttrs, attrOptions) : null),
+    [detail, selectedAttrs, attrOptions],
+  );
+
+  const allSelected = useMemo(
+    () => attrOptions.length > 0 && attrOptions.every((opt) => selectedAttrs[opt.name]),
+    [attrOptions, selectedAttrs],
+  );
+
+  const handleAttrSelect = useCallback((attrName: string, value: string) => {
+    setSelectedAttrs((prev) => {
+      const next = { ...prev };
+      if (next[attrName] === value) {
+        // Toggle off
+        delete next[attrName];
+      } else {
+        next[attrName] = value;
+      }
+      return next;
+    });
+  }, []);
+
   async function handleAddToCart() {
-    if (!product || adding) return;
+    if (!detail || !matchedSku || adding) return;
     setAdding(true);
     try {
       for (let i = 0; i < quantity; i++) {
-        await addItem(product.id, product.sku);
+        await addItem(matchedSku.id);
       }
     } finally {
       setAdding(false);
@@ -116,10 +161,13 @@ export default function ProductDetailPage({ params }: Props) {
   }
 
   function handleBuyNow() {
-    if (!product) return;
+    if (!detail) return;
     handleAddToCart().then(() => router.push("/"));
   }
 
+  const displayPrice = matchedSku?.price ?? detail?.product.min_price ?? 0;
+
+  // Loading state
   if (loading) {
     return (
       <div className="min-h-screen bg-zinc-50 p-4 dark:bg-black">
@@ -143,7 +191,8 @@ export default function ProductDetailPage({ params }: Props) {
     );
   }
 
-  if (error || !product) {
+  // Error state
+  if (error || !detail) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-zinc-50 p-4 dark:bg-black">
         <div className="w-full max-w-md text-center">
@@ -159,6 +208,9 @@ export default function ProductDetailPage({ params }: Props) {
       </div>
     );
   }
+
+  const { product, skus } = detail;
+  const canAddToCart = matchedSku != null;
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-black">
@@ -179,54 +231,95 @@ export default function ProductDetailPage({ params }: Props) {
         {/* ─── Main section: image + info ─── */}
         <div className="grid gap-8 md:grid-cols-2">
           {/* ── Left: Image gallery ── */}
-          <div className="space-y-3">
+          <div className="space-y-2">
             <div
-              className={`group relative flex aspect-square items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br ${imageColors[selectedImage].join(" ")}`}
+              className={`flex aspect-square items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br ${imageColors[selectedImage].join(" ")}`}
             >
               <Package className="size-28 text-muted-foreground/20" />
-              {/* TODO: Hover to zoom — <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100">
-                <span className="flex items-center gap-1 rounded-full bg-background/80 px-3 py-1 text-xs text-muted-foreground backdrop-blur-sm">
-                  <ZoomIn className="size-3" />
-                  Hover to zoom
-                </span>
-              </div> */}
             </div>
-            {/* Thumbnails */}
+            {/* 4 fixed thumbnail slots — purely visual, switch main image */}
             <div className="flex gap-2">
-              {imageColors.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setSelectedImage(i)}
-                  className={`aspect-square w-16 cursor-pointer overflow-hidden rounded-lg border-2 transition-all ${
-                    i === selectedImage
-                      ? "border-primary ring-1 ring-primary/30"
-                      : "border-border hover:border-muted-foreground/30"
-                  }`}
-                >
-                  <div
-                    className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${imageColors[i].join(" ")}`}
+              {imageColors.map((colors, idx) => {
+                const isActive = selectedImage === idx;
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => setSelectedImage(idx)}
+                    className={`aspect-square w-20 cursor-pointer overflow-hidden rounded-lg border-2 transition-all ${
+                      isActive
+                        ? "border-primary ring-1 ring-primary/30"
+                        : "border-border hover:border-muted-foreground/30"
+                    }`}
                   >
-                    <Package className="size-6 text-muted-foreground/20" />
-                  </div>
-                </button>
-              ))}
+                    <div
+                      className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${colors.join(" ")}`}
+                    >
+                      <Package className="size-6 text-muted-foreground/20" />
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
           {/* ── Right: Product info ── */}
           <div className="flex flex-col gap-5">
-            {/* SKU + Name */}
+            {/* Name */}
             <div>
-              <div className="mb-2 inline-flex items-center gap-1 rounded-md bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
-                <Package className="size-3" />
-                {product.sku}
-              </div>
               <h1 className="text-2xl font-bold tracking-tight md:text-3xl">{product.name}</h1>
             </div>
 
             {/* Price */}
             <div className="rounded-xl bg-gradient-to-r from-primary/10 to-transparent px-5 py-4">
-              <span className="text-4xl font-bold text-primary">{formatPrice(product.price)}</span>
+              <span className="text-4xl font-bold text-primary">{formatPrice(displayPrice)}</span>
+              {matchedSku && matchedSku.price < product.min_price && (
+                <span className="ml-2 text-sm text-muted-foreground line-through">
+                  {formatPrice(product.min_price)}
+                </span>
+              )}
+            </div>
+
+            {/* SKU Attribute Selectors — always reserve space to prevent layout shift */}
+            <div className="min-h-[120px] space-y-4">
+              {attrOptions.length > 0 ? (
+                <>
+                  {attrOptions.map((attr) => (
+                    <div key={attr.name}>
+                      <p className="mb-2 text-sm font-medium">{attr.name}</p>
+                      <div className="flex flex-wrap gap-2">
+                        {attr.values.map((value) => {
+                          const isSelected = selectedAttrs[attr.name] === value;
+                          const isAvailable = skus.some((sku) => sku.spec?.[attr.name] === value);
+                          return (
+                            <button
+                              key={value}
+                              onClick={() => isAvailable && handleAttrSelect(attr.name, value)}
+                              disabled={!isAvailable}
+                              className={`cursor-pointer rounded-lg border px-4 py-2 text-sm font-medium transition-all ${
+                                isSelected
+                                  ? "border-primary bg-primary text-primary-foreground"
+                                  : isAvailable
+                                    ? "border-border hover:border-primary hover:text-primary"
+                                    : "cursor-not-allowed border-border/50 text-muted-foreground/40 line-through"
+                              }`}
+                            >
+                              {value}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                  {/* Always reserve SKU info line to prevent layout shift */}
+                  <div className="h-5 text-xs text-muted-foreground">
+                    {matchedSku && (
+                      <>
+                        SKU: <span className="font-mono">{matchedSku.sku_code}</span>
+                      </>
+                    )}
+                  </div>
+                </>
+              ) : null}
             </div>
 
             {/* Shipping */}
@@ -237,7 +330,7 @@ export default function ProductDetailPage({ params }: Props) {
               </span>
               <span className="flex items-center gap-1">
                 <Package className="size-3.5" />
-                In stock
+                {matchedSku ? "In stock" : "Select specifications"}
               </span>
             </div>
 
@@ -274,16 +367,20 @@ export default function ProductDetailPage({ params }: Props) {
                 size="lg"
                 className="flex-1 cursor-pointer gap-2"
                 onClick={handleAddToCart}
-                disabled={adding}
+                disabled={adding || !canAddToCart}
               >
                 <ShoppingCart className="size-4" />
-                {adding ? "Adding..." : "Add to Cart"}
+                {adding
+                  ? "Adding..."
+                  : !allSelected && attrOptions.length > 0
+                    ? "Select Specs"
+                    : "Add to Cart"}
               </Button>
               <Button
                 size="lg"
                 className="flex-1 cursor-pointer gap-2"
                 onClick={handleBuyNow}
-                disabled={adding}
+                disabled={adding || !canAddToCart}
               >
                 <Zap className="size-4" />
                 Buy Now
@@ -346,13 +443,21 @@ export default function ProductDetailPage({ params }: Props) {
             ) : (
               <div className="space-y-3">
                 <div className="flex border-b py-2 text-sm">
-                  <span className="w-28 shrink-0 text-muted-foreground">SKU</span>
-                  <span className="font-mono text-xs">{product.sku}</span>
+                  <span className="w-28 shrink-0 text-muted-foreground">Min Price</span>
+                  <span className="font-semibold text-primary">
+                    {formatPrice(product.min_price)}
+                  </span>
                 </div>
                 <div className="flex border-b py-2 text-sm">
-                  <span className="w-28 shrink-0 text-muted-foreground">Price</span>
-                  <span className="font-semibold text-primary">{formatPrice(product.price)}</span>
+                  <span className="w-28 shrink-0 text-muted-foreground">Variants</span>
+                  <span className="text-xs">{skus.length} SKUs</span>
                 </div>
+                {matchedSku && (
+                  <div className="flex border-b py-2 text-sm">
+                    <span className="w-28 shrink-0 text-muted-foreground">Selected SKU</span>
+                    <span className="font-mono text-xs">{matchedSku.sku_code}</span>
+                  </div>
+                )}
                 <div className="flex border-b py-2 text-sm">
                   <span className="w-28 shrink-0 text-muted-foreground">Product ID</span>
                   <span className="font-mono text-xs">{product.id}</span>
@@ -385,6 +490,33 @@ export default function ProductDetailPage({ params }: Props) {
             )}
           </div>
         </div>
+
+        {/* All SKU table */}
+        {skus.length > 0 && (
+          <div className="mt-6 rounded-xl border bg-card">
+            <div className="border-b px-6 py-3">
+              <h3 className="text-sm font-medium">All Variants ({skus.length})</h3>
+            </div>
+            <div className="divide-y px-6 py-2">
+              {skus.map((sku) => (
+                <div key={sku.id} className="flex items-center justify-between py-2.5 text-sm">
+                  <div className="flex items-center gap-3">
+                    <span className="font-mono text-xs text-muted-foreground">{sku.sku_code}</span>
+                    <span className="text-xs">{sku.name}</span>
+                    {sku.spec && Object.keys(sku.spec).length > 0 && (
+                      <span className="text-xs text-muted-foreground">
+                        {Object.entries(sku.spec)
+                          .map(([k, v]) => `${k}:${v}`)
+                          .join(", ")}
+                      </span>
+                    )}
+                  </div>
+                  <span className="font-medium text-primary">{formatPrice(sku.price)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Back link */}
         <div className="mt-8 text-center">
