@@ -25,7 +25,7 @@ export default function CategoryPage({ params }: Props) {
   }, [categoryId])
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-black">
+    <div className="bg-zinc-50 dark:bg-black">
       <div className="mx-4 py-6 md:mx-auto md:max-w-6xl">
         {/* Breadcrumb */}
         <nav className="mb-6 flex items-center gap-1.5 text-sm text-muted-foreground">
