@@ -5,10 +5,9 @@ import Link from "next/link";
 import { InfiniteProductList } from "@/components/infinite-product-list";
 import { SearchBar } from "@/components/search-bar";
 import { Button } from "@/components/ui/button";
-import { Zap, ChevronRight, ArrowRight, Clock } from "lucide-react";
-import { fetchProductsCursor } from "@/lib/api";
-import type { Product } from "@/types/product";
+import { ArrowRight } from "lucide-react";
 import { CategoriesBar } from "@/components/categories-bar";
+import { FlashSaleSection } from "@/components/flash-sale";
 
 const bannerSlides = [
   {
@@ -31,17 +30,8 @@ const bannerSlides = [
   },
 ];
 
-function formatPrice(cents: number) {
-  return `¥${(cents / 100).toLocaleString("zh-CN", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
-}
-
 export default function Home() {
   const [bannerIdx, setBannerIdx] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(3 * 3600 + 30 * 60 + 45); // 03:30:45
-  const [saleProducts, setSaleProducts] = useState<Product[]>([]);
 
   // Banner auto-rotate
   useEffect(() => {
@@ -51,34 +41,7 @@ export default function Home() {
     return () => clearInterval(t);
   }, []);
 
-  // Countdown
-  useEffect(() => {
-    const t = setInterval(() => {
-      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
-    }, 1000);
-    return () => clearInterval(t);
-  }, []);
-
-  // Fetch flash sale products
-  useEffect(() => {
-    fetchProductsCursor()
-      .then((data) => setSaleProducts(data.list.slice(0, 4)))
-      .catch(() => {});
-  }, []);
-
-  function formatTime(seconds: number) {
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    const s = seconds % 60;
-    return [
-      String(h).padStart(2, "0"),
-      String(m).padStart(2, "0"),
-      String(s).padStart(2, "0"),
-    ];
-  }
-
   const slide = bannerSlides[bannerIdx];
-  const [hh, mm, ss] = formatTime(timeLeft);
 
   return (
     <div className="bg-zinc-50 dark:bg-black">
@@ -122,82 +85,7 @@ export default function Home() {
       {/* ─── Categories ─── */}
       <CategoriesBar />
 
-      {/* ─── Flash Sale ─── */}
-      <section className="mx-4 mt-7 md:mx-auto md:max-w-6xl">
-        <div className="mb-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="flex items-center gap-1 text-base font-bold text-destructive">
-              <Zap className="size-4" />
-              Flash Sale
-            </span>
-            <span className="flex items-center gap-0.5 rounded-md bg-destructive px-1.5 py-0.5 text-xs font-semibold tabular-nums text-destructive-foreground">
-              <Clock className="size-3" />
-              {hh}:{mm}:{ss}
-            </span>
-          </div>
-          <Link
-            href="/products"
-            className="flex items-center gap-0.5 text-xs text-muted-foreground hover:text-foreground"
-          >
-            View All <ChevronRight className="size-3" />
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          {saleProducts.length > 0
-            ? saleProducts.map((p) => (
-                <Link
-                  key={p.id}
-                  href={`/products/${p.id}`}
-                  className="group rounded-xl bg-card p-3 shadow-xs transition-shadow hover:shadow-md"
-                >
-                  <div className={`mb-2 flex aspect-square items-center justify-center rounded-lg bg-gradient-to-br ${
-                    [
-                      "from-blue-500/20 via-purple-500/10 to-pink-500/20",
-                      "from-emerald-500/20 via-teal-500/10 to-cyan-500/20",
-                      "from-amber-500/20 via-orange-500/10 to-red-500/20",
-                      "from-indigo-500/20 via-violet-500/10 to-purple-500/20",
-                      "from-rose-500/20 via-pink-500/10 to-fuchsia-500/20",
-                      "from-sky-500/20 via-blue-500/10 to-indigo-500/20",
-                      "from-lime-500/20 via-green-500/10 to-emerald-500/20",
-                      "from-orange-500/20 via-yellow-500/10 to-amber-500/20",
-                    ][p.id % 8]
-                  }`}>
-                    <div className="flex size-10 items-center justify-center rounded-lg bg-background/40 backdrop-blur-sm">
-                      <Zap className="size-5 text-foreground/30" />
-                    </div>
-                  </div>
-                  <p className="truncate text-sm font-medium group-hover:text-primary">
-                    {p.name}
-                  </p>
-                  <div className="mt-1 flex items-baseline gap-1.5">
-                    <span className="text-sm font-bold text-destructive">
-                      {formatPrice(p.price)}
-                    </span>
-                    <span className="text-xs text-muted-foreground line-through">
-                      {formatPrice(Math.round((p.price * 1.25) / 10) * 10)}
-                    </span>
-                  </div>
-                  <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-destructive/10">
-                    <div
-                      className="h-full rounded-full bg-destructive"
-                      style={{ width: `${30 + (Math.round(p.id * 7) % 50)}%` }}
-                    />
-                  </div>
-                </Link>
-              ))
-            : Array.from({ length: 4 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="animate-pulse rounded-xl bg-card p-3 shadow-xs"
-                >
-                  <div className="mb-2 aspect-square rounded-lg bg-muted" />
-                  <div className="h-4 w-3/4 rounded bg-muted" />
-                  <div className="mt-2 h-4 w-1/2 rounded bg-muted" />
-                </div>
-              ))}
-        </div>
-      </section>
+      <FlashSaleSection />
 
       {/* ─── Recommended Products ─── */}
       <section className="mx-4 mt-8 md:mx-auto md:max-w-6xl">

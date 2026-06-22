@@ -28,12 +28,12 @@ export function CartDrawer() {
       {/* Floating cart button */}
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-24 right-8 z-50 flex size-12 cursor-pointer items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-colors hover:bg-primary/80"
+        className="fixed bottom-20 right-8 z-50 flex size-10 cursor-pointer items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-colors hover:bg-primary/80"
         aria-label="Open cart"
       >
         <ShoppingCart className="size-5" />
         {totalItems > 0 && (
-          <span className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-destructive text-[11px] font-bold text-destructive-foreground">
+          <span className="absolute -right-1 -top-1 flex size-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
             {totalItems > 99 ? '99+' : totalItems}
           </span>
         )}

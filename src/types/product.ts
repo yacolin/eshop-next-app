@@ -39,3 +39,22 @@ export interface CategoryListData {
   total: number
   list: Category[]
 }
+
+export interface FlashActivity {
+  id: number
+  product_id: number
+  flash_price: number
+  total_stock: number
+  sold_stock: number
+  start_time: number
+  end_time: number
+  status: string
+  created_at: number
+  updated_at: number
+}
+
+export interface FlashActivityCursorData {
+  list: FlashActivity[]
+  next_cursor: number | null
+  has_more: boolean
+}

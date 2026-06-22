@@ -18,7 +18,6 @@ import {
 } from "@/components/ui/card";
 import Link from "next/link";
 import {
-  ArrowUp,
   ShoppingCart,
   Smartphone,
   Monitor,
@@ -30,6 +29,7 @@ import {
   Car,
 } from "lucide-react";
 import { useCart } from "@/contexts/cart-context";
+import { BackToTop } from "@/components/back-to-top";
 
 const PAGE_SIZE = 20;
 const ROW_HEIGHT = 270;
@@ -112,7 +112,6 @@ export function InfiniteProductList({ categoryId }: { categoryId?: number }) {
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [initialLoading, setInitialLoading] = useState(true);
-  const [showBackToTop, setShowBackToTop] = useState(false);
   const loadingRef = useRef(false);
   const { addItem } = useCart();
 
@@ -137,12 +136,6 @@ export function InfiniteProductList({ categoryId }: { categoryId?: number }) {
       cancelled = true;
     };
   }, [categoryId]);
-
-  useEffect(() => {
-    const onScroll = () => setShowBackToTop(window.scrollY > 800);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
 
   const loadMoreRows = useCallback(async () => {
     if (loadingRef.current || !hasMore) return;
@@ -311,16 +304,7 @@ export function InfiniteProductList({ categoryId }: { categoryId?: number }) {
         </WindowScroller>
       </div>
 
-      {/* Back to top button */}
-      {showBackToTop && (
-        <button
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="fixed bottom-8 right-8 z-50 flex size-10 cursor-pointer items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-colors hover:bg-primary/80"
-          aria-label="Back to top"
-        >
-          <ArrowUp className="size-5" />
-        </button>
-      )}
+      <BackToTop />
     </>
   );
 }

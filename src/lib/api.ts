@@ -1,4 +1,4 @@
-import type { ApiResponse, Product, ProductCursorData, ProductListData, CategoryListData } from '@/types/product'
+import type { ApiResponse, Product, ProductCursorData, ProductListData, CategoryListData, FlashActivity, FlashActivityCursorData } from '@/types/product'
 import type { LoginRequest, LoginResponseData } from '@/types/auth'
 import type { CartData, AddToCartRequest, UpdateCartItemRequest } from '@/types/cart'
 
@@ -74,6 +74,44 @@ export async function fetchRootCategories(): Promise<CategoryListData> {
   }
 
   const json: ApiResponse<CategoryListData> = await res.json()
+
+  if (json.code !== 0) {
+    throw new Error(`API error: ${json.message}`)
+  }
+
+  return json.data
+}
+
+export async function fetchFlashActivities(
+  cursor: number | null = null,
+): Promise<FlashActivityCursorData> {
+  const url = cursor
+    ? `${API_BASE}/flash/activities-cursor?cursor=${cursor}`
+    : `${API_BASE}/flash/activities-cursor`
+
+  const res = await fetch(url)
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch flash activities: ${res.status}`)
+  }
+
+  const json: ApiResponse<FlashActivityCursorData> = await res.json()
+
+  if (json.code !== 0) {
+    throw new Error(`API error: ${json.message}`)
+  }
+
+  return json.data
+}
+
+export async function fetchFlashActivityById(id: number): Promise<FlashActivity> {
+  const res = await fetch(`${API_BASE}/flash/activities/${id}`)
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch flash activity: ${res.status}`)
+  }
+
+  const json: ApiResponse<FlashActivity> = await res.json()
 
   if (json.code !== 0) {
     throw new Error(`API error: ${json.message}`)
