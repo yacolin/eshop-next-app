@@ -62,6 +62,17 @@ export interface CategoryListData {
   list: Category[];
 }
 
+export interface AttributeValueItem {
+  value_id: number;
+  value: string;
+}
+
+export interface ProductAttributeItem {
+  attribute_id: number;
+  attribute_name: string;
+  values: AttributeValueItem[];
+}
+
 export interface FlashActivity {
   id: number;
   product_id: number;

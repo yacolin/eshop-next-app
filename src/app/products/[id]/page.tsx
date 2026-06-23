@@ -17,8 +17,8 @@ import {
   ShieldCheck,
   Zap,
 } from "lucide-react";
-import { fetchProductDetail } from "@/lib/api";
-import type { ProductDetailResponse, SKUResponse } from "@/types/product";
+import { fetchProductDetail, fetchProductAttributes } from "@/lib/api";
+import type { ProductDetailResponse, SKUResponse, ProductAttributeItem } from "@/types/product";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -31,29 +31,14 @@ function formatPrice(cents: number) {
   })}`;
 }
 
-function buildAttributeOptions(skus: SKUResponse[]) {
-  const attrMap = new Map<string, Set<string>>();
-  for (const sku of skus) {
-    if (!sku.spec) continue;
-    for (const [key, value] of Object.entries(sku.spec)) {
-      if (!attrMap.has(key)) attrMap.set(key, new Set());
-      attrMap.get(key)!.add(value);
-    }
-  }
-  return Array.from(attrMap.entries()).map(([name, values]) => ({
-    name,
-    values: Array.from(values),
-  }));
-}
-
 function findMatchingSku(
   skus: SKUResponse[],
   selected: Record<string, string>,
-  attrOptions: { name: string; values: string[] }[],
+  hasAttrs: boolean,
 ): SKUResponse | null {
   const keys = Object.keys(selected);
   // No attributes on any SKU and nothing selected — auto-pick first SKU
-  if (keys.length === 0 && attrOptions.length === 0) {
+  if (keys.length === 0 && !hasAttrs) {
     return skus.find((sku) => !sku.spec || Object.keys(sku.spec).length === 0) ?? null;
   }
   if (keys.length === 0) return null;
@@ -91,6 +76,7 @@ export default function ProductDetailPage({ params }: Props) {
   const [activeTab, setActiveTab] = useState<"description" | "specs">("description");
   const [selectedAttrs, setSelectedAttrs] = useState<Record<string, string>>({});
   const [selectedImage, setSelectedImage] = useState(0);
+  const [attributes, setAttributes] = useState<ProductAttributeItem[]>([]);
 
   const imageColors = useMemo(() => {
     const offset = productId % palettes.length;
@@ -103,15 +89,21 @@ export default function ProductDetailPage({ params }: Props) {
       setLoading(true);
       setError(null);
       try {
-        const data = await fetchProductDetail(productId);
+        const [detailData, attrsData] = await Promise.all([
+          fetchProductDetail(productId),
+          fetchProductAttributes(productId),
+        ]);
         if (cancelled) return;
-        setDetail(data);
-        // Auto-select first option of each attribute group
-        const attrs = buildAttributeOptions(data.skus);
-        if (attrs.length > 0) {
+        setDetail(detailData);
+        setAttributes(attrsData);
+        // Only auto-select when SKUs actually have spec data
+        const skusHaveSpec = detailData.skus.some(
+          (sku) => sku.spec && Object.keys(sku.spec).length > 0,
+        );
+        if (attrsData.length > 0 && skusHaveSpec) {
           const initial: Record<string, string> = {};
-          attrs.forEach((attr) => {
-            initial[attr.name] = attr.values[0];
+          attrsData.forEach((attr) => {
+            initial[attr.attribute_name] = attr.values[0].value;
           });
           setSelectedAttrs(initial);
         }
@@ -128,16 +120,22 @@ export default function ProductDetailPage({ params }: Props) {
     };
   }, [productId]);
 
-  const attrOptions = useMemo(() => (detail ? buildAttributeOptions(detail.skus) : []), [detail]);
+  const attrOptions = attributes;
+  const hasSpecSkus = detail
+    ? detail.skus.some((sku) => sku.spec && Object.keys(sku.spec).length > 0)
+    : false;
 
   const matchedSku = useMemo(
-    () => (detail ? findMatchingSku(detail.skus, selectedAttrs, attrOptions) : null),
-    [detail, selectedAttrs, attrOptions],
+    () => (detail ? findMatchingSku(detail.skus, selectedAttrs, hasSpecSkus) : null),
+    [detail, selectedAttrs, hasSpecSkus],
   );
 
   const allSelected = useMemo(
-    () => attrOptions.length > 0 && attrOptions.every((opt) => selectedAttrs[opt.name]),
-    [attrOptions, selectedAttrs],
+    () =>
+      hasSpecSkus &&
+      attrOptions.length > 0 &&
+      attrOptions.every((opt) => selectedAttrs[opt.attribute_name]),
+    [attrOptions, selectedAttrs, hasSpecSkus],
   );
 
   const handleAttrSelect = useCallback((attrName: string, value: string) => {
@@ -277,28 +275,27 @@ export default function ProductDetailPage({ params }: Props) {
             {/* Price */}
             <div className="rounded-xl bg-gradient-to-r from-primary/10 to-transparent px-5 py-4">
               <span className="text-4xl font-bold text-primary">{formatPrice(displayPrice)}</span>
-              {matchedSku && matchedSku.price < product.min_price && (
-                <span className="ml-2 text-sm text-muted-foreground line-through">
-                  {formatPrice(product.min_price)}
-                </span>
-              )}
             </div>
 
-            {/* SKU Attribute Selectors — always reserve space to prevent layout shift */}
+            {/* SKU Attribute Selectors */}
             <div className="min-h-[120px] space-y-4">
-              {attrOptions.length > 0 ? (
+              {hasSpecSkus && attrOptions.length > 0 ? (
                 <>
                   {attrOptions.map((attr) => (
-                    <div key={attr.name}>
-                      <p className="mb-2 text-sm font-medium">{attr.name}</p>
+                    <div key={attr.attribute_id}>
+                      <p className="mb-2 text-sm font-medium">{attr.attribute_name}</p>
                       <div className="flex flex-wrap gap-2">
-                        {attr.values.map((value) => {
-                          const isSelected = selectedAttrs[attr.name] === value;
-                          const isAvailable = skus.some((sku) => sku.spec?.[attr.name] === value);
+                        {attr.values.map((v) => {
+                          const isSelected = selectedAttrs[attr.attribute_name] === v.value;
+                          const isAvailable = skus.some(
+                            (sku) => sku.spec?.[attr.attribute_name] === v.value,
+                          );
                           return (
                             <button
-                              key={value}
-                              onClick={() => isAvailable && handleAttrSelect(attr.name, value)}
+                              key={v.value_id}
+                              onClick={() =>
+                                isAvailable && handleAttrSelect(attr.attribute_name, v.value)
+                              }
                               disabled={!isAvailable}
                               className={`cursor-pointer rounded-lg border px-4 py-2 text-sm font-medium transition-all ${
                                 isSelected
@@ -308,21 +305,22 @@ export default function ProductDetailPage({ params }: Props) {
                                     : "cursor-not-allowed border-border/50 text-muted-foreground/40 line-through"
                               }`}
                             >
-                              {value}
+                              {v.value}
                             </button>
                           );
                         })}
                       </div>
                     </div>
                   ))}
-                  {/* Always reserve SKU info line to prevent layout shift */}
-                  <div className="h-5 text-xs text-muted-foreground">
-                    {matchedSku && (
-                      <>
+                  {/* Matched SKU info */}
+                  {matchedSku && (
+                    <div className="rounded-lg bg-primary/5 px-4 py-3">
+                      <p className="text-sm font-semibold text-foreground">{matchedSku.name}</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
                         SKU: <span className="font-mono">{matchedSku.sku_code}</span>
-                      </>
-                    )}
-                  </div>
+                      </p>
+                    </div>
+                  )}
                 </>
               ) : null}
             </div>
@@ -377,7 +375,7 @@ export default function ProductDetailPage({ params }: Props) {
                 <ShoppingCart className="size-4" />
                 {adding
                   ? "Adding..."
-                  : !allSelected && attrOptions.length > 0
+                  : !allSelected && hasSpecSkus && attrOptions.length > 0
                     ? "Select Specs"
                     : "Add to Cart"}
               </Button>
@@ -471,7 +469,7 @@ export default function ProductDetailPage({ params }: Props) {
                   <div className="flex border-b py-2 text-sm">
                     <span className="w-28 shrink-0 text-muted-foreground">Listed</span>
                     <span className="text-xs">
-                      {new Date(product.created_at * 1000).toLocaleDateString("zh-CN", {
+                      {new Date(product.created_at).toLocaleDateString("zh-CN", {
                         year: "numeric",
                         month: "long",
                         day: "numeric",
@@ -483,7 +481,7 @@ export default function ProductDetailPage({ params }: Props) {
                   <div className="flex py-2 text-sm">
                     <span className="w-28 shrink-0 text-muted-foreground">Updated</span>
                     <span className="text-xs">
-                      {new Date(product.updated_at * 1000).toLocaleDateString("zh-CN", {
+                      {new Date(product.updated_at).toLocaleDateString("zh-CN", {
                         year: "numeric",
                         month: "long",
                         day: "numeric",
