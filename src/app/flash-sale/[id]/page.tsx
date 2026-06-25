@@ -149,8 +149,10 @@ export default function FlashSaleDetailPage({ params }: Props) {
   }
 
   function handleBuyNow() {
-    if (!detail) return;
-    handleAddToCart().then(() => router.push("/"));
+    if (!matchedSku || !detail || !activity) return;
+    router.push(
+      `/checkout?product_id=${detail.product.id}&sku_id=${matchedSku.id}&quantity=${quantity}&flash_price=${activity.flash_price}`,
+    );
   }
 
   function formatTime(seconds: number) {

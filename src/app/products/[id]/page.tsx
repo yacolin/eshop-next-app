@@ -133,8 +133,10 @@ export default function ProductDetailPage({ params }: Props) {
   }
 
   function handleBuyNow() {
-    if (!detail) return;
-    handleAddToCart().then(() => router.push("/"));
+    if (!matchedSku || !detail) return;
+    router.push(
+      `/checkout?product_id=${detail.product.id}&sku_id=${matchedSku.id}&quantity=${quantity}`,
+    );
   }
 
   const displayPrice = matchedSku?.price ?? detail?.product.min_price ?? 0;
