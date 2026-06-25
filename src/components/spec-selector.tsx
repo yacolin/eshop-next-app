@@ -1,5 +1,6 @@
 "use client";
 
+import { CheckCircle, XCircle, AlertTriangle } from "lucide-react";
 import type { SKUResponse, ProductAttributeItem } from "@/types/product";
 
 /**
@@ -77,11 +78,20 @@ export function SpecSelector({
           </p>
           <p className="mt-1 text-xs font-medium">
             {matchedSku.inventory_status === "outofstock" ? (
-              <span className="text-destructive">❌ Out of Stock</span>
+              <span className="inline-flex items-center gap-1 text-destructive">
+                <XCircle className="size-3.5" />
+                Out of Stock
+              </span>
             ) : matchedSku.inventory_status === "lowstock" ? (
-              <span className="text-amber-600">⚠ Only {matchedSku.available_quantity} left</span>
+              <span className="inline-flex items-center gap-1 text-amber-600">
+                <AlertTriangle className="size-3.5" />
+                Only {matchedSku.available_quantity} left
+              </span>
             ) : (
-              <span className="text-emerald-600">✅ In Stock</span>
+              <span className="inline-flex items-center gap-1 text-emerald-600">
+                <CheckCircle className="size-3.5" />
+                In Stock
+              </span>
             )}
           </p>
         </div>
