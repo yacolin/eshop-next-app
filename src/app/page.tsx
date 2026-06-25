@@ -89,7 +89,7 @@ export default function Home() {
 
       {/* ─── Recommended Products ─── */}
       <section className="mx-4 mt-8 md:mx-auto md:max-w-6xl">
-        <div className="mb-3 text-center">
+        <div className="mb-3">
           <h2 className="text-lg font-bold">Recommended For You</h2>
         </div>
         <InfiniteProductList />
