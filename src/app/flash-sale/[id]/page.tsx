@@ -5,55 +5,18 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/cart-context";
-import {
-  ShoppingCart,
-  Minus,
-  Plus,
-  Package,
-  ChevronRight,
-  Home,
-  Truck,
-  RotateCcw,
-  ShieldCheck,
-  Zap,
-  Clock,
-} from "lucide-react";
+import { ShoppingCart, ChevronRight, Home, Zap, Clock } from "lucide-react";
 import { fetchFlashActivityById, fetchProductDetail, fetchProductAttributes } from "@/lib/api";
-import type {
-  FlashActivity,
-  SKUResponse,
-  ProductDetailResponse,
-  ProductAttributeItem,
-} from "@/types/product";
+import { formatPrice, findMatchingSku } from "@/lib/utils";
+import { ProductImageGallery } from "@/components/product-image-gallery";
+import { SpecSelector } from "@/components/spec-selector";
+import { QuantitySelector } from "@/components/quantity-selector";
+import { ServicePromises } from "@/components/service-promises";
+import { SkuTable } from "@/components/sku-table";
+import type { FlashActivity, ProductDetailResponse, ProductAttributeItem } from "@/types/product";
 
 interface Props {
   params: Promise<{ id: string }>;
-}
-
-function formatPrice(cents: number) {
-  return `¥${(cents / 100).toLocaleString("zh-CN", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
-}
-
-function findMatchingSku(
-  skus: SKUResponse[],
-  selected: Record<string, string>,
-  hasAttrs: boolean,
-): SKUResponse | null {
-  const keys = Object.keys(selected);
-  // No attributes on any SKU and nothing selected — auto-pick first SKU
-  if (keys.length === 0 && !hasAttrs) {
-    return skus.find((sku) => !sku.spec || Object.keys(sku.spec).length === 0) ?? null;
-  }
-  if (keys.length === 0) return null;
-  return (
-    skus.find((sku) => {
-      if (!sku.spec) return false;
-      return keys.every((key) => sku.spec![key] === selected[key]);
-    }) ?? null
-  );
 }
 
 const palettes = [
@@ -276,36 +239,12 @@ export default function FlashSaleDetailPage({ params }: Props) {
         {/* ─── Main section ─── */}
         <div className="grid gap-8 md:grid-cols-2">
           {/* ── Left: Image ── */}
-          <div className="space-y-2">
-            <div
-              className={`flex aspect-square items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br ${imageColors[selectedImage].join(" ")}`}
-            >
-              <Zap className="size-28 text-muted-foreground/20" />
-            </div>
-            {/* 4 fixed thumbnail slots — purely visual, switch main image */}
-            <div className="flex gap-2">
-              {imageColors.map((colors, idx) => {
-                const isActive = selectedImage === idx;
-                return (
-                  <button
-                    key={idx}
-                    onClick={() => setSelectedImage(idx)}
-                    className={`aspect-square w-20 cursor-pointer overflow-hidden rounded-lg border-2 transition-all ${
-                      isActive
-                        ? "border-primary ring-1 ring-primary/30"
-                        : "border-border hover:border-muted-foreground/30"
-                    }`}
-                  >
-                    <div
-                      className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${colors.join(" ")}`}
-                    >
-                      <Package className="size-6 text-muted-foreground/20" />
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+          <ProductImageGallery
+            palettes={imageColors}
+            selectedImage={selectedImage}
+            onSelectImage={setSelectedImage}
+            icon={Zap}
+          />
 
           {/* ── Right: Info ── */}
           <div className="flex flex-col gap-5">
@@ -331,7 +270,7 @@ export default function FlashSaleDetailPage({ params }: Props) {
             <h1 className="text-2xl font-bold tracking-tight md:text-3xl">{product.name}</h1>
 
             {/* Flash Price */}
-            <div className="rounded-xl bg-gradient-to-r from-destructive/10 to-transparent px-5 py-4">
+            <div className="rounded-xl bg-linear-to-r from-destructive/10 to-transparent px-5 py-4">
               <div className="flex items-baseline gap-3">
                 <span className="text-4xl font-bold text-destructive">
                   {formatPrice(activity.flash_price)}
@@ -347,52 +286,16 @@ export default function FlashSaleDetailPage({ params }: Props) {
               </div>
             </div>
 
-            {/* SKU Attribute Selectors — always reserve space to prevent layout shift */}
-            <div className="min-h-[120px] space-y-4">
-              {hasSpecSkus && attrOptions.length > 0 ? (
-                <>
-                  {attrOptions.map((attr) => (
-                    <div key={attr.attribute_id}>
-                      <p className="mb-2 text-sm font-medium">{attr.attribute_name}</p>
-                      <div className="flex flex-wrap gap-2">
-                        {attr.values.map((v) => {
-                          const isSelected = selectedAttrs[attr.attribute_name] === v.value;
-                          const isAvailable = skus.some(
-                            (sku) => sku.spec?.[attr.attribute_name] === v.value,
-                          );
-                          return (
-                            <button
-                              key={v.value_id}
-                              onClick={() =>
-                                isAvailable && handleAttrSelect(attr.attribute_name, v.value)
-                              }
-                              disabled={!isAvailable}
-                              className={`cursor-pointer rounded-lg border px-4 py-2 text-sm font-medium transition-all ${
-                                isSelected
-                                  ? "border-primary bg-primary text-primary-foreground"
-                                  : isAvailable
-                                    ? "border-border hover:border-primary hover:text-primary"
-                                    : "cursor-not-allowed border-border/50 text-muted-foreground/40 line-through"
-                              }`}
-                            >
-                              {v.value}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
-                  {/* Matched SKU info */}
-                  {matchedSku && (
-                    <div className="rounded-lg bg-primary/5 px-4 py-3">
-                      <p className="text-sm font-semibold text-foreground">{matchedSku.name}</p>
-                      <p className="mt-0.5 text-xs text-muted-foreground">
-                        SKU: <span className="font-mono">{matchedSku.sku_code}</span>
-                      </p>
-                    </div>
-                  )}
-                </>
-              ) : null}
+            {/* SKU Attribute Selectors */}
+            <div className="min-h-30">
+              <SpecSelector
+                hasSpecSkus={hasSpecSkus}
+                attrOptions={attrOptions}
+                selectedAttrs={selectedAttrs}
+                skus={skus}
+                onAttrSelect={handleAttrSelect}
+                matchedSku={matchedSku}
+              />
             </div>
 
             {/* Stock progress */}
@@ -410,28 +313,7 @@ export default function FlashSaleDetailPage({ params }: Props) {
             </div>
 
             {/* Quantity */}
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Quantity</span>
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                  className="flex size-9 cursor-pointer items-center justify-center rounded-l-lg border transition-colors hover:bg-muted"
-                  aria-label="Decrease quantity"
-                >
-                  <Minus className="size-3.5" />
-                </button>
-                <span className="flex h-9 w-12 items-center justify-center border-y text-sm font-medium tabular-nums">
-                  {quantity}
-                </span>
-                <button
-                  onClick={() => setQuantity((q) => Math.min(99, q + 1))}
-                  className="flex size-9 cursor-pointer items-center justify-center rounded-r-lg border transition-colors hover:bg-muted"
-                  aria-label="Increase quantity"
-                >
-                  <Plus className="size-3.5" />
-                </button>
-              </div>
-            </div>
+            <QuantitySelector quantity={quantity} onChange={setQuantity} />
 
             {/* Action buttons */}
             <div className="flex gap-3">
@@ -461,20 +343,7 @@ export default function FlashSaleDetailPage({ params }: Props) {
             </div>
 
             {/* Service promises */}
-            <div className="grid grid-cols-3 gap-2 rounded-xl border bg-card/50 p-3 text-center text-xs text-muted-foreground">
-              <div className="flex flex-col items-center gap-1">
-                <RotateCcw className="size-4" />
-                7-day return
-              </div>
-              <div className="flex flex-col items-center gap-1">
-                <Truck className="size-4" />
-                Free shipping
-              </div>
-              <div className="flex flex-col items-center gap-1">
-                <ShieldCheck className="size-4" />
-                Authentic
-              </div>
-            </div>
+            <ServicePromises />
 
             <hr className="border-border/50" />
 
@@ -496,7 +365,7 @@ export default function FlashSaleDetailPage({ params }: Props) {
           </div>
         </div>
 
-        {/* ─── Bottom: Product details —── */}
+        {/* ─── Bottom: Product details ─── */}
         <div className="mt-10 rounded-xl border bg-card">
           <div className="border-b px-6 py-4">
             <h3 className="text-base font-medium">{product.name}</h3>
@@ -554,31 +423,7 @@ export default function FlashSaleDetailPage({ params }: Props) {
         </div>
 
         {/* All SKU table */}
-        {skus.length > 0 && (
-          <div className="mt-6 rounded-xl border bg-card">
-            <div className="border-b px-6 py-3">
-              <h3 className="text-sm font-medium">All Variants ({skus.length})</h3>
-            </div>
-            <div className="divide-y px-6 py-2">
-              {skus.map((sku) => (
-                <div key={sku.id} className="flex items-center justify-between py-2.5 text-sm">
-                  <div className="flex items-center gap-3">
-                    <span className="font-mono text-xs text-muted-foreground">{sku.sku_code}</span>
-                    <span className="text-xs">{sku.name}</span>
-                    {sku.spec && Object.keys(sku.spec).length > 0 && (
-                      <span className="text-xs text-muted-foreground">
-                        {Object.entries(sku.spec)
-                          .map(([k, v]) => `${k}:${v}`)
-                          .join(", ")}
-                      </span>
-                    )}
-                  </div>
-                  <span className="font-medium text-primary">{formatPrice(sku.price)}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        <SkuTable skus={skus} />
 
         {/* Back link */}
         <div className="mt-8 text-center">

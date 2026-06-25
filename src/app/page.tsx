@@ -53,7 +53,7 @@ export default function Home() {
       {/* ─── Hero Banner ─── */}
       <section className="relative mx-4 mt-4 overflow-hidden rounded-2xl md:mx-auto md:max-w-6xl">
         <div
-          className={`bg-gradient-to-r ${slide.gradient} px-8 py-10 text-primary-foreground transition-all md:px-12 md:py-14`}
+          className={`bg-linear-to-r ${slide.gradient} px-8 py-10 text-primary-foreground transition-all md:px-12 md:py-14`}
         >
           <p className="mb-1 text-xs font-medium uppercase tracking-widest opacity-80">
             {slide.title}

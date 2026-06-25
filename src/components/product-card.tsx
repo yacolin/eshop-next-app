@@ -2,14 +2,8 @@
 
 import Link from "next/link";
 import { Smartphone, Monitor, Shirt, HomeIcon, Gamepad2, BookOpen, Bike, Car } from "lucide-react";
+import { formatPrice } from "@/lib/utils";
 import type { Product } from "@/types/product";
-
-function formatPrice(cents: number) {
-  return `¥${(cents / 100).toLocaleString("zh-CN", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
-}
 
 const palettes = [
   ["from-blue-500/20", "via-purple-500/10", "to-pink-500/20"],
