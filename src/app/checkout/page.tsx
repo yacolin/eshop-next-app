@@ -15,16 +15,6 @@ import { OrderNote } from "./components/order-note";
 import { SubmitButton } from "./components/submit-button";
 import { Package, CheckCircle, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogMedia,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogAction,
-} from "@/components/ui/alert-dialog";
 import Link from "next/link";
 
 interface Props {
@@ -214,46 +204,35 @@ export default function CheckoutPage({ searchParams }: Props) {
         onSaved={() => setAddressRefreshKey((k) => k + 1)}
       />
 
-      {/* Result dialog */}
-      <AlertDialog
-        open={resultDialog !== null}
-        onOpenChange={(open) => {
-          if (!open) {
-            if (resultDialog?.type === "success") router.push("/");
-            setResultDialog(null);
-          }
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogMedia>
-              {resultDialog?.type === "success" ? (
-                <CheckCircle className="size-6 text-green-500" />
-              ) : (
-                <XCircle className="size-6 text-destructive" />
-              )}
-            </AlertDialogMedia>
-            <AlertDialogTitle>
-              {resultDialog?.type === "success" ? "下单成功" : "提交失败"}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {resultDialog?.type === "success"
+      {/* Result overlay — instant show/hide, no flash */}
+      {resultDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+          <div className="w-full max-w-xs rounded-xl bg-popover p-6 text-center shadow-lg ring-1 ring-foreground/10">
+            {resultDialog.type === "success" ? (
+              <CheckCircle className="mx-auto mb-3 size-12 text-green-500" />
+            ) : (
+              <XCircle className="mx-auto mb-3 size-12 text-destructive" />
+            )}
+            <h3 className="text-lg font-semibold">
+              {resultDialog.type === "success" ? "下单成功" : "提交失败"}
+            </h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {resultDialog.type === "success"
                 ? `订单号: ${resultDialog.orderNo}`
-                : resultDialog?.message}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogAction
+                : resultDialog.message}
+            </p>
+            <Button
+              className="mt-6 w-full cursor-pointer"
               onClick={() => {
-                if (resultDialog?.type === "success") router.push("/");
+                if (resultDialog.type === "success") router.push("/");
                 setResultDialog(null);
               }}
             >
-              {resultDialog?.type === "success" ? "继续购物" : "知道了"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+              {resultDialog.type === "success" ? "继续购物" : "知道了"}
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
