@@ -21,6 +21,8 @@ export interface SKUResponse {
   sku_code: string;
   image?: string;
   spec?: Record<string, string>;
+  available_quantity?: number;
+  inventory_status?: string;
   created_at: number;
   updated_at: number;
 }

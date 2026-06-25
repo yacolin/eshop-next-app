@@ -233,14 +233,6 @@ export default function ProductDetailPage({ params }: Props) {
               />
             </div>
 
-            {/* Shipping */}
-            <div className="flex items-center gap-4 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <Package className="size-3.5" />
-                {matchedSku ? "In stock" : "Select specifications"}
-              </span>
-            </div>
-
             <hr className="border-border/50" />
 
             {/* Quantity */}
@@ -253,7 +245,7 @@ export default function ProductDetailPage({ params }: Props) {
                 size="lg"
                 className="flex-1 cursor-pointer gap-2"
                 onClick={handleAddToCart}
-                disabled={adding || !canAddToCart}
+                disabled={adding || !canAddToCart || (matchedSku?.available_quantity ?? 0) <= 0}
               >
                 <ShoppingCart className="size-4" />
                 {adding
@@ -266,7 +258,7 @@ export default function ProductDetailPage({ params }: Props) {
                 size="lg"
                 className="flex-1 cursor-pointer gap-2"
                 onClick={handleBuyNow}
-                disabled={adding || !canAddToCart}
+                disabled={adding || !canAddToCart || (matchedSku?.available_quantity ?? 0) <= 0}
               >
                 <Zap className="size-4" />
                 Buy Now

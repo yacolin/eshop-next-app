@@ -75,6 +75,15 @@ export function SpecSelector({
           <p className="mt-0.5 text-xs text-muted-foreground">
             SKU: <span className="font-mono">{matchedSku.sku_code}</span>
           </p>
+          <p className="mt-1 text-xs font-medium">
+            {matchedSku.inventory_status === "outofstock" ? (
+              <span className="text-destructive">❌ Out of Stock</span>
+            ) : matchedSku.inventory_status === "lowstock" ? (
+              <span className="text-amber-600">⚠ Only {matchedSku.available_quantity} left</span>
+            ) : (
+              <span className="text-emerald-600">✅ In Stock</span>
+            )}
+          </p>
         </div>
       )}
     </div>

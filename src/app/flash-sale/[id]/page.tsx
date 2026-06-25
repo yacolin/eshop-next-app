@@ -322,7 +322,12 @@ export default function FlashSaleDetailPage({ params }: Props) {
                 size="lg"
                 className="flex-1 cursor-pointer gap-2"
                 onClick={handleAddToCart}
-                disabled={adding || !canAddToCart || activity.status !== "active"}
+                disabled={
+                  adding ||
+                  !canAddToCart ||
+                  (matchedSku?.available_quantity ?? 0) <= 0 ||
+                  activity.status !== "active"
+                }
               >
                 <ShoppingCart className="size-4" />
                 {adding
@@ -335,7 +340,12 @@ export default function FlashSaleDetailPage({ params }: Props) {
                 size="lg"
                 className="flex-1 cursor-pointer gap-2"
                 onClick={handleBuyNow}
-                disabled={adding || !canAddToCart || activity.status !== "active"}
+                disabled={
+                  adding ||
+                  !canAddToCart ||
+                  (matchedSku?.available_quantity ?? 0) <= 0 ||
+                  activity.status !== "active"
+                }
               >
                 <Zap className="size-4" />
                 Buy Now
