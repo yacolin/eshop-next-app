@@ -13,8 +13,18 @@ import { PriceSummary } from "./components/price-summary";
 import { CouponSection } from "./components/coupon-section";
 import { OrderNote } from "./components/order-note";
 import { SubmitButton } from "./components/submit-button";
-import { Package } from "lucide-react";
+import { Package, CheckCircle, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 import Link from "next/link";
 
 interface Props {
@@ -40,6 +50,11 @@ export default function CheckoutPage({ searchParams }: Props) {
   const [addressRefreshKey, setAddressRefreshKey] = useState(0);
   const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [resultDialog, setResultDialog] = useState<{
+    type: "success" | "error";
+    orderNo?: string;
+    message?: string;
+  } | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -96,7 +111,7 @@ export default function CheckoutPage({ searchParams }: Props) {
 
   async function handleSubmit() {
     if (!selectedAddressId) {
-      alert("请选择收货地址");
+      setResultDialog({ type: "error", message: "请选择收货地址" });
       return;
     }
     if (!matchedSku) return;
@@ -108,10 +123,12 @@ export default function CheckoutPage({ searchParams }: Props) {
         address_id: selectedAddressId,
         items: [{ sku_id: matchedSku.id, quantity }],
       });
-      alert(`下单成功！订单号: ${result.order_no}`);
-      router.push("/");
+      setResultDialog({ type: "success", orderNo: result.order_no });
     } catch (e) {
-      alert(e instanceof Error ? e.message : "提交订单失败");
+      setResultDialog({
+        type: "error",
+        message: e instanceof Error ? e.message : "提交订单失败",
+      });
     } finally {
       setSubmitting(false);
     }
@@ -196,6 +213,47 @@ export default function CheckoutPage({ searchParams }: Props) {
         onOpenChange={setShowAddressForm}
         onSaved={() => setAddressRefreshKey((k) => k + 1)}
       />
+
+      {/* Result dialog */}
+      <AlertDialog
+        open={resultDialog !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            if (resultDialog?.type === "success") router.push("/");
+            setResultDialog(null);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogMedia>
+              {resultDialog?.type === "success" ? (
+                <CheckCircle className="size-6 text-green-500" />
+              ) : (
+                <XCircle className="size-6 text-destructive" />
+              )}
+            </AlertDialogMedia>
+            <AlertDialogTitle>
+              {resultDialog?.type === "success" ? "下单成功" : "提交失败"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {resultDialog?.type === "success"
+                ? `订单号: ${resultDialog.orderNo}`
+                : resultDialog?.message}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction
+              onClick={() => {
+                if (resultDialog?.type === "success") router.push("/");
+                setResultDialog(null);
+              }}
+            >
+              {resultDialog?.type === "success" ? "继续购物" : "知道了"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
