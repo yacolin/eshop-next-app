@@ -5,7 +5,8 @@ import { fetchProductDetail } from "@/lib/api";
 import type { ProductDetailResponse, SKUResponse } from "@/types/product";
 import type { CheckoutItem } from "@/types/order";
 import { CheckoutHeader } from "./components/checkout-header";
-import { AddressSection } from "./components/address-section";
+import { AddressPicker } from "./components/address-picker";
+import { AddressForm } from "./components/address-form";
 import { OrderItems } from "./components/order-items";
 import { PriceSummary } from "./components/price-summary";
 import { CouponSection } from "./components/coupon-section";
@@ -34,6 +35,8 @@ export default function CheckoutPage({ searchParams }: Props) {
   const [detail, setDetail] = useState<ProductDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showAddressForm, setShowAddressForm] = useState(false);
+  const [addressRefreshKey, setAddressRefreshKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -137,7 +140,7 @@ export default function CheckoutPage({ searchParams }: Props) {
         <div className="flex flex-col gap-6 lg:flex-row">
           {/* Left column */}
           <div className="flex-1 space-y-4">
-            <AddressSection />
+            <AddressPicker key={addressRefreshKey} onAddNew={() => setShowAddressForm(true)} />
             <OrderItems items={[checkoutItem!]} />
             <OrderNote />
           </div>
@@ -157,6 +160,11 @@ export default function CheckoutPage({ searchParams }: Props) {
           </div>
         </div>
       </div>
+      <AddressForm
+        open={showAddressForm}
+        onOpenChange={setShowAddressForm}
+        onSaved={() => setAddressRefreshKey((k) => k + 1)}
+      />
     </div>
   );
 }

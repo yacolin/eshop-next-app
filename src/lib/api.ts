@@ -11,6 +11,12 @@ import type {
 } from "@/types/product";
 import type { LoginRequest, LoginResponseData } from "@/types/auth";
 import type { CartData, AddToCartRequest, UpdateCartItemRequest } from "@/types/cart";
+import type {
+  AddressData,
+  AddressListData,
+  CreateAddressRequest,
+  UpdateAddressRequest,
+} from "@/types/address";
 
 const API_BASE = "/api/v1";
 const API_BASE_SERVER = process.env.API_BASE_SERVER || "http://localhost:8080/api/v1";
@@ -290,5 +296,71 @@ export async function clearCart(userId?: number | null, sessionId?: string | nul
   if (!res.ok) {
     const err = await res.json().catch(() => null);
     throw new Error(err?.message || `Failed to clear cart: ${res.status}`);
+  }
+}
+
+// ── Address API ──
+
+function authHeaders(): Record<string, string> {
+  if (typeof window === "undefined") return {};
+  const token = localStorage.getItem("access_token");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+export async function fetchAddresses(): Promise<AddressListData> {
+  const res = await fetch(`${API_BASE}/addresses`, { headers: authHeaders() });
+  if (!res.ok) throw new Error(`Failed to fetch addresses: ${res.status}`);
+  const json: ApiResponse<AddressListData> = await res.json();
+  if (json.code !== 0) throw new Error(json.message);
+  return json.data;
+}
+
+export async function fetchDefaultAddress(): Promise<AddressData | null> {
+  const res = await fetch(`${API_BASE}/addresses/default`, { headers: authHeaders() });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`Failed to fetch default address: ${res.status}`);
+  const json: ApiResponse<AddressData> = await res.json();
+  if (json.code !== 0) return null;
+  return json.data;
+}
+
+export async function createAddress(data: CreateAddressRequest): Promise<AddressData> {
+  const res = await fetch(`${API_BASE}/addresses`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => null);
+    throw new Error(err?.message || `Failed to create address: ${res.status}`);
+  }
+  const json: ApiResponse<AddressData> = await res.json();
+  if (json.code !== 0) throw new Error(json.message);
+  return json.data;
+}
+
+export async function updateAddress(id: number, data: UpdateAddressRequest): Promise<AddressData> {
+  const res = await fetch(`${API_BASE}/addresses/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => null);
+    throw new Error(err?.message || `Failed to update address: ${res.status}`);
+  }
+  const json: ApiResponse<AddressData> = await res.json();
+  if (json.code !== 0) throw new Error(json.message);
+  return json.data;
+}
+
+export async function deleteAddress(id: number): Promise<void> {
+  const res = await fetch(`${API_BASE}/addresses/${id}`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => null);
+    throw new Error(err?.message || `Failed to delete address: ${res.status}`);
   }
 }
