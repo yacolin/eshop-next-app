@@ -7,13 +7,10 @@ import { formatPrice } from "@/lib/utils";
 interface Props {
   totalAmount: number;
   loading?: boolean;
+  onClick?: () => void;
 }
 
-export function SubmitButton({ totalAmount, loading }: Props) {
-  function handleSubmit() {
-    alert("提交订单功能开发中，敬请期待");
-  }
-
+export function SubmitButton({ totalAmount, loading, onClick }: Props) {
   return (
     <div className="rounded-xl border bg-white p-4">
       <div className="mb-4 flex items-center justify-between">
@@ -23,7 +20,7 @@ export function SubmitButton({ totalAmount, loading }: Props) {
       <Button
         size="lg"
         className="w-full cursor-pointer text-base"
-        onClick={handleSubmit}
+        onClick={onClick}
         disabled={loading}
       >
         {loading && <Loader2 className="mr-2 size-4 animate-spin" />}

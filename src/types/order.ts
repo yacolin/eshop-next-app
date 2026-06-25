@@ -19,16 +19,21 @@ export interface PreOrderResponse {
 }
 
 export interface SubmitOrderRequest {
-  trade_token?: string;
-  sku_id?: number;
-  quantity?: number;
-  address_id?: number;
-  coupon_id?: number;
-  note?: string;
+  customer_id: string;
+  address_id: number;
+  user_coupon_id?: number | null;
+  items: Array<{ sku_id: number; quantity: number }>;
 }
 
 export interface OrderResult {
-  order_id: number;
-  status: string;
+  id: number;
+  order_no: string;
   total_amount: number;
+  status: string;
+  consignee: string;
+  phone: string;
+  province?: string;
+  city?: string;
+  district?: string;
+  detail_addr?: string;
 }

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, use } from "react";
-import { fetchProductDetail } from "@/lib/api";
+import { useRouter } from "next/navigation";
+import { fetchProductDetail, submitOrder } from "@/lib/api";
 import type { ProductDetailResponse, SKUResponse } from "@/types/product";
 import type { CheckoutItem } from "@/types/order";
 import { CheckoutHeader } from "./components/checkout-header";
@@ -37,6 +38,9 @@ export default function CheckoutPage({ searchParams }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [addressRefreshKey, setAddressRefreshKey] = useState(0);
+  const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     let cancelled = false;
@@ -90,6 +94,29 @@ export default function CheckoutPage({ searchParams }: Props) {
   const couponDiscount = 0; // 占位
   const total = subtotal + shippingFee - couponDiscount;
 
+  async function handleSubmit() {
+    if (!selectedAddressId) {
+      alert("请选择收货地址");
+      return;
+    }
+    if (!matchedSku) return;
+    setSubmitting(true);
+    try {
+      const userId = localStorage.getItem("user_id");
+      const result = await submitOrder({
+        customer_id: userId || "0",
+        address_id: selectedAddressId,
+        items: [{ sku_id: matchedSku.id, quantity }],
+      });
+      alert(`下单成功！订单号: ${result.order_no}`);
+      router.push("/");
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "提交订单失败");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   // ── Loading state ──
   if (loading) {
     return (
@@ -140,7 +167,11 @@ export default function CheckoutPage({ searchParams }: Props) {
         <div className="flex flex-col gap-6 lg:flex-row">
           {/* Left column */}
           <div className="flex-1 space-y-4">
-            <AddressPicker key={addressRefreshKey} onAddNew={() => setShowAddressForm(true)} />
+            <AddressPicker
+              key={addressRefreshKey}
+              onAddNew={() => setShowAddressForm(true)}
+              onSelect={(id) => setSelectedAddressId(id)}
+            />
             <OrderItems items={[checkoutItem!]} />
             <OrderNote />
           </div>
@@ -155,7 +186,7 @@ export default function CheckoutPage({ searchParams }: Props) {
                 total={total}
               />
               <CouponSection />
-              <SubmitButton totalAmount={total} loading={false} />
+              <SubmitButton totalAmount={total} loading={submitting} onClick={handleSubmit} />
             </div>
           </div>
         </div>

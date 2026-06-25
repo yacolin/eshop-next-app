@@ -17,6 +17,7 @@ import type {
   CreateAddressRequest,
   UpdateAddressRequest,
 } from "@/types/address";
+import type { SubmitOrderRequest, OrderResult } from "@/types/order";
 
 const API_BASE = "/api/v1";
 const API_BASE_SERVER = process.env.API_BASE_SERVER || "http://localhost:8080/api/v1";
@@ -363,4 +364,21 @@ export async function deleteAddress(id: number): Promise<void> {
     const err = await res.json().catch(() => null);
     throw new Error(err?.message || `Failed to delete address: ${res.status}`);
   }
+}
+
+// ── Order API ──
+
+export async function submitOrder(data: SubmitOrderRequest): Promise<OrderResult> {
+  const res = await fetch(`${API_BASE}/orders`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => null);
+    throw new Error(err?.message || `Failed to submit order: ${res.status}`);
+  }
+  const json: ApiResponse<OrderResult> = await res.json();
+  if (json.code !== 0) throw new Error(json.message);
+  return json.data;
 }

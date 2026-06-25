@@ -7,9 +7,10 @@ import type { AddressData } from "@/types/address";
 
 interface Props {
   onAddNew: () => void;
+  onSelect?: (addressId: number) => void;
 }
 
-export function AddressPicker({ onAddNew }: Props) {
+export function AddressPicker({ onAddNew, onSelect }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [addresses, setAddresses] = useState<AddressData[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -27,7 +28,10 @@ export function AddressPicker({ onAddNew }: Props) {
         setAddresses(data.list);
         // Auto-select default, or first address
         const defaultAddr = data.list.find((a) => a.is_default) ?? data.list[0];
-        if (defaultAddr) setSelectedId(defaultAddr.id);
+        if (defaultAddr) {
+          setSelectedId(defaultAddr.id);
+          onSelect?.(defaultAddr.id);
+        }
       } catch (e) {
         if (!cancelled) {
           const msg = e instanceof Error ? e.message : "";
@@ -151,6 +155,7 @@ export function AddressPicker({ onAddNew }: Props) {
               }`}
               onClick={() => {
                 setSelectedId(addr.id);
+                onSelect?.(addr.id);
                 setExpanded(false);
               }}
             >
