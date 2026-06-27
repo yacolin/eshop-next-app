@@ -48,7 +48,7 @@ export async function fetchProductsCursor(
   if (cursor) params.set("cursor", String(cursor));
   if (categoryId) params.set("category_id", String(categoryId));
   const qs = params.toString();
-  const url = qs ? `${API_BASE}/products/cache-cursor?${qs}` : `${API_BASE}/products/cache-cursor`;
+  const url = qs ? `${API_BASE}/products/cache/cursor?${qs}` : `${API_BASE}/products/cache/cursor`;
 
   const res = await fetch(url, { cache: "no-store" });
 
@@ -129,8 +129,8 @@ export async function fetchFlashActivities(
   cursor: number | null = null,
 ): Promise<FlashActivityCursorData> {
   const url = cursor
-    ? `${API_BASE}/flash/activities-cursor?cursor=${cursor}`
-    : `${API_BASE}/flash/activities-cursor`;
+    ? `${API_BASE}/flash/activities/cursor?cursor=${cursor}`
+    : `${API_BASE}/flash/activities/cursor`;
 
   const res = await fetch(url);
 
