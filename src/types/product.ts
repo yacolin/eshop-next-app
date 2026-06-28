@@ -50,6 +50,15 @@ export interface ProductCursorData {
   has_more: boolean;
 }
 
+export interface ProductEnrichedItem extends Product {
+  categories: { id: number; name: string }[];
+}
+
+export interface ProductEnrichedData {
+  total: number;
+  list: ProductEnrichedItem[];
+}
+
 export interface Category {
   id: number;
   name: string;

@@ -1,36 +1,34 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
-import { AutoSizer, List, InfiniteLoader, WindowScroller } from "react-virtualized";
-import type { ListRowProps, Index } from "react-virtualized";
+import { useState, useEffect } from "react";
+import { AutoSizer, List, WindowScroller } from "react-virtualized";
+import type { ListRowProps } from "react-virtualized";
 import { fetchProductsCursor } from "@/lib/api";
 import type { Product } from "@/types/product";
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import { ProductCard } from "@/components/product-card";
 import { BackToTop } from "@/components/back-to-top";
 
-const PAGE_SIZE = 20;
 const ROW_HEIGHT = 270;
 const MAX_CARD_WIDTH = 274;
 const GAP = 16;
 
 export function InfiniteProductList({ categoryId }: { categoryId?: number }) {
   const [products, setProducts] = useState<Product[]>([]);
-  const [nextCursor, setNextCursor] = useState<number | null>(null);
-  const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [initialLoading, setInitialLoading] = useState(true);
-  const loadingRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
+    setInitialLoading(true);
+    setProducts([]);
+    setError(null);
+
     (async () => {
       try {
         const data = await fetchProductsCursor(null, categoryId);
         if (cancelled) return;
         setProducts(data.list);
-        setNextCursor(data.next_cursor);
-        setHasMore(data.has_more);
       } catch (e) {
         if (!cancelled) {
           setError(e instanceof Error ? e.message : "Unknown error");
@@ -39,27 +37,12 @@ export function InfiniteProductList({ categoryId }: { categoryId?: number }) {
         if (!cancelled) setInitialLoading(false);
       }
     })();
+
     return () => {
       cancelled = true;
     };
   }, [categoryId]);
 
-  const loadMoreRows = useCallback(async () => {
-    if (loadingRef.current || !hasMore) return;
-    loadingRef.current = true;
-    try {
-      const data = await fetchProductsCursor(nextCursor, categoryId);
-      setProducts((prev) => [...prev, ...data.list]);
-      setNextCursor(data.next_cursor);
-      setHasMore(data.has_more);
-    } catch (e) {
-      console.error("Failed to load more products:", e);
-    } finally {
-      loadingRef.current = false;
-    }
-  }, [nextCursor, hasMore, categoryId]);
-
-  // Loading state
   if (initialLoading) {
     return (
       <div className="mx-auto w-full max-w-4xl px-4">
@@ -83,7 +66,6 @@ export function InfiniteProductList({ categoryId }: { categoryId?: number }) {
     );
   }
 
-  // Error state
   if (error) {
     return (
       <div className="mx-auto mt-8 max-w-md px-4">
@@ -97,7 +79,6 @@ export function InfiniteProductList({ categoryId }: { categoryId?: number }) {
     );
   }
 
-  // Empty state
   if (products.length === 0) {
     return (
       <div className="mx-auto mt-8 max-w-md px-4">
@@ -119,28 +100,11 @@ export function InfiniteProductList({ categoryId }: { categoryId?: number }) {
               {({ width }) => {
                 const cols = getColumnCount(width);
                 const cardWidth = Math.min((width - GAP * (cols - 1)) / cols, MAX_CARD_WIDTH);
-                const visualRowCount = Math.ceil(products.length / cols);
-                const rowCount = hasMore ? visualRowCount + 1 : visualRowCount;
-
-                function isRowLoaded({ index }: Index) {
-                  return index < visualRowCount;
-                }
+                const rowCount = Math.ceil(products.length / cols);
 
                 function rowRenderer({ index, key, style }: ListRowProps) {
                   const startIdx = index * cols;
                   const rowProducts = products.slice(startIdx, startIdx + cols);
-
-                  // Sentinel row — show loading indicator
-                  if (rowProducts.length === 0) {
-                    return (
-                      <div key={key} style={style} className="flex items-center justify-center">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <div className="size-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
-                          Loading more...
-                        </div>
-                      </div>
-                    );
-                  }
 
                   return (
                     <div key={key} style={style} className="flex justify-start gap-4 py-2">
@@ -148,7 +112,7 @@ export function InfiniteProductList({ categoryId }: { categoryId?: number }) {
                         <div
                           key={product.id}
                           style={{ width: cardWidth }}
-                          className="flex-shrink-0 mx-[1px]"
+                          className="mx-[1px] flex-shrink-0"
                         >
                           <ProductCard product={product} />
                         </div>
@@ -158,31 +122,18 @@ export function InfiniteProductList({ categoryId }: { categoryId?: number }) {
                 }
 
                 return (
-                  <div>
-                    <InfiniteLoader
-                      isRowLoaded={isRowLoaded}
-                      loadMoreRows={loadMoreRows}
-                      rowCount={rowCount}
-                      threshold={1}
-                    >
-                      {({ onRowsRendered, registerChild }) => (
-                        <List
-                          ref={registerChild as any}
-                          autoHeight
-                          height={height}
-                          isScrolling={isScrolling}
-                          onScroll={onChildScroll}
-                          scrollTop={scrollTop}
-                          width={width}
-                          rowCount={rowCount}
-                          rowHeight={ROW_HEIGHT}
-                          rowRenderer={rowRenderer}
-                          onRowsRendered={onRowsRendered}
-                          overscanRowCount={2}
-                        />
-                      )}
-                    </InfiniteLoader>
-                  </div>
+                  <List
+                    autoHeight
+                    height={height}
+                    isScrolling={isScrolling}
+                    onScroll={onChildScroll}
+                    scrollTop={scrollTop}
+                    width={width}
+                    rowCount={rowCount}
+                    rowHeight={ROW_HEIGHT}
+                    rowRenderer={rowRenderer}
+                    overscanRowCount={2}
+                  />
                 );
               }}
             </AutoSizer>

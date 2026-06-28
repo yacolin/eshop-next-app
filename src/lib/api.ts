@@ -3,6 +3,8 @@ import type {
   Product,
   ProductCursorData,
   ProductListData,
+  ProductEnrichedData,
+  Category,
   CategoryListData,
   FlashActivity,
   FlashActivityCursorData,
@@ -117,6 +119,44 @@ export async function fetchRootCategories(): Promise<CategoryListData> {
   }
 
   const json: ApiResponse<CategoryListData> = await res.json();
+
+  if (json.code !== 0) {
+    throw new Error(`API error: ${json.message}`);
+  }
+
+  return json.data;
+}
+
+export async function fetchProductsEnriched(
+  page: number,
+  pageSize: number,
+  categoryId?: number,
+): Promise<ProductEnrichedData> {
+  const params = new URLSearchParams();
+  params.set("page", String(page));
+  params.set("size", String(pageSize));
+  if (categoryId) params.set("category_id", String(categoryId));
+  const res = await fetch(`${API_BASE}/products/enriched?${params.toString()}`, {
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to fetch enriched products: ${res.status}`);
+  }
+  const json: ApiResponse<ProductEnrichedData> = await res.json();
+  if (json.code !== 0) {
+    throw new Error(`API error: ${json.message}`);
+  }
+  return json.data;
+}
+
+export async function fetchSubcategories(parentId: number): Promise<Category[]> {
+  const res = await fetch(`${API_BASE}/categories/${parentId}/children`);
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch subcategories: ${res.status}`);
+  }
+
+  const json: ApiResponse<Category[]> = await res.json();
 
   if (json.code !== 0) {
     throw new Error(`API error: ${json.message}`);
