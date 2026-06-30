@@ -6,14 +6,14 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/cart-context";
 import { ShoppingCart, ChevronRight, Home, Zap, Clock } from "lucide-react";
-import { fetchFlashActivityById, fetchProductDetail, fetchProductAttributes } from "@/lib/api";
+import { fetchFlashActivityById, fetchProductDetail } from "@/lib/api";
 import { formatPrice, findMatchingSku } from "@/lib/utils";
 import { ProductImageGallery } from "@/components/product-image-gallery";
 import { SpecSelector } from "@/components/spec-selector";
 import { QuantitySelector } from "@/components/quantity-selector";
 import { ServicePromises } from "@/components/service-promises";
 import { SkuTable } from "@/components/sku-table";
-import type { FlashActivity, ProductDetailResponse, ProductAttributeItem } from "@/types/product";
+import type { FlashActivity, ProductDetailResponse } from "@/types/product";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -41,7 +41,6 @@ export default function FlashSaleDetailPage({ params }: Props) {
   const [timeLeft, setTimeLeft] = useState(0);
   const [selectedAttrs, setSelectedAttrs] = useState<Record<string, string>>({});
   const [selectedImage, setSelectedImage] = useState(0);
-  const [attributes, setAttributes] = useState<ProductAttributeItem[]>([]);
 
   // Scroll to top on mount — prevent inherited scroll from list page
   useEffect(() => {
@@ -68,21 +67,17 @@ export default function FlashSaleDetailPage({ params }: Props) {
         const remaining = Math.max(0, Math.floor((act.end_time - Date.now()) / 1000));
         setTimeLeft(remaining);
 
-        const [detailData, attrsData] = await Promise.all([
-          fetchProductDetail(act.product_id),
-          fetchProductAttributes(act.product_id),
-        ]);
+        const detailData = await fetchProductDetail(act.product_id);
         if (cancelled) return;
         setDetail(detailData);
-        setAttributes(attrsData);
 
         // Only auto-select when SKUs actually have spec data
         const skusHaveSpec = detailData.skus.some(
           (sku) => sku.spec && Object.keys(sku.spec).length > 0,
         );
-        if (attrsData.length > 0 && skusHaveSpec) {
+        if (detailData.attributes.length > 0 && skusHaveSpec) {
           const initial: Record<string, string> = {};
-          attrsData.forEach((attr) => {
+          detailData.attributes.forEach((attr) => {
             initial[attr.attribute_name] = attr.values[0].value;
           });
           setSelectedAttrs(initial);
@@ -106,7 +101,7 @@ export default function FlashSaleDetailPage({ params }: Props) {
     return () => clearInterval(t);
   }, []);
 
-  const attrOptions = attributes;
+  const attrOptions = detail?.attributes ?? [];
   const hasSpecSkus = detail
     ? detail.skus.some((sku) => sku.spec && Object.keys(sku.spec).length > 0)
     : false;
@@ -324,12 +319,7 @@ export default function FlashSaleDetailPage({ params }: Props) {
                 size="lg"
                 className="flex-1 cursor-pointer gap-2"
                 onClick={handleAddToCart}
-                disabled={
-                  adding ||
-                  !canAddToCart ||
-                  (matchedSku?.available_quantity ?? 0) <= 0 ||
-                  activity.status !== "active"
-                }
+                disabled={adding || !canAddToCart || activity.status !== "active"}
               >
                 <ShoppingCart className="size-4" />
                 {adding
@@ -342,12 +332,7 @@ export default function FlashSaleDetailPage({ params }: Props) {
                 size="lg"
                 className="flex-1 cursor-pointer gap-2"
                 onClick={handleBuyNow}
-                disabled={
-                  adding ||
-                  !canAddToCart ||
-                  (matchedSku?.available_quantity ?? 0) <= 0 ||
-                  activity.status !== "active"
-                }
+                disabled={adding || !canAddToCart || activity.status !== "active"}
               >
                 <Zap className="size-4" />
                 Buy Now

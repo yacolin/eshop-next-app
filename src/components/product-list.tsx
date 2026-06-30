@@ -10,18 +10,18 @@ function formatPrice(cents: number) {
 }
 
 export async function ProductList() {
-  let products: Awaited<ReturnType<typeof fetchProducts>>;
+  let data: Awaited<ReturnType<typeof fetchProducts>>;
   let error: string | null = null;
 
   try {
-    products = await fetchProducts();
+    data = await fetchProducts(20);
   } catch (e) {
     error = e instanceof Error ? e.message : "Unknown error";
   }
 
   if (error) {
     return (
-      <Card className="max-w-md mx-auto mt-8">
+      <Card className="mx-auto mt-8 max-w-md">
         <CardContent className="text-center text-destructive">
           <p className="font-medium">Failed to load products</p>
           <p className="mt-1 text-sm">{error}</p>
@@ -34,11 +34,11 @@ export async function ProductList() {
     <div className="w-full max-w-4xl">
       <div className="mb-6 flex items-center justify-between">
         <h2 className="text-2xl font-bold text-foreground">Products</h2>
-        <span className="text-sm text-muted-foreground">Total: {products!.total} items</span>
+        {data!.has_more && <span className="text-sm text-muted-foreground">Scroll for more</span>}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {products!.list.map((product) => (
+        {data!.list.map((product) => (
           <Card key={product.id}>
             <CardHeader>
               <CardTitle>{product.name}</CardTitle>

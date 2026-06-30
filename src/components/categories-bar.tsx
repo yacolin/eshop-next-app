@@ -19,25 +19,26 @@ import {
 import { fetchRootCategories } from "@/lib/api";
 import type { Category } from "@/types/product";
 
-const iconMap: Record<string, LucideIcon> = {
-  Electronics: Smartphone,
-  Clothing: Shirt,
-  Books: BookOpen,
-  "Home & Garden": HomeIcon,
-  "Sports & Outdoors": Bike,
-  "Beauty & Health": Sparkles,
-  "Toys & Games": Gamepad2,
-  Automotive: Car,
-  "Food & Grocery": Apple,
-  "Office Supplies": Briefcase,
-};
+const iconList = [
+  Smartphone,
+  Monitor,
+  Shirt,
+  HomeIcon,
+  Gamepad2,
+  BookOpen,
+  Bike,
+  Car,
+  Apple,
+  Briefcase,
+  Sparkles,
+];
 
 export function CategoriesBar() {
   const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
     fetchRootCategories()
-      .then((data) => setCategories(data.list))
+      .then((data) => setCategories(data))
       .catch(() => {});
   }, []);
 
@@ -63,11 +64,11 @@ export function CategoriesBar() {
     <section className="mx-4 mt-5 md:mx-auto md:max-w-6xl">
       <div className="grid grid-cols-4 gap-3 md:grid-cols-5 md:gap-4">
         {categories.map((cat) => {
-          const Icon = iconMap[cat.name] || Smartphone;
+          const Icon = iconList[cat.id % iconList.length];
           return (
             <Link
               key={cat.id}
-              href={`/category/${cat.id}`}
+              href={`/category?id=${cat.id}`}
               className="flex flex-col items-center gap-1.5 rounded-xl bg-card px-2 py-4 text-center text-xs text-muted-foreground shadow-xs transition-colors hover:bg-accent hover:text-accent-foreground"
             >
               <Icon className="size-6" />

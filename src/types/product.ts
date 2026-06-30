@@ -1,7 +1,23 @@
 export interface Product {
   id: number;
   name: string;
+  subtitle: string;
+  category_id: number;
+  brand_id: number;
+  unit: string;
+  main_image: string;
+  images?: string;
+  video_url: string;
   min_price: number;
+  max_price: number;
+  total_stock: number;
+  sales_count: number;
+  rating_average: number;
+  rating_count: number;
+  status: number;
+  sort_order: number;
+  created_at: number;
+  updated_at: number;
 }
 
 export interface ProductResponse {
@@ -30,6 +46,7 @@ export interface SKUResponse {
 export interface ProductDetailResponse {
   product: ProductResponse;
   skus: SKUResponse[];
+  attributes: ProductAttributeItem[];
 }
 
 export interface ApiResponse<T> {
@@ -39,14 +56,20 @@ export interface ApiResponse<T> {
   trace_id: string;
 }
 
+/** @deprecated Use ProductCursorData instead. New API returns cursor-based pagination without total. */
 export interface ProductListData {
   total: number;
   list: Product[];
 }
 
+export interface CategoryListData {
+  total: number;
+  list: Category[];
+}
+
 export interface ProductCursorData {
   list: Product[];
-  next_cursor: number | null;
+  cursor: string;
   has_more: boolean;
 }
 
@@ -62,15 +85,14 @@ export interface ProductEnrichedData {
 export interface Category {
   id: number;
   name: string;
-  description?: string;
-  parent_id: number | null;
+  parent_id: number;
+  level: number;
+  path: string;
+  icon_url: string;
+  sort_order: number;
+  status: number;
   created_at: number;
   updated_at: number;
-}
-
-export interface CategoryListData {
-  total: number;
-  list: Category[];
 }
 
 export interface AttributeValueItem {
@@ -101,4 +123,45 @@ export interface FlashActivityCursorData {
   list: FlashActivity[];
   next_cursor: number | null;
   has_more: boolean;
+}
+
+export interface Brand {
+  id: number;
+  name: string;
+  english_name: string;
+  logo_url: string;
+  first_letter: string;
+  description: string;
+  status: number;
+  sort_order: number;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface BrandSimple {
+  brand_id: number;
+  brand_name: string;
+  first_letter: string;
+  logo_url: string;
+}
+
+export interface Promotion {
+  id: number;
+  promo_name: string;
+  promo_type: number;
+  promo_code: string;
+  start_time: number;
+  end_time: number;
+  total_quantity: number;
+  per_user_limit: number;
+  used_quantity: number;
+  rule_id: number | null;
+  status: number;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface PromotionListData {
+  total: number;
+  list: Promotion[];
 }

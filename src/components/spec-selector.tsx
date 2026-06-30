@@ -77,22 +77,24 @@ export function SpecSelector({
             SKU: <span className="font-mono">{matchedSku.sku_code}</span>
           </p>
           <p className="mt-1 text-xs font-medium">
-            {matchedSku.inventory_status === "outofstock" ? (
+            {matchedSku.available_quantity !== undefined &&
+            matchedSku.inventory_status === "outofstock" ? (
               <span className="inline-flex items-center gap-1 text-destructive">
                 <XCircle className="size-3.5" />
                 Out of Stock
               </span>
-            ) : matchedSku.inventory_status === "lowstock" ? (
+            ) : matchedSku.available_quantity !== undefined &&
+              matchedSku.inventory_status === "lowstock" ? (
               <span className="inline-flex items-center gap-1 text-amber-600">
                 <AlertTriangle className="size-3.5" />
                 Only {matchedSku.available_quantity} left
               </span>
-            ) : (
+            ) : matchedSku.available_quantity !== undefined ? (
               <span className="inline-flex items-center gap-1 text-emerald-600">
                 <CheckCircle className="size-3.5" />
                 In Stock
               </span>
-            )}
+            ) : null}
           </p>
         </div>
       )}

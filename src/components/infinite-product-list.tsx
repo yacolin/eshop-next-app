@@ -1,11 +1,14 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import Link from "next/link";
+import { Package } from "lucide-react";
 import { AutoSizer, List, InfiniteLoader, WindowScroller } from "react-virtualized";
 import type { ListRowProps, Index } from "react-virtualized";
 import { fetchProductsCursor } from "@/lib/api";
 import type { Product } from "@/types/product";
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/product-card";
 import { BackToTop } from "@/components/back-to-top";
 
@@ -16,7 +19,7 @@ const GAP = 16;
 
 export function InfiniteProductList({ categoryId }: { categoryId?: number }) {
   const [products, setProducts] = useState<Product[]>([]);
-  const [nextCursor, setNextCursor] = useState<number | null>(null);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -35,7 +38,7 @@ export function InfiniteProductList({ categoryId }: { categoryId?: number }) {
         const data = await fetchProductsCursor(null, categoryId);
         if (cancelled) return;
         setProducts(data.list);
-        setNextCursor(data.next_cursor);
+        setNextCursor(data.cursor);
         setHasMore(data.has_more);
       } catch (e) {
         if (!cancelled) {
@@ -57,7 +60,7 @@ export function InfiniteProductList({ categoryId }: { categoryId?: number }) {
     try {
       const data = await fetchProductsCursor(nextCursor, categoryId);
       setProducts((prev) => [...prev, ...data.list]);
-      setNextCursor(data.next_cursor);
+      setNextCursor(data.cursor);
       setHasMore(data.has_more);
     } catch (e) {
       console.error("Failed to load more products:", e);
@@ -105,11 +108,20 @@ export function InfiniteProductList({ categoryId }: { categoryId?: number }) {
   if (products.length === 0) {
     return (
       <div className="mx-auto mt-8 max-w-md px-4">
-        <Card>
-          <CardContent className="py-8 text-center text-muted-foreground">
-            <p>No products available</p>
-          </CardContent>
-        </Card>
+        <div className="rounded-xl border bg-card px-8 py-12 text-center">
+          <div className="mx-auto mb-5 flex size-20 items-center justify-center rounded-full bg-muted">
+            <Package className="size-9 text-muted-foreground/40" />
+          </div>
+          <h3 className="text-base font-semibold text-foreground">Nothing here yet</h3>
+          <p className="mt-1.5 text-sm text-muted-foreground">
+            We couldn&apos;t find any products in this category right now.
+          </p>
+          <div className="mt-6 flex items-center justify-center gap-3">
+            <Button variant="outline" size="sm" className="cursor-pointer" asChild>
+              <Link href="/">Browse Home</Link>
+            </Button>
+          </div>
+        </div>
       </div>
     );
   }

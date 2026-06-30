@@ -2,14 +2,15 @@ import type {
   ApiResponse,
   Product,
   ProductCursorData,
-  ProductListData,
   ProductEnrichedData,
   Category,
-  CategoryListData,
   FlashActivity,
   FlashActivityCursorData,
   ProductDetailResponse,
   ProductAttributeItem,
+  Promotion,
+  PromotionListData,
+  BrandSimple,
 } from "@/types/product";
 import type { LoginRequest, LoginResponseData } from "@/types/auth";
 import type { CartData, AddToCartRequest, UpdateCartItemRequest } from "@/types/cart";
@@ -24,8 +25,11 @@ import type { SubmitOrderRequest, OrderResult } from "@/types/order";
 const API_BASE = "/api/v1";
 const API_BASE_SERVER = process.env.API_BASE_SERVER || "http://localhost:8080/api/v1";
 
-export async function fetchProducts(): Promise<ProductListData> {
-  const res = await fetch(`${API_BASE}/products/cache`, {
+export async function fetchProducts(size: number = 20): Promise<ProductCursorData> {
+  const params = new URLSearchParams();
+  params.set("size", String(size));
+  params.set("status", "2");
+  const res = await fetch(`${API_BASE}/products?${params.toString()}`, {
     cache: "no-store",
   });
 
@@ -33,7 +37,7 @@ export async function fetchProducts(): Promise<ProductListData> {
     throw new Error(`Failed to fetch products: ${res.status}`);
   }
 
-  const json: ApiResponse<ProductListData> = await res.json();
+  const json: ApiResponse<ProductCursorData> = await res.json();
 
   if (json.code !== 0) {
     throw new Error(`API error: ${json.message}`);
@@ -43,16 +47,16 @@ export async function fetchProducts(): Promise<ProductListData> {
 }
 
 export async function fetchProductsCursor(
-  cursor: number | null = null,
+  cursor: string | null = null,
   categoryId?: number,
+  size: number = 20,
 ): Promise<ProductCursorData> {
   const params = new URLSearchParams();
-  if (cursor) params.set("cursor", String(cursor));
+  params.set("size", String(size));
+  params.set("status", "2");
+  if (cursor) params.set("cursor", cursor);
   if (categoryId) params.set("category_id", String(categoryId));
-  const qs = params.toString();
-  const url = qs ? `${API_BASE}/products/cache/cursor?${qs}` : `${API_BASE}/products/cache/cursor`;
-
-  const res = await fetch(url, { cache: "no-store" });
+  const res = await fetch(`${API_BASE}/products?${params.toString()}`, { cache: "no-store" });
 
   if (!res.ok) {
     throw new Error(`Failed to fetch products cursor: ${res.status}`);
@@ -68,7 +72,7 @@ export async function fetchProductsCursor(
 }
 
 export async function fetchProductById(id: number): Promise<Product> {
-  const res = await fetch(`${API_BASE_SERVER}/products/cache/${id}`, {
+  const res = await fetch(`${API_BASE_SERVER}/products/${id}`, {
     cache: "no-store",
   });
 
@@ -85,8 +89,18 @@ export async function fetchProductById(id: number): Promise<Product> {
   return json.data;
 }
 
+function safeParseJSON(val: string): Record<string, string> {
+  try {
+    const parsed = JSON.parse(val);
+    if (typeof parsed === "object" && parsed !== null) return parsed;
+    return {};
+  } catch {
+    return {};
+  }
+}
+
 export async function fetchProductDetail(id: number): Promise<ProductDetailResponse> {
-  const res = await fetch(`${API_BASE}/products/${id}/detail`, {
+  const res = await fetch(`${API_BASE}/products/${id}`, {
     cache: "no-store",
   });
 
@@ -94,13 +108,60 @@ export async function fetchProductDetail(id: number): Promise<ProductDetailRespo
     throw new Error(`Failed to fetch product detail: ${res.status}`);
   }
 
-  const json: ApiResponse<ProductDetailResponse> = await res.json();
+  const json: ApiResponse<any> = await res.json();
 
   if (json.code !== 0) {
     throw new Error(`API error: ${json.message}`);
   }
 
-  return json.data;
+  const raw = json.data;
+
+  // Transform backend SPUDetailResponse → frontend ProductDetailResponse
+  // Backend returns flat SPU fields, spec as JSON string, and includes attributes
+  // Collect attribute names that actually appear in SKU specs
+  const skuSpecAttrNames = new Set<string>();
+  for (const sku of raw.skus || []) {
+    const spec = typeof sku.spec === "string" ? safeParseJSON(sku.spec) : sku.spec || {};
+    Object.keys(spec).forEach((k) => skuSpecAttrNames.add(k));
+  }
+
+  return {
+    product: {
+      id: raw.id,
+      name: raw.name,
+      description: raw.description?.description ?? raw.description?.mobile_description ?? "",
+      min_price: raw.min_price,
+      created_at: raw.created_at,
+      updated_at: raw.updated_at,
+    },
+    skus: (raw.skus || []).map((sku: any) => {
+      const parsedSpec = typeof sku.spec === "string" ? safeParseJSON(sku.spec) : sku.spec || {};
+      return {
+        id: sku.id,
+        product_id: sku.product_id,
+        name: sku.sku_code,
+        price: sku.price,
+        sku_code: sku.sku_code,
+        image: sku.image || undefined,
+        spec: parsedSpec,
+        available_quantity: sku.available_quantity,
+        inventory_status: sku.inventory_status,
+        created_at: sku.created_at,
+        updated_at: sku.updated_at,
+      };
+    }),
+    attributes: (raw.attributes || [])
+      // Only show attributes that are used in SKU specs (skip e.g. processor, camera)
+      .filter((attr: any) => skuSpecAttrNames.has(attr.attribute_name))
+      .map((attr: any) => ({
+        attribute_id: attr.attribute_id,
+        attribute_name: attr.attribute_name,
+        values: (attr.values || []).map((v: string, vidx: number) => ({
+          value_id: attr.attribute_id * 100 + vidx,
+          value: v,
+        })),
+      })),
+  };
 }
 
 export async function fetchProductAttributes(id: number): Promise<ProductAttributeItem[]> {
@@ -111,14 +172,56 @@ export async function fetchProductAttributes(id: number): Promise<ProductAttribu
   return json.data;
 }
 
-export async function fetchRootCategories(): Promise<CategoryListData> {
+export async function fetchCategoryById(id: number): Promise<Category> {
+  const res = await fetch(`${API_BASE}/categories/${id}`);
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch category: ${res.status}`);
+  }
+
+  const json: ApiResponse<Category> = await res.json();
+
+  if (json.code !== 0) {
+    throw new Error(`API error: ${json.message}`);
+  }
+
+  return json.data;
+}
+
+export async function fetchAllCategories(): Promise<Category[]> {
+  const res = await fetch(`${API_BASE}/categories/all`);
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch categories: ${res.status}`);
+  }
+
+  const json: ApiResponse<Category[]> = await res.json();
+
+  if (json.code !== 0) {
+    throw new Error(`API error: ${json.message}`);
+  }
+
+  return json.data;
+}
+
+export async function fetchCategoryBrands(categoryId: number): Promise<BrandSimple[]> {
+  const res = await fetch(`${API_BASE}/categories/${categoryId}/brands`, {
+    headers: authHeaders(),
+  });
+  if (!res.ok) return [];
+  const json: ApiResponse<BrandSimple[]> = await res.json();
+  if (json.code !== 0) return [];
+  return json.data ?? [];
+}
+
+export async function fetchRootCategories(): Promise<Category[]> {
   const res = await fetch(`${API_BASE}/categories/root`);
 
   if (!res.ok) {
     throw new Error(`Failed to fetch categories: ${res.status}`);
   }
 
-  const json: ApiResponse<CategoryListData> = await res.json();
+  const json: ApiResponse<Category[]> = await res.json();
 
   if (json.code !== 0) {
     throw new Error(`API error: ${json.message}`);
@@ -157,6 +260,37 @@ export async function fetchSubcategories(parentId: number): Promise<Category[]> 
   }
 
   const json: ApiResponse<Category[]> = await res.json();
+
+  if (json.code !== 0) {
+    throw new Error(`API error: ${json.message}`);
+  }
+
+  return json.data;
+}
+
+export async function fetchPromotionById(id: number): Promise<Promotion | null> {
+  try {
+    const res = await fetch(`${API_BASE}/promotions/${id}`);
+    if (!res.ok) return null;
+    const json: ApiResponse<Promotion> = await res.json();
+    if (json.code !== 0) return null;
+    return json.data;
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchActivePromotions(size: number = 10): Promise<PromotionListData> {
+  const params = new URLSearchParams();
+  params.set("status", "1");
+  params.set("size", String(size));
+  const res = await fetch(`${API_BASE}/promotions?${params.toString()}`);
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch active promotions: ${res.status}`);
+  }
+
+  const json: ApiResponse<PromotionListData> = await res.json();
 
   if (json.code !== 0) {
     throw new Error(`API error: ${json.message}`);

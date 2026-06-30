@@ -19,7 +19,7 @@ export default function FlashSalePage() {
   const [activities, setActivities] = useState<FlashActivity[]>([]);
   const [activitiesNext, setActivitiesNext] = useState<number | null>(null);
   const [activitiesHasMore, setActivitiesHasMore] = useState(true);
-  const [productsNext, setProductsNext] = useState<number | null>(null);
+  const [productsNext, setProductsNext] = useState<string | null>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   const buildItems = useCallback((acts: FlashActivity[], prodMap: Map<number, Product>) => {
@@ -48,14 +48,14 @@ export default function FlashSalePage() {
 
         // Collect unique product_ids from activities
         const neededIds = new Set(acts.map((a) => a.product_id));
-        let prodCursor: number | null = null;
+        let prodCursor: string | null = null;
 
         while (neededIds.size > productsRef.current.size) {
           const prodsData = await fetchProductsCursor(prodCursor);
           if (cancelled) return;
           prodsData.list.forEach((p) => productsRef.current.set(p.id, p));
-          prodCursor = prodsData.next_cursor;
-          if (prodCursor === null) break; // no more products
+          prodCursor = prodsData.cursor;
+          if (!prodCursor) break; // no more products
         }
 
         setActivities(acts);
@@ -95,8 +95,8 @@ export default function FlashSalePage() {
       while (missingIds.length > 0) {
         const prodsData = await fetchProductsCursor(prodCursor);
         prodsData.list.forEach((p) => productsRef.current.set(p.id, p));
-        prodCursor = prodsData.next_cursor;
-        if (prodCursor === null) break;
+        prodCursor = prodsData.cursor;
+        if (!prodCursor) break;
         // Remove now-found IDs from missing list
         for (let i = missingIds.length - 1; i >= 0; i--) {
           if (productsRef.current.has(missingIds[i])) missingIds.splice(i, 1);

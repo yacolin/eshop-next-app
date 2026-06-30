@@ -6,14 +6,14 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/cart-context";
 import { ShoppingCart, Package, ChevronRight, Home, Zap } from "lucide-react";
-import { fetchProductDetail, fetchProductAttributes } from "@/lib/api";
+import { fetchProductDetail } from "@/lib/api";
 import { formatPrice, findMatchingSku } from "@/lib/utils";
 import { ProductImageGallery } from "@/components/product-image-gallery";
 import { SpecSelector } from "@/components/spec-selector";
 import { QuantitySelector } from "@/components/quantity-selector";
 import { ServicePromises } from "@/components/service-promises";
 import { SkuTable } from "@/components/sku-table";
-import type { ProductDetailResponse, ProductAttributeItem } from "@/types/product";
+import type { ProductDetailResponse } from "@/types/product";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -45,7 +45,6 @@ export default function ProductDetailPage({ params }: Props) {
   const [activeTab, setActiveTab] = useState<"description" | "specs">("description");
   const [selectedAttrs, setSelectedAttrs] = useState<Record<string, string>>({});
   const [selectedImage, setSelectedImage] = useState(0);
-  const [attributes, setAttributes] = useState<ProductAttributeItem[]>([]);
 
   const imageColors = useMemo(() => {
     const offset = productId % palettes.length;
@@ -58,20 +57,16 @@ export default function ProductDetailPage({ params }: Props) {
       setLoading(true);
       setError(null);
       try {
-        const [detailData, attrsData] = await Promise.all([
-          fetchProductDetail(productId),
-          fetchProductAttributes(productId),
-        ]);
+        const detailData = await fetchProductDetail(productId);
         if (cancelled) return;
         setDetail(detailData);
-        setAttributes(attrsData);
         // Only auto-select when SKUs actually have spec data
         const skusHaveSpec = detailData.skus.some(
           (sku) => sku.spec && Object.keys(sku.spec).length > 0,
         );
-        if (attrsData.length > 0 && skusHaveSpec) {
+        if (detailData.attributes.length > 0 && skusHaveSpec) {
           const initial: Record<string, string> = {};
-          attrsData.forEach((attr) => {
+          detailData.attributes.forEach((attr) => {
             initial[attr.attribute_name] = attr.values[0].value;
           });
           setSelectedAttrs(initial);
@@ -89,7 +84,7 @@ export default function ProductDetailPage({ params }: Props) {
     };
   }, [productId]);
 
-  const attrOptions = attributes;
+  const attrOptions = detail?.attributes ?? [];
   const hasSpecSkus = detail
     ? detail.skus.some((sku) => sku.spec && Object.keys(sku.spec).length > 0)
     : false;
@@ -247,7 +242,7 @@ export default function ProductDetailPage({ params }: Props) {
                 size="lg"
                 className="flex-1 cursor-pointer gap-2"
                 onClick={handleAddToCart}
-                disabled={adding || !canAddToCart || (matchedSku?.available_quantity ?? 0) <= 0}
+                disabled={adding || !canAddToCart}
               >
                 <ShoppingCart className="size-4" />
                 {adding
@@ -260,7 +255,7 @@ export default function ProductDetailPage({ params }: Props) {
                 size="lg"
                 className="flex-1 cursor-pointer gap-2"
                 onClick={handleBuyNow}
-                disabled={adding || !canAddToCart || (matchedSku?.available_quantity ?? 0) <= 0}
+                disabled={adding || !canAddToCart}
               >
                 <Zap className="size-4" />
                 Buy Now
