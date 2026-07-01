@@ -1,14 +1,29 @@
-// @ts-nocheck
 "use client";
 
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
 import { Carts } from "@/lib/api-gen/Carts";
-import type { TradeCart, TradeAddItemReq, TradeUpdateItemReq } from "@/lib/api-gen/data-contracts";
 
 const cartsApi = new Carts({ baseUrl: "" });
 
+function authHeaders(): Record<string, string> {
+  if (typeof window === "undefined") return {};
+  const token = localStorage.getItem("access_token");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+interface CartItem {
+  id: number;
+  sku_id: number;
+  product_id: number;
+  quantity: number;
+  price: number;
+  product_name: string;
+  sku: string;
+  stock: number;
+}
+
 interface CartContextValue {
-  items: CartItemData[];
+  items: CartItem[];
   loading: boolean;
   error: string | null;
   addItem: (skuId: number) => Promise<void>;
@@ -37,8 +52,14 @@ function getSessionId(): string | null {
   return id;
 }
 
+async function fetchCartItems(): Promise<CartItem[]> {
+  const res = await cartsApi.v1CartsList({ headers: authHeaders() });
+  const data = res.data as any;
+  return data?.data?.items ?? [];
+}
+
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<CartItemData[]>([]);
+  const [items, setItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -46,10 +67,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true);
       setError(null);
-      const userId = getUserId();
-      const sessionId = getSessionId();
-      const cart = await apiFetchCart(userId, sessionId);
-      setItems(cart.items);
+      setItems(await fetchCartItems());
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load cart");
     } finally {
@@ -64,10 +82,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const addItem = useCallback(async (skuId: number) => {
     try {
       setError(null);
-      const userId = getUserId();
-      const sessionId = getSessionId();
-      const cart = await apiAddToCart({ sku_id: skuId, quantity: 1 }, userId, sessionId);
-      setItems(cart.items);
+      await cartsApi.v1CartsCreate({ sku_id: skuId, quantity: 1 }, { headers: authHeaders() });
+      setItems(await fetchCartItems());
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to add item");
     }
@@ -76,10 +92,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const removeItem = useCallback(async (itemId: number) => {
     try {
       setError(null);
-      const userId = getUserId();
-      const sessionId = getSessionId();
-      const cart = await apiRemoveCartItem(itemId, userId, sessionId);
-      setItems(cart.items);
+      await cartsApi.v1CartsDelete({ sku_id: itemId }, { headers: authHeaders() });
+      setItems(await fetchCartItems());
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to remove item");
     }
@@ -87,15 +101,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const updateQuantity = useCallback(
     async (itemId: number, quantity: number) => {
-      if (quantity <= 0) {
-        return removeItem(itemId);
-      }
+      if (quantity <= 0) return removeItem(itemId);
       try {
         setError(null);
-        const userId = getUserId();
-        const sessionId = getSessionId();
-        const cart = await apiUpdateCartItem(itemId, { quantity }, userId, sessionId);
-        setItems(cart.items);
+        await cartsApi.v1CartsUpdate({ sku_id: itemId, quantity }, { headers: authHeaders() });
+        setItems(await fetchCartItems());
       } catch (e) {
         setError(e instanceof Error ? e.message : "Failed to update quantity");
       }
@@ -106,9 +116,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const clearCartAction = useCallback(async () => {
     try {
       setError(null);
-      const userId = getUserId();
-      const sessionId = getSessionId();
-      await apiClearCart(userId, sessionId);
+      await cartsApi.v1CartsClearCreate(undefined, { headers: authHeaders() });
       setItems([]);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to clear cart");
