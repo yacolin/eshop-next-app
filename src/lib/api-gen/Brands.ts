@@ -13,7 +13,9 @@
 import { V1BrandsListData } from "./data-contracts";
 import { ContentType, HttpClient, RequestParams } from "./http-client";
 
-export class Brands<SecurityDataType = unknown> extends HttpClient<SecurityDataType> {
+export class Brands<
+  SecurityDataType = unknown,
+> extends HttpClient<SecurityDataType> {
   /**
    * No description
    *

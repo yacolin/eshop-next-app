@@ -13,7 +13,9 @@
 import { TradeCreateOrderReq, V1OrdersCreateData } from "./data-contracts";
 import { ContentType, HttpClient, RequestParams } from "./http-client";
 
-export class Orders<SecurityDataType = unknown> extends HttpClient<SecurityDataType> {
+export class Orders<
+  SecurityDataType = unknown,
+> extends HttpClient<SecurityDataType> {
   /**
    * No description
    *

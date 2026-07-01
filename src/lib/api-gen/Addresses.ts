@@ -22,7 +22,9 @@ import {
 } from "./data-contracts";
 import { ContentType, HttpClient, RequestParams } from "./http-client";
 
-export class Addresses<SecurityDataType = unknown> extends HttpClient<SecurityDataType> {
+export class Addresses<
+  SecurityDataType = unknown,
+> extends HttpClient<SecurityDataType> {
   /**
    * No description
    *
@@ -49,7 +51,10 @@ export class Addresses<SecurityDataType = unknown> extends HttpClient<SecurityDa
    * @request POST:/api/v1/addresses
    * @secure
    */
-  v1AddressesCreate = (request: UserCreateAddressReq, params: RequestParams = {}) =>
+  v1AddressesCreate = (
+    request: UserCreateAddressReq,
+    params: RequestParams = {},
+  ) =>
     this.request<V1AddressesCreateData, any>({
       path: `/api/v1/addresses`,
       method: "POST",
@@ -102,7 +107,11 @@ export class Addresses<SecurityDataType = unknown> extends HttpClient<SecurityDa
    * @request PUT:/api/v1/addresses/{id}
    * @secure
    */
-  v1AddressesUpdate = (id: number, request: UserUpdateAddressReq, params: RequestParams = {}) =>
+  v1AddressesUpdate = (
+    id: number,
+    request: UserUpdateAddressReq,
+    params: RequestParams = {},
+  ) =>
     this.request<V1AddressesUpdateData, any>({
       path: `/api/v1/addresses/${id}`,
       method: "PUT",

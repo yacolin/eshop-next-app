@@ -10,10 +10,15 @@
  * ---------------------------------------------------------------
  */
 
-import { UserPasswordLoginReq, V1AuthLoginPasswordCreateData } from "./data-contracts";
+import {
+  UserPasswordLoginReq,
+  V1AuthLoginPasswordCreateData,
+} from "./data-contracts";
 import { ContentType, HttpClient, RequestParams } from "./http-client";
 
-export class Auth<SecurityDataType = unknown> extends HttpClient<SecurityDataType> {
+export class Auth<
+  SecurityDataType = unknown,
+> extends HttpClient<SecurityDataType> {
   /**
    * No description
    *
@@ -22,7 +27,10 @@ export class Auth<SecurityDataType = unknown> extends HttpClient<SecurityDataTyp
    * @summary 密码登录
    * @request POST:/api/v1/auth/login/password
    */
-  v1AuthLoginPasswordCreate = (request: UserPasswordLoginReq, params: RequestParams = {}) =>
+  v1AuthLoginPasswordCreate = (
+    request: UserPasswordLoginReq,
+    params: RequestParams = {},
+  ) =>
     this.request<V1AuthLoginPasswordCreateData, any>({
       path: `/api/v1/auth/login/password`,
       method: "POST",
