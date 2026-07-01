@@ -103,7 +103,7 @@ export default function CategoryPage() {
   if (initialLoading) {
     return (
       <div className="min-h-screen bg-zinc-50 dark:bg-black">
-        <div className="mx-auto max-w-6xl px-4 py-6">
+        <div className="mx-4 py-6 md:mx-auto md:max-w-6xl">
           <div className="mb-6 h-5 w-64 animate-pulse rounded bg-muted" />
           <div className="mb-6 flex gap-2">
             {Array.from({ length: 8 }).map((_, i) => (
@@ -135,7 +135,7 @@ export default function CategoryPage() {
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-black">
-      <div className="mx-auto max-w-6xl px-4 py-6">
+      <div className="mx-4 py-6 md:mx-auto md:max-w-6xl">
         {/* Search */}
         <div className="mb-4">
           <SearchBar />

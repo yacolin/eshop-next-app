@@ -3,10 +3,9 @@
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { ChevronRight, Home, Percent, Gift, Truck, BadgePercent, Package } from "lucide-react";
-import { fetchPromotionById, fetchProductsCursor } from "@/lib/api";
-import { formatPrice } from "@/lib/utils";
-import { ProductCard } from "@/components/product-card";
-import type { Promotion, Product } from "@/types/product";
+import { fetchPromotionDetail } from "@/lib/api";
+import { EmptyState } from "@/components/empty-state";
+import type { PromotionDetailResponse } from "@/types/product";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -31,20 +30,15 @@ function formatDate(ts: number) {
 
 export default function PromotionDetailPage({ params }: Props) {
   const { id } = use(params);
-  const [promo, setPromo] = useState<Promotion | null>(null);
-  const [products, setProducts] = useState<Product[]>([]);
+  const [detail, setDetail] = useState<PromotionDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const p = await fetchPromotionById(Number(id));
-        if (cancelled || !p) return;
-        setPromo(p);
-
-        const prods = await fetchProductsCursor(null, undefined, 20);
-        if (!cancelled) setProducts(prods.list);
+        const d = await fetchPromotionDetail(Number(id));
+        if (!cancelled) setDetail(d);
       } catch {
         // handled
       } finally {
@@ -72,7 +66,7 @@ export default function PromotionDetailPage({ params }: Props) {
     );
   }
 
-  if (!promo) {
+  if (!detail) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-black">
         <div className="text-center">
@@ -89,7 +83,7 @@ export default function PromotionDetailPage({ params }: Props) {
     );
   }
 
-  const config = promoConfig[promo.promo_type] || promoConfig[1];
+  const config = promoConfig[detail.promo_type] || promoConfig[1];
   const Icon = config.icon;
 
   return (
@@ -109,7 +103,7 @@ export default function PromotionDetailPage({ params }: Props) {
             Promotions
           </Link>
           <ChevronRight className="size-3.5" />
-          <span className="text-foreground">{promo.promo_name}</span>
+          <span className="text-foreground">{detail.promo_name}</span>
         </nav>
 
         {/* Promo Banner */}
@@ -122,13 +116,13 @@ export default function PromotionDetailPage({ params }: Props) {
               <span className="rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-medium">
                 {config.label}
               </span>
-              <h1 className="mt-2 text-xl font-bold md:text-2xl">{promo.promo_name}</h1>
+              <h1 className="mt-2 text-xl font-bold md:text-2xl">{detail.promo_name}</h1>
               <p className="mt-2 text-sm opacity-80">
-                {formatDate(promo.start_time)} – {formatDate(promo.end_time)}
+                {formatDate(detail.start_time)} – {formatDate(detail.end_time)}
               </p>
-              {promo.total_quantity > 0 && (
+              {detail.total_quantity > 0 && (
                 <p className="mt-1 text-xs opacity-60">
-                  Limited: {promo.used_quantity}/{promo.total_quantity} claimed
+                  Limited: {detail.used_quantity}/{detail.total_quantity} claimed
                 </p>
               )}
             </div>
@@ -136,15 +130,26 @@ export default function PromotionDetailPage({ params }: Props) {
         </div>
 
         {/* Products */}
-        {products.length > 0 && (
-          <>
-            <h2 className="mb-4 text-lg font-bold">Featured Products</h2>
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-              {products.map((p) => (
-                <ProductCard key={p.id} product={p} />
-              ))}
-            </div>
-          </>
+        <h2 className="mb-4 text-lg font-bold">Featured Products</h2>
+        {detail.products.length > 0 ? (
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+            {detail.products.map((p) => (
+              <Link
+                key={p.id}
+                href={p.product_id ? `/products/${p.product_id}` : "#"}
+                className="group rounded-xl bg-card p-3 shadow-xs transition-all hover:-translate-y-1 hover:shadow-md"
+              >
+                <div className="mb-2 flex aspect-square items-center justify-center rounded-lg bg-muted">
+                  <Package className="size-8 text-muted-foreground/30" />
+                </div>
+                <p className="truncate text-sm font-medium group-hover:text-primary">
+                  {p.spu_name || `Product #${p.product_id}`}
+                </p>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <EmptyState message="No products in this promotion yet." />
         )}
       </div>
     </div>

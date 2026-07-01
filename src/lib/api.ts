@@ -9,6 +9,7 @@ import type {
   ProductDetailResponse,
   ProductAttributeItem,
   Promotion,
+  PromotionDetailResponse,
   PromotionListData,
   BrandSimple,
 } from "@/types/product";
@@ -278,6 +279,18 @@ export async function fetchPromotionById(id: number): Promise<Promotion | null> 
     const res = await fetch(`${API_BASE}/promotions/${id}`);
     if (!res.ok) return null;
     const json: ApiResponse<Promotion> = await res.json();
+    if (json.code !== 0) return null;
+    return json.data;
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchPromotionDetail(id: number): Promise<PromotionDetailResponse | null> {
+  try {
+    const res = await fetch(`${API_BASE}/promotions/${id}/detail`);
+    if (!res.ok) return null;
+    const json: ApiResponse<PromotionDetailResponse> = await res.json();
     if (json.code !== 0) return null;
     return json.data;
   } catch {

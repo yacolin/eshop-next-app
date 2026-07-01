@@ -145,6 +145,26 @@ export interface BrandSimple {
   logo_url: string;
 }
 
+export interface PromotionProductItem {
+  id: number;
+  product_type: number;
+  product_id?: number;
+  category_id?: number;
+  spu_name?: string;
+  main_image?: string;
+}
+
+export interface PromotionProductItem {
+  id: number;
+  product_type: number;
+  product_id?: number;
+  category_id?: number;
+  spu_name?: string;
+  subtitle?: string;
+  main_image?: string;
+  unit?: string;
+}
+
 export interface Promotion {
   id: number;
   promo_name: string;
@@ -159,6 +179,23 @@ export interface Promotion {
   status: number;
   created_at: number;
   updated_at: number;
+}
+
+export interface PromotionDetailResponse extends Promotion {
+  rule: PromotionRule | null;
+  products: PromotionProductItem[];
+}
+
+export interface PromotionRule {
+  id: number;
+  promotion_id: number;
+  rule_name: string;
+  condition_type: number;
+  condition_value: number;
+  benefit_type: number;
+  benefit_value: number;
+  is_stackable: number;
+  stack_priority: number;
 }
 
 export interface PromotionListData {
