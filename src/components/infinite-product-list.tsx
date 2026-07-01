@@ -3,11 +3,13 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { AutoSizer, List, InfiniteLoader, WindowScroller } from "react-virtualized";
 import type { ListRowProps, Index } from "react-virtualized";
-import { fetchProductsCursor } from "@/lib/api";
-import type { Product } from "@/types/product";
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import { EmptyState } from "@/components/empty-state";
 import { ProductCard } from "@/components/product-card";
+import { Products } from "@/lib/api-gen/Products";
+import type { ProductSPU } from "@/lib/api-gen/data-contracts";
+
+const productsApi = new Products({ baseUrl: "" });
 import { BackToTop } from "@/components/back-to-top";
 
 const PAGE_SIZE = 20;
@@ -22,7 +24,7 @@ export function InfiniteProductList({
   categoryId?: number;
   brandId?: number;
 }) {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<ProductSPU[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,11 +41,17 @@ export function InfiniteProductList({
 
     (async () => {
       try {
-        const data = await fetchProductsCursor(null, categoryId, 20, brandId);
+        const res = await productsApi.v1ProductsList({
+          size: 20,
+          status: 2,
+          category_id: categoryId,
+          brand_id: brandId,
+        });
         if (cancelled) return;
-        setProducts(data.list);
-        setNextCursor(data.cursor);
-        setHasMore(data.has_more);
+        const data = res.data?.data;
+        setProducts(data?.list ?? []);
+        setNextCursor(data?.cursor ?? null);
+        setHasMore(data?.has_more ?? false);
       } catch (e) {
         if (!cancelled) {
           setError(e instanceof Error ? e.message : "Unknown error");
@@ -62,10 +70,17 @@ export function InfiniteProductList({
     if (loadingRef.current || !hasMore) return;
     loadingRef.current = true;
     try {
-      const data = await fetchProductsCursor(nextCursor, categoryId, 20, brandId);
-      setProducts((prev) => [...prev, ...data.list]);
-      setNextCursor(data.cursor);
-      setHasMore(data.has_more);
+      const res = await productsApi.v1ProductsList({
+        size: 20,
+        status: 2,
+        cursor: nextCursor ?? undefined,
+        category_id: categoryId,
+        brand_id: brandId,
+      });
+      const data = res.data?.data;
+      setProducts((prev) => [...prev, ...(data?.list ?? [])]);
+      setNextCursor(data?.cursor ?? null);
+      setHasMore(data?.has_more ?? false);
     } catch (e) {
       console.error("Failed to load more products:", e);
     } finally {

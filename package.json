@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "prepare": "husky"
+    "prepare": "husky",
+    "gen:api": "openapi-typescript ../eshop-monolith/docs/swagger.json --output src/types/api.ts"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",
@@ -40,7 +41,9 @@
     "eslint-config-next": "16.2.9",
     "husky": "^9.1.7",
     "lint-staged": "^17.0.8",
+    "openapi-typescript": "^5.4.2",
     "prettier": "^3.8.4",
+    "swagger-typescript-api": "^13.12.3",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

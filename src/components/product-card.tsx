@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Smartphone, Monitor, Shirt, HomeIcon, Gamepad2, BookOpen, Bike, Car } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
-import type { Product } from "@/types/product";
+import type { ProductSPU } from "@/lib/api-gen/data-contracts";
 
 const palettes = [
   ["from-blue-500/20", "via-purple-500/10", "to-pink-500/20"],
@@ -18,12 +18,13 @@ const palettes = [
 
 const iconList = [Smartphone, Monitor, Shirt, HomeIcon, Gamepad2, BookOpen, Bike, Car];
 
-export function ProductCard({ product }: { product: Product }) {
-  const gradient = palettes[product.id % palettes.length];
-  const ImgIcon = iconList[product.id % iconList.length];
+export function ProductCard({ product }: { product: ProductSPU }) {
+  const id = product.id ?? 0;
+  const gradient = palettes[id % palettes.length];
+  const ImgIcon = iconList[id % iconList.length];
 
   return (
-    <Link href={`/products/${product.id}`}>
+    <Link href={`/products/${id}`}>
       <div className="group rounded-xl bg-card shadow-xs ring-1 ring-foreground/10 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:ring-primary/20">
         <div
           className={`flex h-32 items-center justify-center rounded-t-xl bg-gradient-to-br ${gradient.join(" ")}`}
@@ -36,7 +37,9 @@ export function ProductCard({ product }: { product: Product }) {
             {product.name}
           </p>
           <div className="flex items-baseline gap-1.5">
-            <span className="text-sm font-bold text-primary">{formatPrice(product.min_price)}</span>
+            <span className="text-sm font-bold text-primary">
+              {formatPrice(product.min_price ?? 0)}
+            </span>
           </div>
           <p className="pt-1 text-[11px] text-muted-foreground">Free shipping</p>
         </div>
