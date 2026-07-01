@@ -17,7 +17,13 @@ const ROW_HEIGHT = 270;
 const MAX_CARD_WIDTH = 274;
 const GAP = 16;
 
-export function InfiniteProductList({ categoryId }: { categoryId?: number }) {
+export function InfiniteProductList({
+  categoryId,
+  brandId,
+}: {
+  categoryId?: number;
+  brandId?: number;
+}) {
   const [products, setProducts] = useState<Product[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
@@ -35,7 +41,7 @@ export function InfiniteProductList({ categoryId }: { categoryId?: number }) {
 
     (async () => {
       try {
-        const data = await fetchProductsCursor(null, categoryId);
+        const data = await fetchProductsCursor(null, categoryId, 20, brandId);
         if (cancelled) return;
         setProducts(data.list);
         setNextCursor(data.cursor);
@@ -58,7 +64,7 @@ export function InfiniteProductList({ categoryId }: { categoryId?: number }) {
     if (loadingRef.current || !hasMore) return;
     loadingRef.current = true;
     try {
-      const data = await fetchProductsCursor(nextCursor, categoryId);
+      const data = await fetchProductsCursor(nextCursor, categoryId, 20, brandId);
       setProducts((prev) => [...prev, ...data.list]);
       setNextCursor(data.cursor);
       setHasMore(data.has_more);

@@ -50,12 +50,14 @@ export async function fetchProductsCursor(
   cursor: string | null = null,
   categoryId?: number,
   size: number = 20,
+  brandId?: number,
 ): Promise<ProductCursorData> {
   const params = new URLSearchParams();
   params.set("size", String(size));
   params.set("status", "2");
   if (cursor) params.set("cursor", cursor);
   if (categoryId) params.set("category_id", String(categoryId));
+  if (brandId) params.set("brand_id", String(brandId));
   const res = await fetch(`${API_BASE}/products?${params.toString()}`, { cache: "no-store" });
 
   if (!res.ok) {
@@ -153,14 +155,17 @@ export async function fetchProductDetail(id: number): Promise<ProductDetailRespo
     attributes: (raw.attributes || [])
       // Only show attributes that are used in SKU specs (skip e.g. processor, camera)
       .filter((attr: any) => skuSpecAttrNames.has(attr.attribute_name))
-      .map((attr: any) => ({
-        attribute_id: attr.attribute_id,
-        attribute_name: attr.attribute_name,
-        values: (attr.values || []).map((v: string, vidx: number) => ({
-          value_id: attr.attribute_id * 100 + vidx,
-          value: v,
-        })),
-      })),
+      .map((attr: any, aidx: number) => {
+        const attrId = attr.attribute_id || -(aidx + 1);
+        return {
+          attribute_id: attrId,
+          attribute_name: attr.attribute_name,
+          values: (attr.values || []).map((v: string, vidx: number) => ({
+            value_id: attrId * 100 + vidx + 1,
+            value: v,
+          })),
+        };
+      }),
   };
 }
 

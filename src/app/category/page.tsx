@@ -19,6 +19,7 @@ export default function CategoryPage() {
   const router = useRouter();
   const categoryId = Number(searchParams.get("id") || "1");
   const sub = searchParams.get("sub");
+  const brandParam = searchParams.get("brand");
 
   const [currentCat, setCurrentCat] = useState<Category | null>(null);
   const [allCats, setAllCats] = useState<Category[]>([]);
@@ -196,20 +197,38 @@ export default function CategoryPage() {
           <div className="mb-6 scroll-mt-4">
             <p className="mb-2 text-xs font-medium text-muted-foreground">Filter by Brand</p>
             <div className="flex flex-wrap gap-2">
-              {brands.map((b) => (
-                <span
-                  key={b.brand_id}
-                  className="cursor-pointer rounded-md border bg-card px-3 py-1.5 text-xs text-muted-foreground shadow-xs transition-colors hover:border-primary hover:text-primary"
-                >
-                  {b.brand_name}
-                </span>
-              ))}
+              {brands.map((b) => {
+                const isActive = Number(brandParam) === b.brand_id;
+                return (
+                  <button
+                    key={b.brand_id}
+                    onClick={() => {
+                      const params = new URLSearchParams();
+                      params.set("id", String(categoryId));
+                      if (sub) params.set("sub", sub);
+                      if (!isActive) params.set("brand", String(b.brand_id));
+                      router.replace(`/category?${params.toString()}`, { scroll: false });
+                    }}
+                    className={`cursor-pointer rounded-md border px-3 py-1.5 text-xs shadow-xs transition-colors ${
+                      isActive
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "bg-card text-muted-foreground hover:border-primary hover:text-primary"
+                    }`}
+                  >
+                    {b.brand_name}
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
 
         {/* Products */}
-        <InfiniteProductList categoryId={activeCategoryId} key={activeCategoryId ?? "all"} />
+        <InfiniteProductList
+          categoryId={activeCategoryId}
+          brandId={brandParam ? Number(brandParam) : undefined}
+          key={`${activeCategoryId ?? "all"}-${brandParam ?? ""}`}
+        />
       </div>
     </div>
   );
