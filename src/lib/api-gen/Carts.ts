@@ -25,7 +25,7 @@ export class Carts<SecurityDataType = unknown> extends HttpClient<SecurityDataTy
   /**
    * No description
    *
-   * @tags carts
+   * @tags carts, frontend
    * @name V1CartsList
    * @summary 获取购物车
    * @request GET:/api/v1/carts
@@ -42,7 +42,7 @@ export class Carts<SecurityDataType = unknown> extends HttpClient<SecurityDataTy
   /**
    * No description
    *
-   * @tags carts
+   * @tags carts, frontend
    * @name V1CartsUpdate
    * @summary 更新购物车商品
    * @request PUT:/api/v1/carts
@@ -61,7 +61,7 @@ export class Carts<SecurityDataType = unknown> extends HttpClient<SecurityDataTy
   /**
    * No description
    *
-   * @tags carts
+   * @tags carts, frontend
    * @name V1CartsCreate
    * @summary 添加商品到购物车
    * @request POST:/api/v1/carts
@@ -80,7 +80,7 @@ export class Carts<SecurityDataType = unknown> extends HttpClient<SecurityDataTy
   /**
    * No description
    *
-   * @tags carts
+   * @tags carts, frontend
    * @name V1CartsDelete
    * @summary 删除购物车商品
    * @request DELETE:/api/v1/carts
@@ -104,7 +104,7 @@ export class Carts<SecurityDataType = unknown> extends HttpClient<SecurityDataTy
   /**
    * No description
    *
-   * @tags carts
+   * @tags carts, frontend
    * @name V1CartsClearCreate
    * @summary 清空购物车
    * @request POST:/api/v1/carts/clear

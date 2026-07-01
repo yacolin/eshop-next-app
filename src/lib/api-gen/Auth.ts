@@ -10,21 +10,14 @@
  * ---------------------------------------------------------------
  */
 
-import {
-  UserPasswordLoginReq,
-  UserRefreshTokenReq,
-  UserRegisterReq,
-  V1AuthLoginPasswordCreateData,
-  V1AuthRefreshCreateData,
-  V1AuthRegisterCreateData,
-} from "./data-contracts";
+import { UserPasswordLoginReq, V1AuthLoginPasswordCreateData } from "./data-contracts";
 import { ContentType, HttpClient, RequestParams } from "./http-client";
 
 export class Auth<SecurityDataType = unknown> extends HttpClient<SecurityDataType> {
   /**
    * No description
    *
-   * @tags auth
+   * @tags auth, frontend
    * @name V1AuthLoginPasswordCreate
    * @summary 密码登录
    * @request POST:/api/v1/auth/login/password
@@ -32,40 +25,6 @@ export class Auth<SecurityDataType = unknown> extends HttpClient<SecurityDataTyp
   v1AuthLoginPasswordCreate = (request: UserPasswordLoginReq, params: RequestParams = {}) =>
     this.request<V1AuthLoginPasswordCreateData, any>({
       path: `/api/v1/auth/login/password`,
-      method: "POST",
-      body: request,
-      type: ContentType.Json,
-      format: "json",
-      ...params,
-    });
-  /**
-   * No description
-   *
-   * @tags auth
-   * @name V1AuthRefreshCreate
-   * @summary 刷新令牌
-   * @request POST:/api/v1/auth/refresh
-   */
-  v1AuthRefreshCreate = (request: UserRefreshTokenReq, params: RequestParams = {}) =>
-    this.request<V1AuthRefreshCreateData, any>({
-      path: `/api/v1/auth/refresh`,
-      method: "POST",
-      body: request,
-      type: ContentType.Json,
-      format: "json",
-      ...params,
-    });
-  /**
-   * No description
-   *
-   * @tags auth
-   * @name V1AuthRegisterCreate
-   * @summary 注册
-   * @request POST:/api/v1/auth/register
-   */
-  v1AuthRegisterCreate = (request: UserRegisterReq, params: RequestParams = {}) =>
-    this.request<V1AuthRegisterCreateData, any>({
-      path: `/api/v1/auth/register`,
       method: "POST",
       body: request,
       type: ContentType.Json,

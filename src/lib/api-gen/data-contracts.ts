@@ -1509,74 +1509,12 @@ export type V1AddressesUpdateData = ResponseResponse & {
 
 export type V1AddressesDeleteData = ResponseResponse;
 
-export type V1AdminReviewsPendingListData = ResponseResponse & {
-  data?: ReviewReviewListResult;
-};
-
-export type V1AdminReviewsDeleteData = ResponseResponse;
-
-export type V1AdminReviewsModeratePartialUpdateData = ResponseResponse;
-
-export type V1AdminReviewsReplyCreateData = ResponseResponse;
-
-export type V1AttributesListData = ResponseResponse & {
-  data?: ProductAttribute[];
-};
-
-export type V1AttributesCreateData = ResponseResponse & {
-  data?: ProductAttribute;
-};
-
-export type V1AttributesSearchableListData = ResponseResponse & {
-  data?: ProductAttribute[];
-};
-
-export type V1AttributesSkuSpecListData = ResponseResponse & {
-  data?: ProductAttribute[];
-};
-
-export type V1AttributesDetailData = ResponseResponse & {
-  data?: ProductAttribute;
-};
-
-export type V1AttributesUpdateData = ResponseResponse & {
-  data?: ProductAttribute;
-};
-
-export type V1AttributesDeleteData = ResponseResponse & {
-  data?: Record<string, string>;
-};
-
 export type V1AuthLoginPasswordCreateData = ResponseResponse & {
-  data?: UserLoginResponse;
-};
-
-export type V1AuthRefreshCreateData = ResponseResponse & {
-  data?: UserTokenResponse;
-};
-
-export type V1AuthRegisterCreateData = ResponseResponse & {
   data?: UserLoginResponse;
 };
 
 export type V1BrandsListData = ResponseResponse & {
   data?: ProductBrandListResult;
-};
-
-export type V1BrandsCreateData = ResponseResponse & {
-  data?: ProductBrand;
-};
-
-export type V1BrandsDetailData = ResponseResponse & {
-  data?: ProductBrand;
-};
-
-export type V1BrandsUpdateData = ResponseResponse & {
-  data?: ProductBrand;
-};
-
-export type V1BrandsDeleteData = ResponseResponse & {
-  data?: Record<string, string>;
 };
 
 export type V1CartsListData = ResponseResponse & {
@@ -1591,19 +1529,7 @@ export type V1CartsDeleteData = ResponseResponse;
 
 export type V1CartsClearCreateData = ResponseResponse;
 
-export type V1CategoriesListData = ResponseResponse & {
-  data?: ProductCategoryListResult;
-};
-
-export type V1CategoriesCreateData = ResponseResponse & {
-  data?: ProductCategory;
-};
-
 export type V1CategoriesAllListData = ResponseResponse & {
-  data?: ProductCategory[];
-};
-
-export type V1CategoriesLevelDetailData = ResponseResponse & {
   data?: ProductCategory[];
 };
 
@@ -1615,262 +1541,34 @@ export type V1CategoriesDetailData = ResponseResponse & {
   data?: ProductCategory;
 };
 
-export type V1CategoriesUpdateData = ResponseResponse & {
-  data?: ProductCategory;
-};
-
-export type V1CategoriesDeleteData = ResponseResponse & {
-  data?: Record<string, string>;
-};
-
 export type V1CategoriesBrandsListData = ResponseResponse & {
   data?: ProductCategoryBrandDetail[];
 };
 
-export type V1CategoriesBrandsUpdateData = ResponseResponse;
-
 export type V1CategoriesChildrenListData = ResponseResponse & {
   data?: ProductCategory[];
-};
-
-export type V1CouponsClaimCreateData = ResponseResponse;
-
-export type V1CouponsMeListData = ResponseResponse & {
-  data?: MarketingUserPromotionListResult;
-};
-
-export type V1CouponsUseCreateData = ResponseResponse;
-
-export type V1DashboardStatsListData = ResponseResponse & {
-  data?: DashboardDashboardResponse;
-};
-
-export type V1FlashBuyCreateData = ResponseResponse;
-
-export type V1FlashConfirmCreateData = ResponseResponse;
-
-export type V1InventoriesDeductCreateData = ResponseResponse & {
-  data?: InventoryInventory;
-};
-
-export type V1InventoriesLockCreateData = ResponseResponse & {
-  data?: InventoryInventory;
-};
-
-export type V1InventoriesLogsListData = ResponseResponse & {
-  data?: InventoryInventoryLogListResult;
-};
-
-export type V1InventoriesRestockCreateData = ResponseResponse & {
-  data?: InventoryInventory;
-};
-
-export type V1InventoriesStockListData = ResponseResponse & {
-  data?: InventoryInventory;
-};
-
-export type V1InventoriesUnlockCreateData = ResponseResponse & {
-  data?: InventoryInventory;
-};
-
-export type V1NotificationsListData = ResponseResponse & {
-  data?: BaseNotificationListResult;
-};
-
-export type V1NotificationsReadallUpdateData = ResponseResponse;
-
-export type V1NotificationsSystemCreateData = ResponseResponse;
-
-export type V1NotificationsUnreadListData = ResponseResponse & {
-  data?: BaseUnreadCountResp;
-};
-
-export type V1NotificationsDeleteData = ResponseResponse;
-
-export type V1NotificationsReadUpdateData = ResponseResponse;
-
-export type V1OrdersListData = ResponseResponse & {
-  data?: TradeOrderListResult;
 };
 
 export type V1OrdersCreateData = ResponseResponse & {
   data?: TradeOrder;
 };
 
-export type V1OrdersDetailData = ResponseResponse & {
-  data?: TradeOrderDetailResponse;
-};
-
-export type V1OrdersStatusUpdateData = ResponseResponse & {
-  data?: TradeOrder;
-};
-
-export type V1PaymentsCreateData = ResponseResponse & {
-  data?: TradePayment;
-};
-
-export type V1PaymentsCallbackCreateData = ResponseResponse;
-
-export type V1PaymentsRefundCreateData = ResponseResponse;
-
-export type V1PaymentsDetailData = ResponseResponse & {
-  data?: TradePayment;
-};
-
-export type V1PermissionsListData = ResponseResponse & {
-  data?: UserPermissionListResult;
-};
-
-export type V1PermissionsCreateData = ResponseResponse & {
-  data?: UserPermission;
-};
-
-export type V1PermissionsCheckCreateData = ResponseResponse & {
-  data?: UserCheckPermissionsResult;
-};
-
-export type V1PermissionsRolesDetailData = ResponseResponse & {
-  data?: UserPermission[];
-};
-
-export type V1PermissionsRolesCreateData = ResponseResponse;
-
-export type V1PermissionsRolesDeleteData = ResponseResponse;
-
-export type V1PermissionsDetailData = ResponseResponse & {
-  data?: UserPermission;
-};
-
-export type V1PermissionsUpdateData = ResponseResponse & {
-  data?: UserPermission;
-};
-
-export type V1PermissionsDeleteData = ResponseResponse;
-
 export type V1ProductsListData = ResponseResponse & {
   data?: ProductSPUListResult;
-};
-
-export type V1ProductsCreateData = ResponseResponse & {
-  data?: ProductSPU;
 };
 
 export type V1ProductsDetailData = ResponseResponse & {
   data?: ProductSPUDetailResponse;
 };
 
-export type V1ProductsUpdateData = ResponseResponse & {
-  data?: ProductSPU;
-};
-
-export type V1ProductsDeleteData = ResponseResponse & {
-  data?: Record<string, string>;
-};
-
-export type V1ProductsRatingListData = ResponseResponse & {
-  data?: ReviewReviewRatingResp;
-};
-
-export type V1ProductsReviewsListData = ResponseResponse & {
-  data?: ReviewReviewListResult;
-};
-
 export type V1PromotionsListData = ResponseResponse & {
   data?: MarketingPromotionListResult;
-};
-
-export type V1PromotionsCreateData = ResponseResponse & {
-  data?: MarketingPromotion;
 };
 
 export type V1PromotionsDetailData = ResponseResponse & {
   data?: MarketingPromotion;
 };
 
-export type V1PromotionsUpdateData = ResponseResponse & {
-  data?: MarketingPromotion;
-};
-
-export type V1PromotionsDeleteData = ResponseResponse;
-
 export type V1PromotionsDetailListData = ResponseResponse & {
   data?: MarketingPromotionDetailResponse;
 };
-
-export type V1ReviewsCreateData = ResponseResponse & {
-  data?: ReviewReviewResp;
-};
-
-export type V1ReviewsMeListData = ResponseResponse & {
-  data?: ReviewReviewListResult;
-};
-
-export type V1ReviewsDeleteData = ResponseResponse;
-
-export type V1RolesListData = ResponseResponse & {
-  data?: UserRoleListResult;
-};
-
-export type V1RolesCreateData = ResponseResponse & {
-  data?: UserRole;
-};
-
-export type V1RolesDetailData = ResponseResponse & {
-  data?: UserRole;
-};
-
-export type V1RolesUpdateData = ResponseResponse & {
-  data?: UserRole;
-};
-
-export type V1RolesDeleteData = ResponseResponse;
-
-export type V1SkusListData = ResponseResponse & {
-  data?: ProductSKU[];
-};
-
-export type V1SkusCreateData = ResponseResponse & {
-  data?: ProductSKU;
-};
-
-export type V1SkusCodeCodeListData = ResponseResponse & {
-  data?: ProductSKU;
-};
-
-export type V1SkusDetailData = ResponseResponse & {
-  data?: ProductSKU;
-};
-
-export type V1SkusUpdateData = ResponseResponse & {
-  data?: ProductSKU;
-};
-
-export type V1SkusDeleteData = ResponseResponse;
-
-export type V1UsersListData = ResponseResponse & {
-  data?: UserUserListResult;
-};
-
-export type V1UsersInfoUpdateData = ResponseResponse;
-
-export type V1UsersProfileListData = ResponseResponse & {
-  data?: UserUserProfileResponse;
-};
-
-export type V1UsersRolesCreateData = ResponseResponse;
-
-export type V1UsersRolesDeleteData = ResponseResponse;
-
-export type V1WsReconnectCreateData = ResponseResponse & {
-  data?: DtoReconnectResponse;
-};
-
-export type V1WsSessionListData = ResponseResponse & {
-  data?: DtoSessionResponse;
-};
-
-export type V1WsStatsListData = ResponseResponse & {
-  data?: DtoOnlineStatsResponse;
-};
-
-export type V1WsTestPushCreateData = ResponseResponse;

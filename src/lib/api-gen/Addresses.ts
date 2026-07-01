@@ -26,7 +26,7 @@ export class Addresses<SecurityDataType = unknown> extends HttpClient<SecurityDa
   /**
    * No description
    *
-   * @tags addresses
+   * @tags addresses, frontend
    * @name V1AddressesList
    * @summary 地址列表
    * @request GET:/api/v1/addresses
@@ -43,7 +43,7 @@ export class Addresses<SecurityDataType = unknown> extends HttpClient<SecurityDa
   /**
    * No description
    *
-   * @tags addresses
+   * @tags addresses, frontend
    * @name V1AddressesCreate
    * @summary 创建地址
    * @request POST:/api/v1/addresses
@@ -62,7 +62,7 @@ export class Addresses<SecurityDataType = unknown> extends HttpClient<SecurityDa
   /**
    * No description
    *
-   * @tags addresses
+   * @tags addresses, frontend
    * @name V1AddressesDefaultList
    * @summary 获取默认地址
    * @request GET:/api/v1/addresses/default
@@ -79,7 +79,7 @@ export class Addresses<SecurityDataType = unknown> extends HttpClient<SecurityDa
   /**
    * No description
    *
-   * @tags addresses
+   * @tags addresses, frontend
    * @name V1AddressesDetail
    * @summary 获取地址详情
    * @request GET:/api/v1/addresses/{id}
@@ -96,7 +96,7 @@ export class Addresses<SecurityDataType = unknown> extends HttpClient<SecurityDa
   /**
    * No description
    *
-   * @tags addresses
+   * @tags addresses, frontend
    * @name V1AddressesUpdate
    * @summary 更新地址
    * @request PUT:/api/v1/addresses/{id}
@@ -115,7 +115,7 @@ export class Addresses<SecurityDataType = unknown> extends HttpClient<SecurityDa
   /**
    * No description
    *
-   * @tags addresses
+   * @tags addresses, frontend
    * @name V1AddressesDelete
    * @summary 删除地址
    * @request DELETE:/api/v1/addresses/{id}

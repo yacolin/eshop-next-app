@@ -10,22 +10,14 @@
  * ---------------------------------------------------------------
  */
 
-import {
-  ProductCreateSPUReq,
-  ProductUpdateSPUReq,
-  V1ProductsCreateData,
-  V1ProductsDeleteData,
-  V1ProductsDetailData,
-  V1ProductsListData,
-  V1ProductsUpdateData,
-} from "./data-contracts";
+import { V1ProductsDetailData, V1ProductsListData } from "./data-contracts";
 import { ContentType, HttpClient, RequestParams } from "./http-client";
 
 export class Products<SecurityDataType = unknown> extends HttpClient<SecurityDataType> {
   /**
    * No description
    *
-   * @tags products
+   * @tags products, frontend
    * @name V1ProductsList
    * @summary 商品列表（keyset 游标分页）
    * @request GET:/api/v1/products
@@ -65,24 +57,7 @@ export class Products<SecurityDataType = unknown> extends HttpClient<SecurityDat
   /**
    * No description
    *
-   * @tags products
-   * @name V1ProductsCreate
-   * @summary 创建商品
-   * @request POST:/api/v1/products
-   */
-  v1ProductsCreate = (product: ProductCreateSPUReq, params: RequestParams = {}) =>
-    this.request<V1ProductsCreateData, any>({
-      path: `/api/v1/products`,
-      method: "POST",
-      body: product,
-      type: ContentType.Json,
-      format: "json",
-      ...params,
-    });
-  /**
-   * No description
-   *
-   * @tags products
+   * @tags products, frontend
    * @name V1ProductsDetail
    * @summary 获取商品详情
    * @request GET:/api/v1/products/{id}
@@ -91,38 +66,6 @@ export class Products<SecurityDataType = unknown> extends HttpClient<SecurityDat
     this.request<V1ProductsDetailData, any>({
       path: `/api/v1/products/${id}`,
       method: "GET",
-      format: "json",
-      ...params,
-    });
-  /**
-   * No description
-   *
-   * @tags products
-   * @name V1ProductsUpdate
-   * @summary 更新商品
-   * @request PUT:/api/v1/products/{id}
-   */
-  v1ProductsUpdate = (id: number, product: ProductUpdateSPUReq, params: RequestParams = {}) =>
-    this.request<V1ProductsUpdateData, any>({
-      path: `/api/v1/products/${id}`,
-      method: "PUT",
-      body: product,
-      type: ContentType.Json,
-      format: "json",
-      ...params,
-    });
-  /**
-   * No description
-   *
-   * @tags products
-   * @name V1ProductsDelete
-   * @summary 删除商品
-   * @request DELETE:/api/v1/products/{id}
-   */
-  v1ProductsDelete = (id: number, params: RequestParams = {}) =>
-    this.request<V1ProductsDeleteData, any>({
-      path: `/api/v1/products/${id}`,
-      method: "DELETE",
       format: "json",
       ...params,
     });

@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "prepare": "husky",
-    "gen:api": "openapi-typescript ../eshop-monolith/docs/swagger.json --output src/types/api.ts"
+    "gen:api": "node scripts/filter-swagger.mjs && rm -rf src/lib/api-gen && swagger-typescript-api generate -p swagger.frontend.json -o src/lib/api-gen -n client.ts --modular --module-name-first-tag --clean-output --extract-request-body --extract-response-body --extract-enums && rm swagger.frontend.json"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",
