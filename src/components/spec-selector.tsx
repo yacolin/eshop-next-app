@@ -45,7 +45,7 @@ export function SpecSelector({
   return (
     <div className="space-y-4">
       {attrOptions.map((attr) => (
-        <div key={attr.attribute_id}>
+        <div key={attr.attribute_name}>
           <p className="mb-2 text-sm font-medium">{attr.attribute_name}</p>
           <div className="flex flex-wrap gap-2">
             {(attr.values ?? []).map((v: any, vi: number) => {
@@ -55,7 +55,7 @@ export function SpecSelector({
               );
               return (
                 <button
-                  key={(attr.attribute_id ?? 0) * 100 + vi}
+                  key={attr.attribute_name + "-" + vi}
                   onClick={() => isAvailable && onAttrSelect(attr.attribute_name ?? "", v.value)}
                   disabled={!isAvailable}
                   className={`cursor-pointer rounded-lg border px-4 py-2 text-sm font-medium transition-all ${
