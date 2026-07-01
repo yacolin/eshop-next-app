@@ -232,12 +232,12 @@ export interface MarketingClaimCouponReq {
 }
 
 export interface MarketingCreatePromotionReq {
-  benefit_type?: 1 | 2 | 3 | 4 | 5;
+  benefit_type?: MarketingCreatePromotionReqBenefitTypeEnum;
   benefit_value?: number;
-  condition_type?: 1 | 2 | 3 | 4;
+  condition_type?: MarketingCreatePromotionReqConditionTypeEnum;
   condition_value?: number;
   end_time: string;
-  is_stackable?: 0 | 1;
+  is_stackable?: MarketingCreatePromotionReqIsStackableEnum;
   per_user_limit?: number;
   /** Products */
   product_ids?: number[];
@@ -245,7 +245,7 @@ export interface MarketingCreatePromotionReq {
   promo_code?: string;
   /** @maxLength 100 */
   promo_name: string;
-  promo_type: 1 | 2 | 3 | 4 | 5 | 6;
+  promo_type: MarketingCreatePromotionReqPromoTypeEnum;
   /**
    * Rule
    * @maxLength 100
@@ -344,12 +344,12 @@ export interface MarketingPromotionRule {
 }
 
 export interface MarketingUpdatePromotionReq {
-  benefit_type?: 1 | 2 | 3 | 4 | 5;
+  benefit_type?: MarketingUpdatePromotionReqBenefitTypeEnum;
   benefit_value?: number;
-  condition_type?: 1 | 2 | 3 | 4;
+  condition_type?: MarketingUpdatePromotionReqConditionTypeEnum;
   condition_value?: number;
   end_time?: string;
-  is_stackable?: 0 | 1;
+  is_stackable?: MarketingUpdatePromotionReqIsStackableEnum;
   per_user_limit?: number;
   /** @maxLength 100 */
   promo_name?: string;
@@ -357,7 +357,7 @@ export interface MarketingUpdatePromotionReq {
   rule_name?: string;
   stack_priority?: number;
   start_time?: string;
-  status?: 1 | 2 | 3 | 4;
+  status?: MarketingUpdatePromotionReqStatusEnum;
   total_quantity?: number;
 }
 
@@ -452,12 +452,12 @@ export interface ProductCategoryListResult {
 
 export interface ProductCreateAttributeReq {
   category_id: number;
-  input_type?: 1 | 2 | 3 | 4;
-  is_sku_spec?: 0 | 1;
+  input_type?: ProductCreateAttributeReqInputTypeEnum;
+  is_sku_spec?: ProductCreateAttributeReqIsSkuSpecEnum;
   /** @maxLength 100 */
   name: string;
-  required?: 0 | 1;
-  searchable?: 0 | 1;
+  required?: ProductCreateAttributeReqRequiredEnum;
+  searchable?: ProductCreateAttributeReqSearchableEnum;
   sort_order?: number;
   /** @maxLength 20 */
   unit?: string;
@@ -475,7 +475,7 @@ export interface ProductCreateBrandReq {
   /** @maxLength 100 */
   name: string;
   sort_order?: number;
-  status?: 0 | 1;
+  status?: ProductCreateBrandReqStatusEnum;
 }
 
 export interface ProductCreateCategoryReq {
@@ -661,14 +661,14 @@ export interface ProductSetCategoryBrandsReq {
 }
 
 export interface ProductUpdateAttributeReq {
-  input_type?: 1 | 2 | 3 | 4;
-  is_sku_spec?: 0 | 1;
+  input_type?: ProductUpdateAttributeReqInputTypeEnum;
+  is_sku_spec?: ProductUpdateAttributeReqIsSkuSpecEnum;
   /** @maxLength 100 */
   name?: string;
-  required?: 0 | 1;
-  searchable?: 0 | 1;
+  required?: ProductUpdateAttributeReqRequiredEnum;
+  searchable?: ProductUpdateAttributeReqSearchableEnum;
   sort_order?: number;
-  status?: 0 | 1;
+  status?: ProductUpdateAttributeReqStatusEnum;
   /** @maxLength 20 */
   unit?: string;
   values?: string;
@@ -684,7 +684,7 @@ export interface ProductUpdateBrandReq {
   /** @maxLength 100 */
   name?: string;
   sort_order?: number;
-  status?: 0 | 1;
+  status?: ProductUpdateBrandReqStatusEnum;
 }
 
 export interface ProductUpdateCategoryReq {
@@ -693,7 +693,7 @@ export interface ProductUpdateCategoryReq {
   /** @maxLength 100 */
   name?: string;
   sort_order?: number;
-  status?: 0 | 1;
+  status?: ProductUpdateCategoryReqStatusEnum;
 }
 
 export interface ProductUpdateSKUReq {
@@ -708,7 +708,7 @@ export interface ProductUpdateSKUReq {
   /** @min 0 */
   market_price?: number;
   price?: number;
-  status?: 0 | 1;
+  status?: ProductUpdateSkuReqStatusEnum;
   volume?: number;
   weight?: number;
   width?: number;
@@ -721,7 +721,7 @@ export interface ProductUpdateSPUReq {
   /** @maxLength 200 */
   name?: string;
   sort_order?: number;
-  status?: 0 | 1 | 2 | 3 | 4;
+  status?: ProductUpdateSpuReqStatusEnum;
   /** @maxLength 500 */
   subtitle?: string;
   /** @maxLength 10 */
@@ -772,7 +772,7 @@ export interface ReviewCreateReviewReq {
 export interface ReviewModerateReviewReq {
   /** @maxLength 200 */
   reason?: string;
-  status: 1 | 2;
+  status: ReviewModerateReviewReqStatusEnum;
 }
 
 export interface ReviewReplyReviewReq {
@@ -1009,7 +1009,7 @@ export interface TradePaymentCallbackReq {
   /** @maxLength 32 */
   payment_no: string;
   raw_body?: string;
-  status: "success" | "failed";
+  status: TradePaymentCallbackReqStatusEnum;
   /** @maxLength 128 */
   transaction_id: string;
 }
@@ -1026,7 +1026,7 @@ export interface TradeUpdateItemReq {
 export interface TradeUpdateOrderStatusReq {
   /** @maxLength 500 */
   note?: string;
-  status: "cancelled" | "shipped" | "delivered" | "completed";
+  status: TradeUpdateOrderStatusReqStatusEnum;
 }
 
 export interface UserAddress {
@@ -1083,7 +1083,7 @@ export interface UserCreateAddressReq {
   phone: string;
   /** @maxLength 32 */
   province: string;
-  tag?: "home" | "office" | "company" | "other";
+  tag?: UserCreateAddressReqTagEnum;
   /** @maxLength 10 */
   zip_code?: string;
 }
@@ -1104,7 +1104,7 @@ export interface UserCreateRoleReq {
   is_system?: boolean;
   name: string;
   sort_order?: number;
-  status?: 0 | 1;
+  status?: UserCreateRoleReqStatusEnum;
 }
 
 export interface UserLoginResponse {
@@ -1193,7 +1193,7 @@ export interface UserUpdateAddressReq {
   phone?: string;
   /** @maxLength 32 */
   province?: string;
-  tag?: "home" | "office" | "company" | "other";
+  tag?: UserUpdateAddressReqTagEnum;
   /** @maxLength 10 */
   zip_code?: string;
 }
@@ -1203,14 +1203,14 @@ export interface UserUpdatePermissionReq {
   description?: string;
   display_name?: string;
   sort_order?: number;
-  status?: 0 | 1;
+  status?: UserUpdatePermissionReqStatusEnum;
 }
 
 export interface UserUpdateRoleReq {
   description?: string;
   display_name?: string;
   sort_order?: number;
-  status?: 0 | 1;
+  status?: UserUpdateRoleReqStatusEnum;
 }
 
 export interface UserUpdateUserInfoReq {
@@ -1223,7 +1223,7 @@ export interface UserUpdateUserInfoReq {
   city?: string;
   /** @maxLength 32 */
   country?: string;
-  gender?: 0 | 1 | 2;
+  gender?: UserUpdateUserInfoReqGenderEnum;
   /** @maxLength 10 */
   language?: string;
   /** @maxLength 50 */
@@ -1300,6 +1300,191 @@ export interface WsTestPushRequest {
   target?: string;
   /** 通知标题 */
   title: string;
+}
+
+export enum MarketingCreatePromotionReqBenefitTypeEnum {
+  Value1 = 1,
+  Value2 = 2,
+  Value3 = 3,
+  Value4 = 4,
+  Value5 = 5,
+}
+
+export enum MarketingCreatePromotionReqConditionTypeEnum {
+  Value1 = 1,
+  Value2 = 2,
+  Value3 = 3,
+  Value4 = 4,
+}
+
+export enum MarketingCreatePromotionReqIsStackableEnum {
+  Value0 = 0,
+  Value1 = 1,
+}
+
+export enum MarketingCreatePromotionReqPromoTypeEnum {
+  Value1 = 1,
+  Value2 = 2,
+  Value3 = 3,
+  Value4 = 4,
+  Value5 = 5,
+  Value6 = 6,
+}
+
+export enum MarketingUpdatePromotionReqBenefitTypeEnum {
+  Value1 = 1,
+  Value2 = 2,
+  Value3 = 3,
+  Value4 = 4,
+  Value5 = 5,
+}
+
+export enum MarketingUpdatePromotionReqConditionTypeEnum {
+  Value1 = 1,
+  Value2 = 2,
+  Value3 = 3,
+  Value4 = 4,
+}
+
+export enum MarketingUpdatePromotionReqIsStackableEnum {
+  Value0 = 0,
+  Value1 = 1,
+}
+
+export enum MarketingUpdatePromotionReqStatusEnum {
+  Value1 = 1,
+  Value2 = 2,
+  Value3 = 3,
+  Value4 = 4,
+}
+
+export enum ProductCreateAttributeReqInputTypeEnum {
+  Value1 = 1,
+  Value2 = 2,
+  Value3 = 3,
+  Value4 = 4,
+}
+
+export enum ProductCreateAttributeReqIsSkuSpecEnum {
+  Value0 = 0,
+  Value1 = 1,
+}
+
+export enum ProductCreateAttributeReqRequiredEnum {
+  Value0 = 0,
+  Value1 = 1,
+}
+
+export enum ProductCreateAttributeReqSearchableEnum {
+  Value0 = 0,
+  Value1 = 1,
+}
+
+export enum ProductCreateBrandReqStatusEnum {
+  Value0 = 0,
+  Value1 = 1,
+}
+
+export enum ProductUpdateAttributeReqInputTypeEnum {
+  Value1 = 1,
+  Value2 = 2,
+  Value3 = 3,
+  Value4 = 4,
+}
+
+export enum ProductUpdateAttributeReqIsSkuSpecEnum {
+  Value0 = 0,
+  Value1 = 1,
+}
+
+export enum ProductUpdateAttributeReqRequiredEnum {
+  Value0 = 0,
+  Value1 = 1,
+}
+
+export enum ProductUpdateAttributeReqSearchableEnum {
+  Value0 = 0,
+  Value1 = 1,
+}
+
+export enum ProductUpdateAttributeReqStatusEnum {
+  Value0 = 0,
+  Value1 = 1,
+}
+
+export enum ProductUpdateBrandReqStatusEnum {
+  Value0 = 0,
+  Value1 = 1,
+}
+
+export enum ProductUpdateCategoryReqStatusEnum {
+  Value0 = 0,
+  Value1 = 1,
+}
+
+export enum ProductUpdateSkuReqStatusEnum {
+  Value0 = 0,
+  Value1 = 1,
+}
+
+export enum ProductUpdateSpuReqStatusEnum {
+  Value0 = 0,
+  Value1 = 1,
+  Value2 = 2,
+  Value3 = 3,
+  Value4 = 4,
+}
+
+export enum ReviewModerateReviewReqStatusEnum {
+  Value1 = 1,
+  Value2 = 2,
+}
+
+export enum TradePaymentCallbackReqStatusEnum {
+  Success = "success",
+  Failed = "failed",
+}
+
+export enum TradeUpdateOrderStatusReqStatusEnum {
+  Cancelled = "cancelled",
+  Shipped = "shipped",
+  Delivered = "delivered",
+  Completed = "completed",
+}
+
+export enum UserCreateAddressReqTagEnum {
+  Home = "home",
+  Office = "office",
+  Company = "company",
+  Other = "other",
+}
+
+export enum UserCreateRoleReqStatusEnum {
+  Value0 = 0,
+  Value1 = 1,
+}
+
+export enum UserUpdateAddressReqTagEnum {
+  Home = "home",
+  Office = "office",
+  Company = "company",
+  Other = "other",
+}
+
+export enum UserUpdatePermissionReqStatusEnum {
+  Value0 = 0,
+  Value1 = 1,
+}
+
+export enum UserUpdateRoleReqStatusEnum {
+  Value0 = 0,
+  Value1 = 1,
+}
+
+export enum UserUpdateUserInfoReqGenderEnum {
+  Value0 = 0,
+  Value1 = 1,
+  Value2 = 2,
 }
 
 export type V1AddressesListData = ResponseResponse & {
