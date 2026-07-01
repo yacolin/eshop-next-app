@@ -1,5 +1,9 @@
 // Legacy types bridge
-import type { ProductSPU } from "@/lib/api-gen/data-contracts";
+import type {
+  ProductSPU,
+  ProductSKU,
+  ProductProductAttrResponse,
+} from "@/lib/api-gen/data-contracts";
 
 export type Product = ProductSPU;
 export interface ProductDetailResponse {
@@ -11,8 +15,8 @@ export interface ProductDetailResponse {
     created_at: number | string;
     updated_at: number | string;
   };
-  skus: any[];
-  attributes: any[];
+  skus: (ProductSKU & { spec: Record<string, string> })[];
+  attributes: ProductProductAttrResponse[];
 }
 export interface FlashActivity {
   id: number;

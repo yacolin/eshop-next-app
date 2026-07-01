@@ -1,7 +1,7 @@
 "use client";
 
 import { CheckCircle, XCircle, AlertTriangle } from "lucide-react";
-import type { SKUResponse } from "@/lib/utils";
+import type { ProductSKU } from "@/lib/api-gen/data-contracts";
 import type { ProductProductAttrResponse } from "@/lib/api-gen/data-contracts";
 
 /**
@@ -36,9 +36,9 @@ export function SpecSelector({
   hasSpecSkus: boolean;
   attrOptions: ProductProductAttrResponse[];
   selectedAttrs: Record<string, string>;
-  skus: SKUResponse[];
+  skus: ProductSKU[];
   onAttrSelect: (attrName: string, value: string) => void;
-  matchedSku: SKUResponse | null;
+  matchedSku: ProductSKU | null;
 }) {
   if (!hasSpecSkus || attrOptions.length === 0) return null;
 
@@ -50,7 +50,7 @@ export function SpecSelector({
           <div className="flex flex-wrap gap-2">
             {(attr.values ?? []).map((v: any, vi: number) => {
               const isSelected = selectedAttrs[attr.attribute_name ?? ""] === v.value;
-              const isAvailable = (skus as any[]).some(
+              const isAvailable = (skus as any).some(
                 (sku: any) => sku.spec?.[attr.attribute_name ?? ""] === v.value,
               );
               return (
@@ -75,7 +75,7 @@ export function SpecSelector({
       ))}
       {matchedSku && (
         <div className="rounded-lg bg-primary/5 px-4 py-3">
-          <p className="text-sm font-semibold text-foreground">{(matchedSku as any).name ?? ""}</p>
+          <p className="text-sm font-semibold text-foreground">{matchedSku.sku_code ?? ""}</p>
           <p className="mt-0.5 text-xs text-muted-foreground">
             SKU: <span className="font-mono">{matchedSku.sku_code}</span>
           </p>

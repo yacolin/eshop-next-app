@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Products } from "@/lib/api-gen/Products";
 import { Orders } from "@/lib/api-gen/Orders";
 
-import type { SKUResponse } from "@/lib/utils";
+import type { ProductSKU } from "@/lib/api-gen/data-contracts";
 import type { CheckoutItem } from "@/types/order";
 import { CheckoutHeader } from "./components/checkout-header";
 import { AddressPicker } from "./components/address-picker";
@@ -76,7 +76,7 @@ export default function CheckoutPage({ searchParams }: Props) {
   }, [productId, skuId]);
 
   // Find the specific SKU by ID
-  const matchedSku: SKUResponse | null = detail
+  const matchedSku: ProductSKU | null = detail
     ? (detail.skus.find((s: any) => s.id === skuId) ?? null)
     : null;
 

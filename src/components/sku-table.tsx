@@ -1,5 +1,5 @@
 import { formatPrice } from "@/lib/utils";
-import type { SKUResponse } from "@/lib/utils";
+import type { ProductSKU } from "@/lib/api-gen/data-contracts";
 
 /**
  * SKU 列表表格 —— 产品/秒杀详情页底部共用。
@@ -9,7 +9,7 @@ import type { SKUResponse } from "@/lib/utils";
  *
  * @param skus - 完整 SKU 列表，通常来自 ProductDetailResponse.skus
  */
-export function SkuTable({ skus }: { skus: SKUResponse[] }) {
+export function SkuTable({ skus }: { skus: ProductSKU[] }) {
   if (skus.length === 0) return null;
 
   return (
@@ -21,10 +21,8 @@ export function SkuTable({ skus }: { skus: SKUResponse[] }) {
         {skus.map((sku) => (
           <div key={sku.id} className="flex items-center justify-between py-2.5 text-sm">
             <div className="flex items-center gap-3">
-              <span className="font-mono text-xs text-muted-foreground">
-                {(sku as any).sku_code ?? ""}
-              </span>
-              <span className="text-xs">{(sku as any).name ?? sku.sku_code ?? ""}</span>
+              <span className="font-mono text-xs text-muted-foreground">{sku.sku_code ?? ""}</span>
+              <span className="text-xs">{sku.sku_code ?? ""}</span>
               {sku.spec && Object.keys(sku.spec).length > 0 && (
                 <span className="text-xs text-muted-foreground">
                   {Object.entries(sku.spec)

@@ -2,8 +2,6 @@ import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import type { ProductSKU } from "@/lib/api-gen/data-contracts";
 
-export type SKUResponse = ProductSKU;
-
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
@@ -39,10 +37,10 @@ export function formatPrice(cents: number) {
  * @param hasAttrs - 是否存在带 spec 的 SKU，用于判断是否需要规格选择
  */
 export function findMatchingSku(
-  skus: SKUResponse[],
+  skus: ProductSKU[],
   selected: Record<string, string>,
   hasAttrs: boolean,
-): SKUResponse | null {
+): ProductSKU | null {
   const keys = Object.keys(selected);
   if (keys.length === 0 && !hasAttrs) {
     return skus.find((sku) => !sku.spec || Object.keys(sku.spec).length === 0) ?? null;

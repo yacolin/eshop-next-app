@@ -1,9 +1,15 @@
-// @ts-nocheck
 // Legacy API bridge — wraps generated clients for backward compatibility
 import { Products } from "@/lib/api-gen/Products";
 import { Orders } from "@/lib/api-gen/Orders";
 import { Addresses } from "@/lib/api-gen/Addresses";
 import { Carts } from "@/lib/api-gen/Carts";
+import type {
+  ProductSKU,
+  ProductProductAttrResponse,
+  UserCreateAddressReq,
+  TradeAddItemReq,
+  TradeUpdateItemReq,
+} from "@/lib/api-gen/data-contracts";
 
 const pApi = new Products({ baseUrl: "" });
 const oApi = new Orders({ baseUrl: "" });
@@ -29,7 +35,7 @@ export async function fetchProductDetail(id: number) {
       created_at: raw.created_at ?? "",
       updated_at: raw.updated_at ?? "",
     },
-    skus: (raw.skus ?? []).map((s: any) => ({
+    skus: ((raw.skus ?? []) as ProductSKU[]).map((s: ProductSKU) => ({
       id: s.id ?? 0,
       product_id: s.product_id ?? 0,
       name: s.sku_code ?? "",
@@ -42,19 +48,21 @@ export async function fetchProductDetail(id: number) {
       created_at: s.created_at ?? 0,
       updated_at: s.updated_at ?? 0,
     })),
-    attributes: (raw.attributes ?? []).map((a: any, i: number) => ({
-      attribute_id: a.attribute_id ?? 0,
-      attribute_name: a.attribute_name ?? "",
-      values: (a.values ?? []).map((v: string, j: number) => ({
-        value_id: (a.attribute_id ?? 0) * 100 + j + 1,
-        value: v,
-      })),
-    })),
+    attributes: ((raw.attributes ?? []) as ProductProductAttrResponse[]).map(
+      (a: ProductProductAttrResponse, i: number) => ({
+        attribute_id: a.attribute_id ?? 0,
+        attribute_name: a.attribute_name ?? "",
+        values: (a.values ?? []).map((v: string, j: number) => ({
+          value_id: (a.attribute_id ?? 0) * 100 + j + 1,
+          value: v,
+        })),
+      }),
+    ),
   };
 }
 
-export async function submitOrder(data: any) {
-  const res = await oApi.v1OrdersCreate(data, { headers: authHeaders() });
+export async function submitOrder(data: Record<string, unknown>) {
+  const res = await oApi.v1OrdersCreate(data as any, { headers: authHeaders() });
   return res.data?.data;
 }
 
@@ -63,7 +71,7 @@ export async function fetchAddresses() {
   return res.data?.data;
 }
 
-export async function createAddress(data: any) {
+export async function createAddress(data: UserCreateAddressReq) {
   const res = await aApi.v1AddressesCreate(data, { headers: authHeaders() });
   return res.data?.data;
 }
@@ -75,27 +83,27 @@ export async function fetchCart(userId?: number | null, sessionId?: string | nul
   return res.data?.data;
 }
 
-export async function addToCart(data: any) {
+export async function addToCart(data: TradeAddItemReq) {
   const res = await cApi.v1CartsCreate(data, { headers: authHeaders() });
   return res.data?.data;
 }
 
-export async function updateCartItem(itemId: number, data: any) {
+export async function updateCartItem(itemId: number, data: TradeUpdateItemReq) {
   const res = await cApi.v1CartsUpdate(data, { headers: authHeaders() });
   return res.data?.data;
 }
 
-export async function removeCartItem(itemId: number) {
-  const res = await cApi.v1CartsDelete(itemId, { headers: authHeaders() });
+export async function removeCartItem(skuId: number) {
+  const res = await cApi.v1CartsDelete({ sku_id: skuId }, { headers: authHeaders() });
   return res.data?.data;
 }
 
 export async function clearCart() {
-  const res = await cApi.v1CartsClearCreate({ headers: authHeaders() });
+  const res = await cApi.v1CartsClearCreate(undefined, { headers: authHeaders() });
   return res.data?.data;
 }
 
-// Legacy — still used by flash-sale pages (no generated equivalent)
+// Legacy — still used by flash-sale pages
 export async function fetchProductsCursor(cursor: string | null = null, categoryId?: number) {
   const res = await pApi.v1ProductsList({
     size: 20,
@@ -105,25 +113,6 @@ export async function fetchProductsCursor(cursor: string | null = null, category
   });
   const d = res.data?.data;
   return { list: d?.list ?? [], cursor: d?.cursor ?? null, has_more: d?.has_more ?? false };
-}
-
-export async function fetchFlashActivities(_cursor?: any) {
-  return { list: [], next_cursor: null, has_more: false };
-}
-
-export async function fetchFlashActivityById(id: number) {
-  return {
-    id: 0,
-    product_id: 0,
-    flash_price: 0,
-    total_stock: 0,
-    sold_stock: 0,
-    status: "ended",
-    start_time: 0,
-    end_time: 0,
-    created_at: 0,
-    updated_at: 0,
-  };
 }
 
 export { authHeaders };
