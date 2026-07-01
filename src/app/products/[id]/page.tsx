@@ -46,19 +46,29 @@ function toDetail(
       sku_code: s.sku_code ?? "",
       image: s.image ?? undefined,
       spec: typeof s.spec === "string" ? JSON.parse(s.spec) : (s.spec ?? {}),
-      available_quantity: undefined as number | undefined,
-      inventory_status: undefined as string | undefined,
+      available_quantity: s.available_quantity,
+      inventory_status: s.inventory_status,
       created_at: s.created_at ?? 0,
       updated_at: s.updated_at ?? 0,
     })),
-    attributes: attrs.map((a) => ({
-      attribute_id: a.attribute_id ?? 0,
-      attribute_name: a.attribute_name ?? "",
-      values: (a.values ?? []).map((v: string, i: number) => ({
-        value_id: (a.attribute_id ?? 0) * 100 + i + 1,
-        value: v,
-      })),
-    })),
+    attributes: (() => {
+      // Only keep attributes that appear in SKU specs
+      const specKeys = new Set<string>();
+      for (const s of skus) {
+        const spec = typeof s.spec === "string" ? JSON.parse(s.spec) : (s.spec ?? {});
+        Object.keys(spec).forEach((k) => specKeys.add(k));
+      }
+      return attrs
+        .filter((a) => specKeys.has(a.attribute_name ?? ""))
+        .map((a) => ({
+          attribute_id: a.attribute_id ?? 0,
+          attribute_name: a.attribute_name ?? "",
+          values: (a.values ?? []).map((v: string, i: number) => ({
+            value_id: (a.attribute_id ?? 0) * 100 + i + 1,
+            value: v,
+          })),
+        }));
+    })(),
   };
 }
 

@@ -28,7 +28,7 @@ export default function PromotionsPage() {
     let cancelled = false;
     (async () => {
       try {
-        const res = await promoApi.v1PromotionsList({ size: 50 });
+        const res = await promoApi.v1PromotionsList({ size: 50, status: 2 });
         if (!cancelled) setPromotions(res.data?.data?.list ?? []);
       } catch {
         // no promotions
