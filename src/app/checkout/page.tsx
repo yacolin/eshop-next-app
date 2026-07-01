@@ -2,11 +2,12 @@
 
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
+import { submitOrder } from "@/lib/api";
 import { Products } from "@/lib/api-gen/Products";
-import { Orders } from "@/lib/api-gen/Orders";
-
 import type { ProductSKU } from "@/lib/api-gen/data-contracts";
 import type { CheckoutItem } from "@/types/order";
+
+const productsApi = new Products({ baseUrl: "" });
 import { CheckoutHeader } from "./components/checkout-header";
 import { AddressPicker } from "./components/address-picker";
 import { AddressForm } from "./components/address-form";
@@ -60,7 +61,7 @@ export default function CheckoutPage({ searchParams }: Props) {
       try {
         setLoading(true);
         setError(null);
-        const res = await new Products({ baseUrl: "" }).v1ProductsDetail(productId!);
+        const res = await productsApi.v1ProductsDetail(productId!);
         const data = (res as any).data?.data;
         if (cancelled) return;
         setDetail(data);
@@ -81,16 +82,19 @@ export default function CheckoutPage({ searchParams }: Props) {
     : null;
 
   // Unit price: flash_price > sku price > min_price
-  const unitPrice = flashPrice ?? matchedSku?.price ?? detail?.product.min_price ?? 0;
+  const unitPrice = flashPrice ?? matchedSku?.price ?? detail?.min_price ?? 0;
 
   // Construct checkout item
   const checkoutItem: any =
     detail && matchedSku
       ? {
           sku_id: matchedSku.id ?? 0,
-          product_name: detail.product.name,
+          product_name: detail.name,
           sku_name: (matchedSku as any).name ?? matchedSku.sku_code ?? "",
-          spec: matchedSku.spec ?? {},
+          spec:
+            typeof matchedSku.spec === "string"
+              ? JSON.parse(matchedSku.spec)
+              : (matchedSku.spec ?? {}),
           price: unitPrice,
           quantity,
           stock: matchedSku.available_quantity ?? 0,
@@ -111,12 +115,12 @@ export default function CheckoutPage({ searchParams }: Props) {
     setSubmitting(true);
     try {
       const userId = localStorage.getItem("user_id");
-      const result = await new Orders({ baseUrl: "" }).v1OrdersCreate({
+      const result = await submitOrder({
         customer_id: userId || "0",
         address_id: selectedAddressId,
         items: [{ sku_id: matchedSku.id ?? 0, quantity }],
       } as any);
-      setResultDialog({ type: "success", orderNo: (result as any).data?.order_no });
+      setResultDialog({ type: "success", orderNo: (result as any)?.order_no });
     } catch (e) {
       setResultDialog({
         type: "error",
