@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import type { ProductSKU } from "@/lib/api-gen/data-contracts";
@@ -52,7 +51,11 @@ export function findMatchingSku(
   return (
     skus.find((sku) => {
       if (!sku.spec) return false;
-      return keys.every((key) => sku.spec![key] === selected[key]);
+      return keys.every(
+        (key) =>
+          (typeof sku.spec === "string" ? JSON.parse(sku.spec) : (sku.spec ?? {}))[key] ===
+          selected[key],
+      );
     }) ?? null
   );
 }

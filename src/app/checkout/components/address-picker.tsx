@@ -1,10 +1,15 @@
-// @ts-nocheck
 "use client";
+
+function authHeaders(): Record<string, string> {
+  if (typeof window === "undefined") return {};
+  const token = localStorage.getItem("access_token");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
 
 import { useState, useEffect } from "react";
 import { MapPin, ChevronDown, ChevronRight, Plus, Loader2 } from "lucide-react";
-import { fetchAddresses } from "@/lib/api";
-import type { AddressData } from "@/types/address";
+import { Addresses } from "@/lib/api-gen/Addresses";
+import type { UserAddress } from "@/lib/api-gen/data-contracts";
 
 interface Props {
   onAddNew: () => void;
@@ -13,7 +18,7 @@ interface Props {
 
 export function AddressPicker({ onAddNew, onSelect }: Props) {
   const [expanded, setExpanded] = useState(false);
-  const [addresses, setAddresses] = useState<AddressData[]>([]);
+  const [addresses, setAddresses] = useState<UserAddress[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -24,14 +29,16 @@ export function AddressPicker({ onAddNew, onSelect }: Props) {
       try {
         setLoading(true);
         setError(null);
-        const data = await fetchAddresses();
+        const data = await new Addresses({ baseUrl: "" }).v1AddressesList({
+          headers: authHeaders(),
+        });
         if (cancelled) return;
-        setAddresses(data.list);
+        setAddresses((data as any)?.data?.list ?? []);
         // Auto-select default, or first address
-        const defaultAddr = data.list.find((a) => a.is_default) ?? data.list[0];
+        const defaultAddr = addresses.find((a: any) => a.is_default) ?? addresses[0];
         if (defaultAddr) {
-          setSelectedId(defaultAddr.id);
-          onSelect?.(defaultAddr.id);
+          setSelectedId(defaultAddr.id ?? null);
+          onSelect?.(defaultAddr.id ?? 0);
         }
       } catch (e) {
         if (!cancelled) {
@@ -155,8 +162,8 @@ export function AddressPicker({ onAddNew, onSelect }: Props) {
                 addr.id === selectedId ? "bg-primary/5" : ""
               }`}
               onClick={() => {
-                setSelectedId(addr.id);
-                onSelect?.(addr.id);
+                setSelectedId(addr.id ?? null);
+                onSelect?.(addr.id ?? 0);
                 setExpanded(false);
               }}
             >

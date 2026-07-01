@@ -30,7 +30,7 @@ export function FlashSaleSection() {
     let cancelled = false;
     (async () => {
       try {
-        const res = await promoApi.v1PromotionsList({ size: 4, promo_type: 3 });
+        const res = await promoApi.v1PromotionsList({ size: 4, promo_type: 3 } as any);
         if (!cancelled) {
           setPromotions(res.data?.data?.list ?? []);
         }

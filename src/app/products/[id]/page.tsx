@@ -1,6 +1,4 @@
-// @ts-nocheck
 "use client";
-// @ts-nocheck
 
 import { useState, useEffect, useMemo, use, useCallback } from "react";
 import Link from "next/link";
@@ -150,7 +148,7 @@ export default function ProductDetailPage({ params }: Props) {
     : false;
 
   const matchedSku = useMemo(
-    () => (detail ? findMatchingSku(detail.skus, selectedAttrs, hasSpecSkus) : null),
+    () => (detail ? findMatchingSku(detail.skus as any, selectedAttrs, hasSpecSkus) : null),
     [detail, selectedAttrs, hasSpecSkus],
   );
 
@@ -283,7 +281,7 @@ export default function ProductDetailPage({ params }: Props) {
             <div className="min-h-30">
               <SpecSelector
                 hasSpecSkus={hasSpecSkus}
-                attrOptions={attrOptions}
+                attrOptions={attrOptions as any}
                 selectedAttrs={selectedAttrs}
                 skus={skus}
                 onAttrSelect={handleAttrSelect}

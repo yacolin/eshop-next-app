@@ -1,11 +1,11 @@
-// @ts-nocheck
 "use client";
-// @ts-nocheck
 
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
-import { fetchProductDetail, submitOrder } from "@/lib/api";
-import type { ProductDetailResponse, SKUResponse } from "@/types/product";
+import { Products } from "@/lib/api-gen/Products";
+import { Orders } from "@/lib/api-gen/Orders";
+
+import type { SKUResponse } from "@/lib/utils";
 import type { CheckoutItem } from "@/types/order";
 import { CheckoutHeader } from "./components/checkout-header";
 import { AddressPicker } from "./components/address-picker";
@@ -35,7 +35,7 @@ export default function CheckoutPage({ searchParams }: Props) {
   const quantity = Math.max(1, Math.floor(Number(params.quantity) || 1));
   const flashPrice = params.flash_price ? Number(params.flash_price) : null;
 
-  const [detail, setDetail] = useState<ProductDetailResponse | null>(null);
+  const [detail, setDetail] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showAddressForm, setShowAddressForm] = useState(false);
@@ -60,7 +60,8 @@ export default function CheckoutPage({ searchParams }: Props) {
       try {
         setLoading(true);
         setError(null);
-        const data = await fetchProductDetail(productId);
+        const res = await new Products({ baseUrl: "" }).v1ProductsDetail(productId!);
+        const data = (res as any).data?.data;
         if (cancelled) return;
         setDetail(data);
       } catch (e) {
@@ -76,14 +77,14 @@ export default function CheckoutPage({ searchParams }: Props) {
 
   // Find the specific SKU by ID
   const matchedSku: SKUResponse | null = detail
-    ? (detail.skus.find((s) => s.id === skuId) ?? null)
+    ? (detail.skus.find((s: any) => s.id === skuId) ?? null)
     : null;
 
   // Unit price: flash_price > sku price > min_price
   const unitPrice = flashPrice ?? matchedSku?.price ?? detail?.product.min_price ?? 0;
 
   // Construct checkout item
-  const checkoutItem: CheckoutItem | null =
+  const checkoutItem: any =
     detail && matchedSku
       ? {
           sku_id: matchedSku.id ?? 0,
@@ -110,12 +111,12 @@ export default function CheckoutPage({ searchParams }: Props) {
     setSubmitting(true);
     try {
       const userId = localStorage.getItem("user_id");
-      const result = await submitOrder({
+      const result = await new Orders({ baseUrl: "" }).v1OrdersCreate({
         customer_id: userId || "0",
         address_id: selectedAddressId,
         items: [{ sku_id: matchedSku.id ?? 0, quantity }],
-      });
-      setResultDialog({ type: "success", orderNo: result.order_no });
+      } as any);
+      setResultDialog({ type: "success", orderNo: (result as any).data?.order_no });
     } catch (e) {
       setResultDialog({
         type: "error",
@@ -181,7 +182,7 @@ export default function CheckoutPage({ searchParams }: Props) {
               onAddNew={() => setShowAddressForm(true)}
               onSelect={(id) => setSelectedAddressId(id)}
             />
-            <OrderItems items={[checkoutItem!]} />
+            <OrderItems items={[checkoutItem] as any} />
             <OrderNote />
           </div>
 

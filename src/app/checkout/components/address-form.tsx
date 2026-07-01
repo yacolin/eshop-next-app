@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { createAddress } from "@/lib/api";
+import { Addresses } from "@/lib/api-gen/Addresses";
 import {
   Sheet,
   SheetContent,
@@ -46,7 +46,7 @@ export function AddressForm({ open, onOpenChange, onSaved }: Props) {
     if (!consignee || !phone || !province || !city || !district || !detail) return;
     setSaving(true);
     try {
-      await createAddress({
+      await new Addresses({ baseUrl: "" }).v1AddressesCreate({
         consignee,
         phone,
         province,

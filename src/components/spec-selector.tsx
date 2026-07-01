@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client";
 
 import { CheckCircle, XCircle, AlertTriangle } from "lucide-react";
@@ -49,13 +48,15 @@ export function SpecSelector({
         <div key={attr.attribute_id}>
           <p className="mb-2 text-sm font-medium">{attr.attribute_name}</p>
           <div className="flex flex-wrap gap-2">
-            {(attr.values ?? []).map((v: any) => {
-              const isSelected = selectedAttrs[attr.attribute_name] === v.value;
-              const isAvailable = skus.some((sku) => sku.spec?.[attr.attribute_name] === v.value);
+            {(attr.values ?? []).map((v: any, vi: number) => {
+              const isSelected = selectedAttrs[attr.attribute_name ?? ""] === v.value;
+              const isAvailable = (skus as any[]).some(
+                (sku: any) => sku.spec?.[attr.attribute_name ?? ""] === v.value,
+              );
               return (
                 <button
-                  key={v.value_id}
-                  onClick={() => isAvailable && onAttrSelect(attr.attribute_name, v.value)}
+                  key={(attr.attribute_id ?? 0) * 100 + vi}
+                  onClick={() => isAvailable && onAttrSelect(attr.attribute_name ?? "", v.value)}
                   disabled={!isAvailable}
                   className={`cursor-pointer rounded-lg border px-4 py-2 text-sm font-medium transition-all ${
                     isSelected
@@ -74,7 +75,7 @@ export function SpecSelector({
       ))}
       {matchedSku && (
         <div className="rounded-lg bg-primary/5 px-4 py-3">
-          <p className="text-sm font-semibold text-foreground">{matchedSku.name}</p>
+          <p className="text-sm font-semibold text-foreground">{(matchedSku as any).name ?? ""}</p>
           <p className="mt-0.5 text-xs text-muted-foreground">
             SKU: <span className="font-mono">{matchedSku.sku_code}</span>
           </p>
