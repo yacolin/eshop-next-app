@@ -136,9 +136,7 @@ export default function FlashSaleDetailPage({ params }: Props) {
     if (!detail || !matchedSku || adding) return;
     setAdding(true);
     try {
-      for (let i = 0; i < quantity; i++) {
-        await addItem(matchedSku.id);
-      }
+      await addItem(matchedSku.id, quantity);
     } finally {
       setAdding(false);
     }

@@ -26,7 +26,7 @@ interface CartContextValue {
   items: CartItem[];
   loading: boolean;
   error: string | null;
-  addItem: (skuId: number) => Promise<void>;
+  addItem: (skuId: number, qty?: number) => Promise<void>;
   removeItem: (skuId: number) => Promise<void>;
   updateQuantity: (skuId: number, quantity: number) => Promise<void>;
   clearCart: () => Promise<void>;
@@ -89,10 +89,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
     loadCart();
   }, [loadCart]);
 
-  const addItem = useCallback(async (skuId: number) => {
+  const addItem = useCallback(async (skuId: number, qty: number = 1) => {
     try {
       setError(null);
-      await cartsApi.v1CartsItemsCreate({ sku_id: skuId, quantity: 1 }, { headers: authHeaders() });
+      await cartsApi.v1CartsItemsCreate(
+        { sku_id: skuId, quantity: qty },
+        { headers: authHeaders() },
+      );
       setItems(await fetchCartItems());
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to add item");

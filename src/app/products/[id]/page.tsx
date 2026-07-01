@@ -177,9 +177,7 @@ export default function ProductDetailPage({ params }: Props) {
     if (!detail || !matchedSku || adding) return;
     setAdding(true);
     try {
-      for (let i = 0; i < quantity; i++) {
-        await addItem((matchedSku as any).id);
-      }
+      await addItem((matchedSku as any).id, quantity);
     } finally {
       setAdding(false);
     }
