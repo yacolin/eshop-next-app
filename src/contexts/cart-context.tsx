@@ -27,8 +27,8 @@ interface CartContextValue {
   loading: boolean;
   error: string | null;
   addItem: (skuId: number) => Promise<void>;
-  removeItem: (itemId: number) => Promise<void>;
-  updateQuantity: (itemId: number, quantity: number) => Promise<void>;
+  removeItem: (skuId: number) => Promise<void>;
+  updateQuantity: (skuId: number, quantity: number) => Promise<void>;
   clearCart: () => Promise<void>;
   totalItems: number;
   totalPrice: number;
@@ -54,8 +54,18 @@ function getSessionId(): string | null {
 
 async function fetchCartItems(): Promise<CartItem[]> {
   const res = await cartsApi.v1CartsList({ headers: authHeaders() });
-  const data = res.data as any;
-  return data?.data?.items ?? [];
+  const raw: any = res.data;
+  const items: any[] = raw?.data?.items ?? [];
+  return items.map((i: any) => ({
+    id: i.id ?? 0,
+    sku_id: i.sku_id ?? 0,
+    product_id: i.product_id ?? 0,
+    quantity: i.quantity ?? 0,
+    price: i.price ?? 0,
+    product_name: i.product_name ?? "",
+    sku: i.sku_spec ?? "",
+    stock: i.stock ?? 0,
+  }));
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {
@@ -89,10 +99,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const removeItem = useCallback(async (itemId: number) => {
+  const removeItem = useCallback(async (skuId: number) => {
     try {
       setError(null);
-      await cartsApi.v1CartsItemsDelete({ sku_id: itemId }, { headers: authHeaders() });
+      await cartsApi.v1CartsItemsDelete({ sku_id: skuId }, { headers: authHeaders() });
       setItems(await fetchCartItems());
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to remove item");
@@ -100,11 +110,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const updateQuantity = useCallback(
-    async (itemId: number, quantity: number) => {
-      if (quantity <= 0) return removeItem(itemId);
+    async (skuId: number, quantity: number) => {
+      if (quantity <= 0) return removeItem(skuId);
       try {
         setError(null);
-        await cartsApi.v1CartsItemsUpdate({ sku_id: itemId, quantity }, { headers: authHeaders() });
+        await cartsApi.v1CartsItemsUpdate({ sku_id: skuId, quantity }, { headers: authHeaders() });
         setItems(await fetchCartItems());
       } catch (e) {
         setError(e instanceof Error ? e.message : "Failed to update quantity");

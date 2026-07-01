@@ -55,7 +55,7 @@ export function CartDrawer() {
             <>
               <div className="flex-1 space-y-3 overflow-y-auto px-4">
                 {items.map((item) => (
-                  <div key={item.id} className="flex items-start gap-3 rounded-lg border p-3">
+                  <div key={item.sku_id} className="flex items-center gap-3 rounded-lg border p-3">
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium">{item.product_name}</p>
                       <p className="text-sm font-semibold text-primary">
@@ -64,7 +64,7 @@ export function CartDrawer() {
                     </div>
                     <div className="flex items-center gap-1">
                       <button
-                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                        onClick={() => updateQuantity(item.sku_id, item.quantity - 1)}
                         className="flex size-7 cursor-pointer items-center justify-center rounded-md border transition-colors hover:bg-muted"
                         aria-label="Decrease quantity"
                       >
@@ -74,7 +74,7 @@ export function CartDrawer() {
                         {item.quantity}
                       </span>
                       <button
-                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                        onClick={() => updateQuantity(item.sku_id, item.quantity + 1)}
                         className="flex size-7 cursor-pointer items-center justify-center rounded-md border transition-colors hover:bg-muted"
                         aria-label="Increase quantity"
                       >
@@ -82,7 +82,7 @@ export function CartDrawer() {
                       </button>
                     </div>
                     <button
-                      onClick={() => removeItem(item.id)}
+                      onClick={() => removeItem(item.sku_id)}
                       className="flex size-7 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
                       aria-label="Remove item"
                     >
