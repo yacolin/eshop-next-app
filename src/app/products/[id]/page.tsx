@@ -299,20 +299,22 @@ export default function ProductDetailPage({ params }: Props) {
                 size="lg"
                 className="flex-1 cursor-pointer gap-2"
                 onClick={handleAddToCart}
-                disabled={adding || !canAddToCart}
+                disabled={adding || !canAddToCart || (matchedSku?.available_quantity ?? 0) <= 0}
               >
                 <ShoppingCart className="size-4" />
                 {adding
                   ? "Adding..."
                   : !allSelected && hasSpecSkus && attrOptions.length > 0
                     ? "Select Specs"
-                    : "Add to Cart"}
+                    : (matchedSku?.available_quantity ?? 0) <= 0
+                      ? "Out of Stock"
+                      : "Add to Cart"}
               </Button>
               <Button
                 size="lg"
                 className="flex-1 cursor-pointer gap-2"
                 onClick={handleBuyNow}
-                disabled={adding || !canAddToCart}
+                disabled={adding || !canAddToCart || (matchedSku?.available_quantity ?? 0) <= 0}
               >
                 <Zap className="size-4" />
                 Buy Now
