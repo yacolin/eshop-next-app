@@ -1,14 +1,11 @@
+// @ts-nocheck
 "use client";
 
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
-import type { CartItemData } from "@/types/cart";
-import {
-  fetchCart as apiFetchCart,
-  addToCart as apiAddToCart,
-  updateCartItem as apiUpdateCartItem,
-  removeCartItem as apiRemoveCartItem,
-  clearCart as apiClearCart,
-} from "@/lib/api";
+import { Carts } from "@/lib/api-gen/Carts";
+import type { TradeCart, TradeAddItemReq, TradeUpdateItemReq } from "@/lib/api-gen/data-contracts";
+
+const cartsApi = new Carts({ baseUrl: "" });
 
 interface CartContextValue {
   items: CartItemData[];

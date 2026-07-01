@@ -2,13 +2,15 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { login as apiLogin } from "@/lib/api";
-import type { LoginRequest } from "@/types/auth";
+import { Auth } from "@/lib/api-gen/Auth";
+import type { UserPasswordLoginReq } from "@/lib/api-gen/data-contracts";
+
+const authApi = new Auth({ baseUrl: "" });
 
 interface AuthContextValue {
   isAuthenticated: boolean;
   username: string | null;
-  login: (data: LoginRequest) => Promise<void>;
+  login: (data: UserPasswordLoginReq) => Promise<void>;
   logout: () => void;
   loading: boolean;
 }
@@ -37,14 +39,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = useCallback(
-    async (data: LoginRequest) => {
-      const result = await apiLogin(data);
-      localStorage.setItem("access_token", result.access_token);
-      localStorage.setItem("refresh_token", result.refresh_token);
-      localStorage.setItem("username", result.username);
-      localStorage.setItem("user_id", String(result.user_id));
+    async (data: UserPasswordLoginReq) => {
+      const res = await authApi.v1AuthLoginPasswordCreate(data);
+      const result = res.data?.data;
+      if (!result) throw new Error("Login failed");
+      localStorage.setItem("access_token", result.access_token ?? "");
+      localStorage.setItem("refresh_token", result.refresh_token ?? "");
+      localStorage.setItem("username", result.username ?? "");
+      localStorage.setItem("user_id", String(result.user_id ?? ""));
       setIsAuthenticated(true);
-      setUsername(result.username);
+      setUsername(result.username ?? null);
       router.push("/");
     },
     [router],

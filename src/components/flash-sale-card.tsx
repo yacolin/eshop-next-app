@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { Zap, Clock } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
-import type { Product, FlashActivity } from "@/types/product";
 
 const palettes = [
   "from-blue-500/20 via-purple-500/10 to-pink-500/20",
@@ -21,8 +20,19 @@ export function FlashSaleCard({
   activity,
   showStatus = false,
 }: {
-  product: Product;
-  activity: FlashActivity;
+  product: { id: number; name: string; min_price: number };
+  activity: {
+    id: number;
+    product_id: number;
+    flash_price: number;
+    total_stock: number;
+    sold_stock: number;
+    status: string;
+    created_at: number;
+    end_time: number;
+    start_time: number;
+    updated_at: number;
+  };
   showStatus?: boolean;
 }) {
   const soldPct =
