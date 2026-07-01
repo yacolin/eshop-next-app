@@ -58,7 +58,7 @@ export function InfiniteProductList({
     return () => {
       cancelled = true;
     };
-  }, [categoryId]);
+  }, [categoryId, brandId]);
 
   const loadMoreRows = useCallback(async () => {
     if (loadingRef.current || !hasMore) return;
@@ -73,7 +73,7 @@ export function InfiniteProductList({
     } finally {
       loadingRef.current = false;
     }
-  }, [nextCursor, hasMore, categoryId]);
+  }, [nextCursor, hasMore, categoryId, brandId]);
 
   if (initialLoading) {
     return (
