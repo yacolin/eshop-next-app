@@ -84,17 +84,17 @@ export async function fetchCart(userId?: number | null, sessionId?: string | nul
 }
 
 export async function addToCart(data: TradeAddItemReq) {
-  const res = await cApi.v1CartsCreate(data, { headers: authHeaders() });
+  const res = await cApi.v1CartsItemsCreate(data, { headers: authHeaders() });
   return res.data?.data;
 }
 
 export async function updateCartItem(itemId: number, data: TradeUpdateItemReq) {
-  const res = await cApi.v1CartsUpdate(data, { headers: authHeaders() });
+  const res = await cApi.v1CartsItemsUpdate(data, { headers: authHeaders() });
   return res.data?.data;
 }
 
 export async function removeCartItem(skuId: number) {
-  const res = await cApi.v1CartsDelete({ sku_id: skuId }, { headers: authHeaders() });
+  const res = await cApi.v1CartsItemsDelete({ sku_id: skuId }, { headers: authHeaders() });
   return res.data?.data;
 }
 

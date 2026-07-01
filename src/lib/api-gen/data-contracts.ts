@@ -845,15 +845,23 @@ export interface TradeAddressInfo {
   zip_code?: string;
 }
 
-export interface TradeCart {
-  created_at?: string;
-  expired_at?: string;
+export interface TradeCartItemResponse {
+  id?: number;
+  image?: string;
+  price?: number;
+  product_id?: number;
+  product_name?: string;
+  quantity?: number;
+  sku_id?: number;
+  sku_spec?: string;
+  subtotal?: number;
+}
+
+export interface TradeCartResponse {
   id?: number;
   item_count?: number;
-  session_id?: string;
+  items?: TradeCartItemResponse[];
   total_amount?: number;
-  updated_at?: string;
-  user_id?: number;
 }
 
 export interface TradeCreateOrderItem {
@@ -1518,16 +1526,16 @@ export type V1BrandsListData = ResponseResponse & {
 };
 
 export type V1CartsListData = ResponseResponse & {
-  data?: TradeCart;
+  data?: TradeCartResponse;
 };
 
-export type V1CartsUpdateData = ResponseResponse;
-
-export type V1CartsCreateData = ResponseResponse;
-
-export type V1CartsDeleteData = ResponseResponse;
-
 export type V1CartsClearCreateData = ResponseResponse;
+
+export type V1CartsItemsUpdateData = ResponseResponse;
+
+export type V1CartsItemsCreateData = ResponseResponse;
+
+export type V1CartsItemsDeleteData = ResponseResponse;
 
 export type V1CategoriesAllListData = ResponseResponse & {
   data?: ProductCategory[];

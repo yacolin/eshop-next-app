@@ -14,10 +14,10 @@ import {
   TradeAddItemReq,
   TradeUpdateItemReq,
   V1CartsClearCreateData,
-  V1CartsCreateData,
-  V1CartsDeleteData,
+  V1CartsItemsCreateData,
+  V1CartsItemsDeleteData,
+  V1CartsItemsUpdateData,
   V1CartsListData,
-  V1CartsUpdateData,
 } from "./data-contracts";
 import { ContentType, HttpClient, RequestParams } from "./http-client";
 
@@ -45,68 +45,6 @@ export class Carts<
    * No description
    *
    * @tags carts, frontend
-   * @name V1CartsUpdate
-   * @summary 更新购物车商品
-   * @request PUT:/api/v1/carts
-   * @secure
-   */
-  v1CartsUpdate = (request: TradeUpdateItemReq, params: RequestParams = {}) =>
-    this.request<V1CartsUpdateData, any>({
-      path: `/api/v1/carts`,
-      method: "PUT",
-      body: request,
-      secure: true,
-      type: ContentType.Json,
-      format: "json",
-      ...params,
-    });
-  /**
-   * No description
-   *
-   * @tags carts, frontend
-   * @name V1CartsCreate
-   * @summary 添加商品到购物车
-   * @request POST:/api/v1/carts
-   * @secure
-   */
-  v1CartsCreate = (request: TradeAddItemReq, params: RequestParams = {}) =>
-    this.request<V1CartsCreateData, any>({
-      path: `/api/v1/carts`,
-      method: "POST",
-      body: request,
-      secure: true,
-      type: ContentType.Json,
-      format: "json",
-      ...params,
-    });
-  /**
-   * No description
-   *
-   * @tags carts, frontend
-   * @name V1CartsDelete
-   * @summary 删除购物车商品
-   * @request DELETE:/api/v1/carts
-   * @secure
-   */
-  v1CartsDelete = (
-    query: {
-      /** SKU ID */
-      sku_id: number;
-    },
-    params: RequestParams = {},
-  ) =>
-    this.request<V1CartsDeleteData, any>({
-      path: `/api/v1/carts`,
-      method: "DELETE",
-      query: query,
-      secure: true,
-      format: "json",
-      ...params,
-    });
-  /**
-   * No description
-   *
-   * @tags carts, frontend
    * @name V1CartsClearCreate
    * @summary 清空购物车
    * @request POST:/api/v1/carts/clear
@@ -122,6 +60,71 @@ export class Carts<
     this.request<V1CartsClearCreateData, any>({
       path: `/api/v1/carts/clear`,
       method: "POST",
+      query: query,
+      secure: true,
+      format: "json",
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags carts, frontend
+   * @name V1CartsItemsUpdate
+   * @summary 更新购物车商品
+   * @request PUT:/api/v1/carts/items
+   * @secure
+   */
+  v1CartsItemsUpdate = (
+    request: TradeUpdateItemReq,
+    params: RequestParams = {},
+  ) =>
+    this.request<V1CartsItemsUpdateData, any>({
+      path: `/api/v1/carts/items`,
+      method: "PUT",
+      body: request,
+      secure: true,
+      type: ContentType.Json,
+      format: "json",
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags carts, frontend
+   * @name V1CartsItemsCreate
+   * @summary 添加商品到购物车
+   * @request POST:/api/v1/carts/items
+   * @secure
+   */
+  v1CartsItemsCreate = (request: TradeAddItemReq, params: RequestParams = {}) =>
+    this.request<V1CartsItemsCreateData, any>({
+      path: `/api/v1/carts/items`,
+      method: "POST",
+      body: request,
+      secure: true,
+      type: ContentType.Json,
+      format: "json",
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags carts, frontend
+   * @name V1CartsItemsDelete
+   * @summary 删除购物车商品
+   * @request DELETE:/api/v1/carts/items
+   * @secure
+   */
+  v1CartsItemsDelete = (
+    query: {
+      /** SKU ID */
+      sku_id: number;
+    },
+    params: RequestParams = {},
+  ) =>
+    this.request<V1CartsItemsDeleteData, any>({
+      path: `/api/v1/carts/items`,
+      method: "DELETE",
       query: query,
       secure: true,
       format: "json",

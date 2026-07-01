@@ -82,7 +82,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const addItem = useCallback(async (skuId: number) => {
     try {
       setError(null);
-      await cartsApi.v1CartsCreate({ sku_id: skuId, quantity: 1 }, { headers: authHeaders() });
+      await cartsApi.v1CartsItemsCreate({ sku_id: skuId, quantity: 1 }, { headers: authHeaders() });
       setItems(await fetchCartItems());
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to add item");
@@ -92,7 +92,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const removeItem = useCallback(async (itemId: number) => {
     try {
       setError(null);
-      await cartsApi.v1CartsDelete({ sku_id: itemId }, { headers: authHeaders() });
+      await cartsApi.v1CartsItemsDelete({ sku_id: itemId }, { headers: authHeaders() });
       setItems(await fetchCartItems());
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to remove item");
@@ -104,7 +104,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       if (quantity <= 0) return removeItem(itemId);
       try {
         setError(null);
-        await cartsApi.v1CartsUpdate({ sku_id: itemId, quantity }, { headers: authHeaders() });
+        await cartsApi.v1CartsItemsUpdate({ sku_id: itemId, quantity }, { headers: authHeaders() });
         setItems(await fetchCartItems());
       } catch (e) {
         setError(e instanceof Error ? e.message : "Failed to update quantity");

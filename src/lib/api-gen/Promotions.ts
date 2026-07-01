@@ -40,10 +40,6 @@ export class Promotions<
        * @default 10
        */
       size?: number;
-      /** 状态 1-启用 2-禁用 3-已结束 */
-      status?: number;
-      /** 促销类型 1-满减 2-折扣 3-包邮 4-赠品 */
-      promo_type?: number;
     },
     params: RequestParams = {},
   ) =>
