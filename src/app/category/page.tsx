@@ -6,13 +6,16 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ChevronRight, Home } from "lucide-react";
 import { InfiniteProductList } from "@/components/infinite-product-list";
 import { SearchBar } from "@/components/search-bar";
-import {
-  fetchAllCategories,
-  fetchCategoryById,
-  fetchSubcategories,
-  fetchCategoryBrands,
-} from "@/lib/api";
-import type { Category, BrandSimple } from "@/types/product";
+import { Categories } from "@/lib/api-gen/Categories";
+import type { ProductCategory, ProductCategoryBrandDetail } from "@/lib/api-gen/data-contracts";
+
+function authHeaders(): Record<string, string> {
+  if (typeof window === "undefined") return {};
+  const token = localStorage.getItem("access_token");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+const catApi = new Categories({ baseUrl: "" });
 
 export default function CategoryPage() {
   const searchParams = useSearchParams();
@@ -21,10 +24,10 @@ export default function CategoryPage() {
   const sub = searchParams.get("sub");
   const brandParam = searchParams.get("brand");
 
-  const [currentCat, setCurrentCat] = useState<Category | null>(null);
-  const [allCats, setAllCats] = useState<Category[]>([]);
-  const [children, setChildren] = useState<Category[]>([]);
-  const [brands, setBrands] = useState<BrandSimple[]>([]);
+  const [currentCat, setCurrentCat] = useState<ProductCategory | null>(null);
+  const [allCats, setAllCats] = useState<ProductCategory[]>([]);
+  const [children, setChildren] = useState<ProductCategory[]>([]);
+  const [brands, setBrands] = useState<ProductCategoryBrandDetail[]>([]);
   const [initialLoading, setInitialLoading] = useState(true);
   const hasDefaulted = useRef(false);
 
@@ -32,19 +35,20 @@ export default function CategoryPage() {
     let cancelled = false;
     (async () => {
       try {
-        const [cat, all, childList] = await Promise.all([
-          fetchCategoryById(categoryId),
-          fetchAllCategories(),
-          fetchSubcategories(categoryId),
+        const [catRes, allRes, childRes] = await Promise.all([
+          catApi.v1CategoriesDetail(categoryId),
+          catApi.v1CategoriesAllList(),
+          catApi.v1CategoriesChildrenList(categoryId),
         ]);
         if (cancelled) return;
-        setCurrentCat(cat);
-        setAllCats(all);
-        setChildren(childList);
+        if (catRes.data?.data) setCurrentCat(catRes.data.data);
+        if (allRes.data?.data) setAllCats(allRes.data.data);
+        const childData = childRes.data?.data ?? [];
+        setChildren(childData);
 
-        if (!hasDefaulted.current && childList.length > 0 && !sub) {
+        if (!hasDefaulted.current && childData.length > 0 && !sub) {
           hasDefaulted.current = true;
-          router.replace(`/category?id=${categoryId}&sub=${childList[0].id}`, {
+          router.replace(`/category?id=${categoryId}&sub=${childData[0].id}`, {
             scroll: false,
           });
         }
@@ -64,15 +68,15 @@ export default function CategoryPage() {
   const breadcrumb = useMemo(() => {
     if (!currentCat) return [];
     const items: { label: string; id: number }[] = [];
-    let pid: number = currentCat.parent_id;
+    let pid = currentCat.parent_id ?? 0;
     while (pid > 0) {
       const p = allCats.find((c) => c.id === pid);
       if (p) {
-        items.unshift({ label: p.name, id: p.id });
-        pid = p.parent_id;
+        items.unshift({ label: p.name ?? "", id: p.id ?? 0 });
+        pid = p.parent_id ?? 0;
       } else break;
     }
-    items.push({ label: currentCat.name, id: currentCat.id });
+    items.push({ label: currentCat.name ?? "", id: currentCat.id ?? 0 });
     return items;
   }, [currentCat, allCats]);
 
@@ -91,8 +95,10 @@ export default function CategoryPage() {
     let cancelled = false;
     const brandTargetId = activeCategoryId ?? categoryId;
     (async () => {
-      const list = await fetchCategoryBrands(brandTargetId);
-      if (!cancelled) setBrands(list);
+      const brandRes = await catApi.v1CategoriesBrandsList(brandTargetId, {
+        headers: authHeaders(),
+      });
+      if (!cancelled) setBrands(brandRes.data?.data ?? []);
     })();
     return () => {
       cancelled = true;

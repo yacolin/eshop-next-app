@@ -3,9 +3,11 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Percent, ChevronRight, Gift, Truck, BadgePercent } from "lucide-react";
-import { fetchActivePromotions } from "@/lib/api";
 import { PromotionCard } from "@/components/promotion-card";
-import type { Promotion } from "@/types/product";
+import { Promotions } from "@/lib/api-gen/Promotions";
+import type { MarketingPromotion } from "@/lib/api-gen/data-contracts";
+
+const promoApi = new Promotions({ baseUrl: "" });
 
 const promoTypeIcons: Record<number, typeof Percent> = {
   1: BadgePercent, // 满减
@@ -22,15 +24,15 @@ const promoTypeLabels: Record<number, string> = {
 };
 
 export function FlashSaleSection() {
-  const [promotions, setPromotions] = useState<Promotion[]>([]);
+  const [promotions, setPromotions] = useState<MarketingPromotion[]>([]);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const data = await fetchActivePromotions(4);
+        const res = await promoApi.v1PromotionsList({ size: 4 });
         if (!cancelled) {
-          setPromotions(data.list);
+          setPromotions(res.data?.data?.list ?? []);
         }
       } catch {
         // fallback - no promotions to show
@@ -45,7 +47,7 @@ export function FlashSaleSection() {
     return null;
   }
 
-  const Icon = promoTypeIcons[promotions[0].promo_type] || Percent;
+  const Icon = promoTypeIcons[promotions[0].promo_type ?? 1] || Percent;
 
   return (
     <section className="mx-4 mt-7 md:mx-auto md:max-w-6xl">

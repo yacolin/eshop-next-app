@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { Percent, Gift, Truck, BadgePercent, ArrowRight } from "lucide-react";
-import type { Promotion } from "@/types/product";
-import { formatPrice } from "@/lib/utils";
+import type { MarketingPromotion } from "@/lib/api-gen/data-contracts";
 
 const promoTypeConfig: Record<number, { label: string; icon: typeof Percent; gradient: string }> = {
   1: { label: "Spend & Save", icon: BadgePercent, gradient: "from-rose-500 to-pink-600" },
@@ -10,13 +9,14 @@ const promoTypeConfig: Record<number, { label: string; icon: typeof Percent; gra
   4: { label: "Free Gift", icon: Gift, gradient: "from-amber-500 to-orange-600" },
 };
 
-function formatDate(ts: number): string {
+function formatDate(ts: string | number | undefined): string {
+  if (!ts) return "";
   const d = new Date(ts);
   return `${d.getMonth() + 1}/${d.getDate()}`;
 }
 
-export function PromotionCard({ promotion }: { promotion: Promotion }) {
-  const config = promoTypeConfig[promotion.promo_type] || promoTypeConfig[1];
+export function PromotionCard({ promotion }: { promotion: MarketingPromotion }) {
+  const config = promoTypeConfig[promotion.promo_type ?? 1] || promoTypeConfig[1];
   const Icon = config.icon;
 
   return (

@@ -3,9 +3,11 @@
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { ChevronRight, Home, Percent, Gift, Truck, BadgePercent, Package } from "lucide-react";
-import { fetchPromotionDetail } from "@/lib/api";
 import { EmptyState } from "@/components/empty-state";
-import type { PromotionDetailResponse } from "@/types/product";
+import { Promotions } from "@/lib/api-gen/Promotions";
+import type { MarketingPromotionDetailResponse } from "@/lib/api-gen/data-contracts";
+
+const promoApi = new Promotions({ baseUrl: "" });
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -18,7 +20,8 @@ const promoConfig: Record<number, { label: string; icon: typeof Percent }> = {
   4: { label: "Free Gift", icon: Gift },
 };
 
-function formatDate(ts: number) {
+function formatDate(ts: string | number | undefined) {
+  if (!ts) return "";
   return new Date(ts).toLocaleDateString("zh-CN", {
     year: "numeric",
     month: "long",
@@ -30,15 +33,15 @@ function formatDate(ts: number) {
 
 export default function PromotionDetailPage({ params }: Props) {
   const { id } = use(params);
-  const [detail, setDetail] = useState<PromotionDetailResponse | null>(null);
+  const [detail, setDetail] = useState<MarketingPromotionDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const d = await fetchPromotionDetail(Number(id));
-        if (!cancelled) setDetail(d);
+        const res = await promoApi.v1PromotionsDetailList(Number(id));
+        if (!cancelled) setDetail(res.data?.data ?? null);
       } catch {
         // handled
       } finally {
@@ -83,7 +86,7 @@ export default function PromotionDetailPage({ params }: Props) {
     );
   }
 
-  const config = promoConfig[detail.promo_type] || promoConfig[1];
+  const config = promoConfig[detail.promo_type ?? 1] || promoConfig[1];
   const Icon = config.icon;
 
   return (
@@ -120,9 +123,9 @@ export default function PromotionDetailPage({ params }: Props) {
               <p className="mt-2 text-sm opacity-80">
                 {formatDate(detail.start_time)} – {formatDate(detail.end_time)}
               </p>
-              {detail.total_quantity > 0 && (
+              {(detail.total_quantity ?? 0) > 0 && (
                 <p className="mt-1 text-xs opacity-60">
-                  Limited: {detail.used_quantity}/{detail.total_quantity} claimed
+                  Limited: {detail.used_quantity ?? 0}/{detail.total_quantity} claimed
                 </p>
               )}
             </div>
@@ -131,9 +134,9 @@ export default function PromotionDetailPage({ params }: Props) {
 
         {/* Products */}
         <h2 className="mb-4 text-lg font-bold">Featured Products</h2>
-        {detail.products.length > 0 ? (
+        {(detail.products ?? []).length > 0 ? (
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-            {detail.products.map((p) => (
+            {(detail.products ?? []).map((p) => (
               <Link
                 key={p.id}
                 href={p.product_id ? `/products/${p.product_id}` : "#"}

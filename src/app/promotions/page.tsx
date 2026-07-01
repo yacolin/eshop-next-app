@@ -3,9 +3,10 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Percent, Gift, Truck, BadgePercent, ChevronRight, Home } from "lucide-react";
-import { fetchActivePromotions } from "@/lib/api";
-import { formatPrice } from "@/lib/utils";
-import type { Promotion } from "@/types/product";
+import { Promotions } from "@/lib/api-gen/Promotions";
+import type { MarketingPromotion } from "@/lib/api-gen/data-contracts";
+
+const promoApi = new Promotions({ baseUrl: "" });
 
 const promoTypeConfig: Record<number, { label: string; icon: typeof Percent; gradient: string }> = {
   1: { label: "Spend & Save", icon: BadgePercent, gradient: "from-rose-500 to-pink-600" },
@@ -14,21 +15,21 @@ const promoTypeConfig: Record<number, { label: string; icon: typeof Percent; gra
   4: { label: "Free Gift", icon: Gift, gradient: "from-amber-500 to-orange-600" },
 };
 
-function formatDate(ts: number) {
-  const d = new Date(ts);
-  return d.toLocaleDateString("zh-CN", { month: "short", day: "numeric" });
+function formatDate(ts: string | number | undefined) {
+  if (!ts) return "";
+  return new Date(ts).toLocaleDateString("zh-CN", { month: "short", day: "numeric" });
 }
 
 export default function PromotionsPage() {
-  const [promotions, setPromotions] = useState<Promotion[]>([]);
+  const [promotions, setPromotions] = useState<MarketingPromotion[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const data = await fetchActivePromotions(50);
-        if (!cancelled) setPromotions(data.list);
+        const res = await promoApi.v1PromotionsList({ size: 50 });
+        if (!cancelled) setPromotions(res.data?.data?.list ?? []);
       } catch {
         // no promotions
       } finally {
@@ -84,7 +85,7 @@ export default function PromotionsPage() {
         ) : (
           <div className="grid gap-4 sm:grid-cols-2">
             {promotions.map((promo) => {
-              const config = promoTypeConfig[promo.promo_type] || promoTypeConfig[1];
+              const config = promoTypeConfig[promo.promo_type ?? 1] || promoTypeConfig[1];
               const Icon = config.icon;
               return (
                 <Link

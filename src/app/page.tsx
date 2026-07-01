@@ -7,8 +7,10 @@ import { SearchBar } from "@/components/search-bar";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, ChevronRight } from "lucide-react";
 import { FlashSaleSection } from "@/components/flash-sale";
-import { fetchRootCategories } from "@/lib/api";
-import type { Category } from "@/types/product";
+import { Categories } from "@/lib/api-gen/Categories";
+import type { ProductCategory } from "@/lib/api-gen/data-contracts";
+
+const catApi = new Categories({ baseUrl: "" });
 
 const bannerSlides = [
   {
@@ -33,7 +35,7 @@ const bannerSlides = [
 
 export default function Home() {
   const [bannerIdx, setBannerIdx] = useState(0);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories, setCategories] = useState<ProductCategory[]>([]);
 
   useEffect(() => {
     const t = setInterval(() => {
@@ -43,8 +45,9 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    fetchRootCategories()
-      .then(setCategories)
+    catApi
+      .v1CategoriesRootList()
+      .then((res) => setCategories(res.data?.data ?? []))
       .catch(() => {});
   }, []);
 
