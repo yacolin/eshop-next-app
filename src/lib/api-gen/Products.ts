@@ -10,7 +10,18 @@
  * ---------------------------------------------------------------
  */
 
-import { V1ProductsDetailData, V1ProductsListData } from "./data-contracts";
+import {
+  GfEshopApiProductsV1ProductsCreateFullReq,
+  GfEshopApiProductsV1ProductsCreateReq,
+  V1ProductsCreateData,
+  V1ProductsDeleteData,
+  V1ProductsDetailData,
+  V1ProductsFullCreateData,
+  V1ProductsListData,
+  V1ProductsPureDetailData,
+  V1ProductsUpdateData,
+  V1ProductsUpdatePayload,
+} from "./data-contracts";
 import { ContentType, HttpClient, RequestParams } from "./http-client";
 
 export class Products<
@@ -19,31 +30,34 @@ export class Products<
   /**
    * No description
    *
-   * @tags products, frontend
+   * @tags Products
    * @name V1ProductsList
-   * @summary 商品列表（keyset 游标分页）
+   * @summary 商品列表(游标分页)
    * @request GET:/api/v1/products
    */
   v1ProductsList = (
     query?: {
       /**
-       * 每页条数
-       * @default 10
+       * 每页条数(默认10,最大100)
+       * @format int
        */
       size?: number;
-      /** 游标（首次请求不传，后续使用上次返回的 cursor） */
+      /**
+       * 游标(首次不传,后续使用返回的cursor)
+       * @format string
+       */
       cursor?: string;
-      /** 商品名称模糊搜索 */
+      /** @format string */
       name?: string;
-      /** 类目ID */
+      /** @format int64 */
       category_id?: number;
-      /** 品牌ID */
+      /** @format int64 */
       brand_id?: number;
-      /** 状态 0-草稿 1-待审 2-上架 3-下架 4-封禁 */
+      /** @format int */
       status?: number;
-      /** 最低价格（分） */
+      /** @format int64 */
       price_min?: number;
-      /** 最高价格（分） */
+      /** @format int64 */
       price_max?: number;
     },
     params: RequestParams = {},
@@ -52,6 +66,25 @@ export class Products<
       path: `/api/v1/products`,
       method: "GET",
       query: query,
+      format: "json",
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags Products
+   * @name V1ProductsCreate
+   * @summary 新增商品
+   * @request POST:/api/v1/products
+   */
+  v1ProductsCreate = (
+    data: GfEshopApiProductsV1ProductsCreateReq,
+    params: RequestParams = {},
+  ) =>
+    this.request<V1ProductsCreateData, any>({
+      path: `/api/v1/products`,
+      method: "POST",
+      body: data,
       type: ContentType.Json,
       format: "json",
       ...params,
@@ -59,15 +92,86 @@ export class Products<
   /**
    * No description
    *
-   * @tags products, frontend
+   * @tags Products
+   * @name V1ProductsFullCreate
+   * @summary 创建商品（含SKU/属性/描述）
+   * @request POST:/api/v1/products/full
+   */
+  v1ProductsFullCreate = (
+    data: GfEshopApiProductsV1ProductsCreateFullReq,
+    params: RequestParams = {},
+  ) =>
+    this.request<V1ProductsFullCreateData, any>({
+      path: `/api/v1/products/full`,
+      method: "POST",
+      body: data,
+      type: ContentType.Json,
+      format: "json",
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags Products
+   * @name V1ProductsPureDetail
+   * @summary 商品详情(纯实体,不含聚合)
+   * @request GET:/api/v1/products/pure/{id}
+   */
+  v1ProductsPureDetail = (id: number, params: RequestParams = {}) =>
+    this.request<V1ProductsPureDetailData, any>({
+      path: `/api/v1/products/pure/${id}`,
+      method: "GET",
+      format: "json",
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags Products
+   * @name V1ProductsDelete
+   * @summary 删除商品
+   * @request DELETE:/api/v1/products/{id}
+   */
+  v1ProductsDelete = (id: number, params: RequestParams = {}) =>
+    this.request<V1ProductsDeleteData, any>({
+      path: `/api/v1/products/${id}`,
+      method: "DELETE",
+      format: "json",
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags Products
    * @name V1ProductsDetail
-   * @summary 获取商品详情
+   * @summary 商品详情
    * @request GET:/api/v1/products/{id}
    */
   v1ProductsDetail = (id: number, params: RequestParams = {}) =>
     this.request<V1ProductsDetailData, any>({
       path: `/api/v1/products/${id}`,
       method: "GET",
+      format: "json",
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags Products
+   * @name V1ProductsUpdate
+   * @summary 更新商品
+   * @request PUT:/api/v1/products/{id}
+   */
+  v1ProductsUpdate = (
+    id: number,
+    data: V1ProductsUpdatePayload,
+    params: RequestParams = {},
+  ) =>
+    this.request<V1ProductsUpdateData, any>({
+      path: `/api/v1/products/${id}`,
+      method: "PUT",
+      body: data,
+      type: ContentType.Json,
       format: "json",
       ...params,
     });

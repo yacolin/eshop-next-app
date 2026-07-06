@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useAuth } from "@/contexts/auth-context";
-import { Button } from "@/components/ui/button";
+// import { useAuth } from "@/contexts/auth-context";
+// import { Button } from "@/components/ui/button";
 
 export function Navbar() {
-  const { isAuthenticated, username, logout, loading } = useAuth();
+  // const { isAuthenticated, username, logout, loading } = useAuth();
 
   return (
     <header className="sticky top-0 z-40 border-b bg-background">
@@ -14,7 +14,7 @@ export function Navbar() {
           E-Shop
         </Link>
 
-        <nav className="flex items-center gap-2">
+        {/* <nav className="flex items-center gap-2">
           {loading ? null : isAuthenticated ? (
             <>
               <span className="text-sm text-muted-foreground">{username}</span>
@@ -27,7 +27,7 @@ export function Navbar() {
               <Link href="/login">Login</Link>
             </Button>
           )}
-        </nav>
+        </nav> */}
       </div>
     </header>
   );

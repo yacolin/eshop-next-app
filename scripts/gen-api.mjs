@@ -10,7 +10,7 @@ if (!source) {
     if (match) source = match[1].trim();
   } catch {}
 }
-if (!source) source = "../eshop-monolith/docs/swagger.json";
+if (!source) source = "http://127.0.0.1:8000/api.json";
 const outDir = "src/lib/api-gen";
 const intermediate = "swagger.frontend.json";
 
@@ -25,19 +25,7 @@ async function loadSpec(src) {
 }
 
 const spec = await loadSpec(source);
-const filtered = { ...spec, paths: {} };
-for (const [path, methods] of Object.entries(spec.paths ?? {})) {
-  for (const [method, detail] of Object.entries(methods)) {
-    if ((detail.tags ?? []).includes("frontend")) {
-      if (!filtered.paths[path]) filtered.paths[path] = {};
-      filtered.paths[path][method] = detail;
-    }
-  }
-}
-writeFileSync(intermediate, JSON.stringify(filtered), "utf-8");
-const kept = Object.keys(filtered.paths).length;
-const total = Object.keys(spec.paths ?? {}).length;
-console.log(`Filtered: ${kept}/${total} paths kept (tagged "frontend")`);
+writeFileSync(intermediate, JSON.stringify(spec), "utf-8");
 
 // 2. Generate client
 if (existsSync(outDir)) rmSync(outDir, { recursive: true });

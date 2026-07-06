@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Smartphone, Monitor, Shirt, HomeIcon, Gamepad2, BookOpen, Bike, Car } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
-import type { ProductSPU } from "@/lib/api-gen/data-contracts";
+import type { ProductSPU } from "@/types/product";
 
 const palettes = [
   ["from-blue-500/20", "via-purple-500/10", "to-pink-500/20"],

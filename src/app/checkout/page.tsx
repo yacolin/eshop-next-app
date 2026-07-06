@@ -4,7 +4,7 @@ import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { submitOrder } from "@/lib/api";
 import { Products } from "@/lib/api-gen/Products";
-import type { ProductSKU } from "@/lib/api-gen/data-contracts";
+import type { ProductSKU } from "@/types/product";
 import type { CheckoutItem } from "@/types/order";
 
 const productsApi = new Products({ baseUrl: "" });

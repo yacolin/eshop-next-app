@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { AuthProvider } from "@/contexts/auth-context";
+// import { AuthProvider } from "@/contexts/auth-context";
 import { CartProvider } from "@/contexts/cart-context";
 import { CartDrawer } from "@/components/cart-drawer";
 import { Navbar } from "@/components/navbar";
@@ -29,13 +29,13 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-zinc-50 dark:bg-black">
-        <AuthProvider>
-          <CartProvider>
-            <Navbar />
-            <main className="flex flex-1 flex-col">{children}</main>
-            <CartDrawer />
-          </CartProvider>
-        </AuthProvider>
+        {/* <AuthProvider> */}
+        <CartProvider>
+          <Navbar />
+          <main className="flex flex-1 flex-col">{children}</main>
+          <CartDrawer />
+        </CartProvider>
+        {/* </AuthProvider> */}
       </body>
     </html>
   );

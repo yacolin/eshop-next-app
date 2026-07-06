@@ -7,7 +7,10 @@ import { ChevronRight, Home } from "lucide-react";
 import { InfiniteProductList } from "@/components/infinite-product-list";
 import { SearchBar } from "@/components/search-bar";
 import { Categories } from "@/lib/api-gen/Categories";
-import type { ProductCategory, ProductCategoryBrandDetail } from "@/lib/api-gen/data-contracts";
+import type {
+  GfEshopInternalModelEntityCategories,
+  GfEshopApiCategoryBrandsV1CategoryBrandItem,
+} from "@/lib/api-gen/data-contracts";
 
 function authHeaders(): Record<string, string> {
   if (typeof window === "undefined") return {};
@@ -24,10 +27,10 @@ export default function CategoryPage() {
   const sub = searchParams.get("sub");
   const brandParam = searchParams.get("brand");
 
-  const [currentCat, setCurrentCat] = useState<ProductCategory | null>(null);
-  const [allCats, setAllCats] = useState<ProductCategory[]>([]);
-  const [children, setChildren] = useState<ProductCategory[]>([]);
-  const [brands, setBrands] = useState<ProductCategoryBrandDetail[]>([]);
+  const [currentCat, setCurrentCat] = useState<GfEshopInternalModelEntityCategories | null>(null);
+  const [allCats, setAllCats] = useState<GfEshopInternalModelEntityCategories[]>([]);
+  const [children, setChildren] = useState<GfEshopInternalModelEntityCategories[]>([]);
+  const [brands, setBrands] = useState<GfEshopApiCategoryBrandsV1CategoryBrandItem[]>([]);
   const [initialLoading, setInitialLoading] = useState(true);
   const hasDefaulted = useRef(false);
 
@@ -41,9 +44,9 @@ export default function CategoryPage() {
           catApi.v1CategoriesChildrenList(categoryId),
         ]);
         if (cancelled) return;
-        if (catRes.data?.data) setCurrentCat(catRes.data.data);
-        if (allRes.data?.data) setAllCats(allRes.data.data);
-        const childData = childRes.data?.data ?? [];
+        if ((catRes.data as any)?.data) setCurrentCat((catRes.data as any).data);
+        if ((allRes.data as any)?.data?.list) setAllCats((allRes.data as any).data.list);
+        const childData = (childRes.data as any)?.data?.list ?? [];
         setChildren(childData);
 
         if (!hasDefaulted.current && childData.length > 0 && !sub) {
@@ -98,7 +101,7 @@ export default function CategoryPage() {
       const brandRes = await catApi.v1CategoriesBrandsList(brandTargetId, {
         headers: authHeaders(),
       });
-      if (!cancelled) setBrands(brandRes.data?.data ?? []);
+      if (!cancelled) setBrands((brandRes.data as any)?.data?.list ?? []);
     })();
     return () => {
       cancelled = true;

@@ -10,32 +10,24 @@
  * ---------------------------------------------------------------
  */
 
-import {
-  UserPasswordLoginReq,
-  V1AuthLoginPasswordCreateData,
-} from "./data-contracts";
-import { ContentType, HttpClient, RequestParams } from "./http-client";
+import { V1DashboardStatsListData } from "./data-contracts";
+import { HttpClient, RequestParams } from "./http-client";
 
-export class Auth<
+export class Dashboard<
   SecurityDataType = unknown,
 > extends HttpClient<SecurityDataType> {
   /**
    * No description
    *
-   * @tags auth, frontend
-   * @name V1AuthLoginPasswordCreate
-   * @summary 密码登录
-   * @request POST:/api/v1/auth/login/password
+   * @tags Dashboard
+   * @name V1DashboardStatsList
+   * @summary 仪表盘汇总统计
+   * @request GET:/api/v1/dashboard/stats
    */
-  v1AuthLoginPasswordCreate = (
-    request: UserPasswordLoginReq,
-    params: RequestParams = {},
-  ) =>
-    this.request<V1AuthLoginPasswordCreateData, any>({
-      path: `/api/v1/auth/login/password`,
-      method: "POST",
-      body: request,
-      type: ContentType.Json,
+  v1DashboardStatsList = (params: RequestParams = {}) =>
+    this.request<V1DashboardStatsListData, any>({
+      path: `/api/v1/dashboard/stats`,
+      method: "GET",
       format: "json",
       ...params,
     });

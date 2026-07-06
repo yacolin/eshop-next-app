@@ -1,5 +1,5 @@
 import { formatPrice } from "@/lib/utils";
-import type { ProductSKU } from "@/lib/api-gen/data-contracts";
+import type { ProductSKU } from "@/types/product";
 
 /**
  * SKU 列表表格 —— 产品/秒杀详情页底部共用。

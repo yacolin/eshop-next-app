@@ -6,9 +6,9 @@ import { InfiniteProductList } from "@/components/infinite-product-list";
 import { SearchBar } from "@/components/search-bar";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, ChevronRight } from "lucide-react";
-import { FlashSaleSection } from "@/components/flash-sale";
+// import { FlashSaleSection } from "@/components/flash-sale";
 import { Categories } from "@/lib/api-gen/Categories";
-import type { ProductCategory } from "@/lib/api-gen/data-contracts";
+import type { GfEshopInternalModelEntityCategories } from "@/lib/api-gen/data-contracts";
 
 const catApi = new Categories({ baseUrl: "" });
 
@@ -35,7 +35,7 @@ const bannerSlides = [
 
 export default function Home() {
   const [bannerIdx, setBannerIdx] = useState(0);
-  const [categories, setCategories] = useState<ProductCategory[]>([]);
+  const [categories, setCategories] = useState<GfEshopInternalModelEntityCategories[]>([]);
 
   useEffect(() => {
     const t = setInterval(() => {
@@ -47,7 +47,7 @@ export default function Home() {
   useEffect(() => {
     catApi
       .v1CategoriesRootList()
-      .then((res) => setCategories(res.data?.data ?? []))
+      .then((res) => setCategories((res.data as any)?.data?.list ?? []))
       .catch(() => {});
   }, []);
 
@@ -117,7 +117,7 @@ export default function Home() {
           </section>
 
           {/* Flash Sale */}
-          <FlashSaleSection />
+          {/* <FlashSaleSection /> */}
         </div>
       </div>
 

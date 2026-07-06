@@ -7,7 +7,7 @@ import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card"
 import { EmptyState } from "@/components/empty-state";
 import { ProductCard } from "@/components/product-card";
 import { Products } from "@/lib/api-gen/Products";
-import type { ProductSPU } from "@/lib/api-gen/data-contracts";
+import type { ProductSPU } from "@/types/product";
 
 const productsApi = new Products({ baseUrl: "" });
 import { BackToTop } from "@/components/back-to-top";
@@ -48,7 +48,7 @@ export function InfiniteProductList({
           brand_id: brandId,
         });
         if (cancelled) return;
-        const data = res.data?.data;
+        const data = (res.data as any)?.data;
         setProducts(data?.list ?? []);
         setNextCursor(data?.cursor ?? null);
         setHasMore(data?.has_more ?? false);
@@ -77,7 +77,7 @@ export function InfiniteProductList({
         category_id: categoryId,
         brand_id: brandId,
       });
-      const data = res.data?.data;
+      const data = (res.data as any)?.data;
       setProducts((prev) => [...prev, ...(data?.list ?? [])]);
       setNextCursor(data?.cursor ?? null);
       setHasMore(data?.has_more ?? false);

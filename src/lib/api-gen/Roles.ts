@@ -11,28 +11,28 @@
  */
 
 import {
-  GfEshopApiBrandsV1BrandsCreateReq,
-  V1BrandsCreateData,
-  V1BrandsDeleteData,
-  V1BrandsDetailData,
-  V1BrandsListData,
-  V1BrandsUpdateData,
-  V1BrandsUpdatePayload,
+  GfEshopApiRolesV1RoleCreateReq,
+  V1RolesCreateData,
+  V1RolesDeleteData,
+  V1RolesDetailData,
+  V1RolesListData,
+  V1RolesUpdateData,
+  V1RolesUpdatePayload,
 } from "./data-contracts";
 import { ContentType, HttpClient, RequestParams } from "./http-client";
 
-export class Brands<
+export class Roles<
   SecurityDataType = unknown,
 > extends HttpClient<SecurityDataType> {
   /**
    * No description
    *
-   * @tags Brands
-   * @name V1BrandsList
-   * @summary 品牌列表
-   * @request GET:/api/v1/brands
+   * @tags Roles
+   * @name V1RolesList
+   * @summary 角色列表
+   * @request GET:/api/v1/roles
    */
-  v1BrandsList = (
+  v1RolesList = (
     query?: {
       /** @format int */
       page?: number;
@@ -41,14 +41,14 @@ export class Brands<
       /** @format string */
       name?: string;
       /** @format string */
-      first_letter?: string;
+      role_type?: string;
       /** @format int */
       status?: number;
     },
     params: RequestParams = {},
   ) =>
-    this.request<V1BrandsListData, any>({
-      path: `/api/v1/brands`,
+    this.request<V1RolesListData, any>({
+      path: `/api/v1/roles`,
       method: "GET",
       query: query,
       format: "json",
@@ -57,17 +57,17 @@ export class Brands<
   /**
    * No description
    *
-   * @tags Brands
-   * @name V1BrandsCreate
-   * @summary 新增品牌
-   * @request POST:/api/v1/brands
+   * @tags Roles
+   * @name V1RolesCreate
+   * @summary 新增角色
+   * @request POST:/api/v1/roles
    */
-  v1BrandsCreate = (
-    data: GfEshopApiBrandsV1BrandsCreateReq,
+  v1RolesCreate = (
+    data: GfEshopApiRolesV1RoleCreateReq,
     params: RequestParams = {},
   ) =>
-    this.request<V1BrandsCreateData, any>({
-      path: `/api/v1/brands`,
+    this.request<V1RolesCreateData, any>({
+      path: `/api/v1/roles`,
       method: "POST",
       body: data,
       type: ContentType.Json,
@@ -77,14 +77,14 @@ export class Brands<
   /**
    * No description
    *
-   * @tags Brands
-   * @name V1BrandsDelete
-   * @summary 删除品牌
-   * @request DELETE:/api/v1/brands/{id}
+   * @tags Roles
+   * @name V1RolesDelete
+   * @summary 删除角色
+   * @request DELETE:/api/v1/roles/{id}
    */
-  v1BrandsDelete = (id: number, params: RequestParams = {}) =>
-    this.request<V1BrandsDeleteData, any>({
-      path: `/api/v1/brands/${id}`,
+  v1RolesDelete = (id: number, params: RequestParams = {}) =>
+    this.request<V1RolesDeleteData, any>({
+      path: `/api/v1/roles/${id}`,
       method: "DELETE",
       format: "json",
       ...params,
@@ -92,14 +92,14 @@ export class Brands<
   /**
    * No description
    *
-   * @tags Brands
-   * @name V1BrandsDetail
-   * @summary 品牌详情
-   * @request GET:/api/v1/brands/{id}
+   * @tags Roles
+   * @name V1RolesDetail
+   * @summary 角色详情
+   * @request GET:/api/v1/roles/{id}
    */
-  v1BrandsDetail = (id: number, params: RequestParams = {}) =>
-    this.request<V1BrandsDetailData, any>({
-      path: `/api/v1/brands/${id}`,
+  v1RolesDetail = (id: number, params: RequestParams = {}) =>
+    this.request<V1RolesDetailData, any>({
+      path: `/api/v1/roles/${id}`,
       method: "GET",
       format: "json",
       ...params,
@@ -107,18 +107,18 @@ export class Brands<
   /**
    * No description
    *
-   * @tags Brands
-   * @name V1BrandsUpdate
-   * @summary 更新品牌
-   * @request PUT:/api/v1/brands/{id}
+   * @tags Roles
+   * @name V1RolesUpdate
+   * @summary 更新角色
+   * @request PUT:/api/v1/roles/{id}
    */
-  v1BrandsUpdate = (
+  v1RolesUpdate = (
     id: number,
-    data: V1BrandsUpdatePayload,
+    data: V1RolesUpdatePayload,
     params: RequestParams = {},
   ) =>
-    this.request<V1BrandsUpdateData, any>({
-      path: `/api/v1/brands/${id}`,
+    this.request<V1RolesUpdateData, any>({
+      path: `/api/v1/roles/${id}`,
       method: "PUT",
       body: data,
       type: ContentType.Json,

@@ -1,9 +1,15 @@
-// Legacy types bridge
+// Legacy types bridge — maps generated types to friendly names
 import type {
-  ProductSPU,
-  ProductSKU,
-  ProductProductAttrResponse,
+  GfEshopInternalModelEntityProducts,
+  GfEshopApiProductsV1SkuDetailItem,
+  GfEshopApiProductsV1ProductAttrDetailResponse,
+  GfEshopApiProductsV1ProductsDetailRes,
 } from "@/lib/api-gen/data-contracts";
+
+export type ProductSPU = GfEshopInternalModelEntityProducts;
+export type ProductSKU = GfEshopApiProductsV1SkuDetailItem;
+export type ProductProductAttrResponse = GfEshopApiProductsV1ProductAttrDetailResponse;
+export type ProductSPUDetailResponse = GfEshopApiProductsV1ProductsDetailRes;
 
 export type Product = ProductSPU;
 export interface ProductDetailResponse {

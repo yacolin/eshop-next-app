@@ -105,7 +105,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const removeItem = useCallback(async (skuId: number) => {
     try {
       setError(null);
-      await cartsApi.v1CartsItemsDelete({ sku_id: skuId }, { headers: authHeaders() });
+      await cartsApi.v1CartsItemsDelete(skuId, { headers: authHeaders() });
       setItems(await fetchCartItems());
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to remove item");
@@ -129,7 +129,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const clearCartAction = useCallback(async () => {
     try {
       setError(null);
-      await cartsApi.v1CartsClearCreate(undefined, { headers: authHeaders() });
+      await cartsApi.v1CartsClearCreate({} as any, { headers: authHeaders() });
       setItems([]);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to clear cart");

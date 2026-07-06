@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "prepare": "husky",
-    "gen:api": "node scripts/gen-api.mjs"
+    "api": "node scripts/gen-api.mjs"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",

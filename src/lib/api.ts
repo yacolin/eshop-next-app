@@ -1,19 +1,15 @@
 // Legacy API bridge — wraps generated clients for backward compatibility
 import { Products } from "@/lib/api-gen/Products";
 import { Orders } from "@/lib/api-gen/Orders";
-import { Addresses } from "@/lib/api-gen/Addresses";
 import { Carts } from "@/lib/api-gen/Carts";
+import type { ProductSKU, ProductProductAttrResponse } from "@/types/product";
 import type {
-  ProductSKU,
-  ProductProductAttrResponse,
-  UserCreateAddressReq,
-  TradeAddItemReq,
-  TradeUpdateItemReq,
+  GfEshopApiCartsV1CartsAddItemReq,
+  GfEshopApiCartsV1CartsUpdateItemReq,
 } from "@/lib/api-gen/data-contracts";
 
 const pApi = new Products({ baseUrl: "" });
 const oApi = new Orders({ baseUrl: "" });
-const aApi = new Addresses({ baseUrl: "" });
 const cApi = new Carts({ baseUrl: "" });
 
 function authHeaders(): Record<string, string> {
@@ -24,7 +20,7 @@ function authHeaders(): Record<string, string> {
 
 export async function fetchProductDetail(id: number) {
   const res = await pApi.v1ProductsDetail(id);
-  const raw = res.data?.data;
+  const raw = (res.data as any)?.data;
   if (!raw) throw new Error("Product not found");
   return {
     product: {
@@ -63,44 +59,34 @@ export async function fetchProductDetail(id: number) {
 
 export async function submitOrder(data: Record<string, unknown>) {
   const res = await oApi.v1OrdersCreate(data as any, { headers: authHeaders() });
-  return res.data?.data;
-}
-
-export async function fetchAddresses() {
-  const res = await aApi.v1AddressesList({ headers: authHeaders() });
-  return res.data?.data;
-}
-
-export async function createAddress(data: UserCreateAddressReq) {
-  const res = await aApi.v1AddressesCreate(data, { headers: authHeaders() });
-  return res.data?.data;
+  return (res.data as any)?.data;
 }
 
 export async function fetchCart(userId?: number | null, sessionId?: string | null) {
   const res = await cApi.v1CartsList({
     headers: { ...authHeaders(), ...(sessionId ? { "X-Session-Id": sessionId } : {}) },
   });
-  return res.data?.data;
+  return (res.data as any)?.data;
 }
 
-export async function addToCart(data: TradeAddItemReq) {
+export async function addToCart(data: GfEshopApiCartsV1CartsAddItemReq) {
   const res = await cApi.v1CartsItemsCreate(data, { headers: authHeaders() });
-  return res.data?.data;
+  return (res.data as any)?.data;
 }
 
-export async function updateCartItem(itemId: number, data: TradeUpdateItemReq) {
+export async function updateCartItem(itemId: number, data: GfEshopApiCartsV1CartsUpdateItemReq) {
   const res = await cApi.v1CartsItemsUpdate(data, { headers: authHeaders() });
-  return res.data?.data;
+  return (res.data as any)?.data;
 }
 
 export async function removeCartItem(skuId: number) {
-  const res = await cApi.v1CartsItemsDelete({ sku_id: skuId }, { headers: authHeaders() });
-  return res.data?.data;
+  const res = await cApi.v1CartsItemsDelete(skuId, { headers: authHeaders() });
+  return (res.data as any)?.data;
 }
 
 export async function clearCart() {
-  const res = await cApi.v1CartsClearCreate(undefined, { headers: authHeaders() });
-  return res.data?.data;
+  const res = await cApi.v1CartsClearCreate({} as any, { headers: authHeaders() });
+  return (res.data as any)?.data;
 }
 
 // Legacy — still used by flash-sale pages
@@ -111,7 +97,7 @@ export async function fetchProductsCursor(cursor: string | null = null, category
     cursor: cursor ?? undefined,
     category_id: categoryId,
   });
-  const d = res.data?.data;
+  const d = (res.data as any)?.data;
   return { list: d?.list ?? [], cursor: d?.cursor ?? null, has_more: d?.has_more ?? false };
 }
 

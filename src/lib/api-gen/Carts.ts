@@ -11,8 +11,9 @@
  */
 
 import {
-  TradeAddItemReq,
-  TradeUpdateItemReq,
+  GfEshopApiCartsV1CartsAddItemReq,
+  GfEshopApiCartsV1CartsClearReq,
+  GfEshopApiCartsV1CartsUpdateItemReq,
   V1CartsClearCreateData,
   V1CartsItemsCreateData,
   V1CartsItemsDeleteData,
@@ -27,62 +28,74 @@ export class Carts<
   /**
    * No description
    *
-   * @tags carts, frontend
+   * @tags Carts
    * @name V1CartsList
    * @summary 获取购物车
    * @request GET:/api/v1/carts
-   * @secure
    */
   v1CartsList = (params: RequestParams = {}) =>
     this.request<V1CartsListData, any>({
       path: `/api/v1/carts`,
       method: "GET",
-      secure: true,
       format: "json",
       ...params,
     });
   /**
    * No description
    *
-   * @tags carts, frontend
+   * @tags Carts
    * @name V1CartsClearCreate
    * @summary 清空购物车
    * @request POST:/api/v1/carts/clear
-   * @secure
    */
   v1CartsClearCreate = (
-    query?: {
-      /** 会话ID */
-      session_id?: string;
-    },
+    data: GfEshopApiCartsV1CartsClearReq,
     params: RequestParams = {},
   ) =>
     this.request<V1CartsClearCreateData, any>({
       path: `/api/v1/carts/clear`,
       method: "POST",
-      query: query,
-      secure: true,
+      body: data,
+      type: ContentType.Json,
       format: "json",
       ...params,
     });
   /**
    * No description
    *
-   * @tags carts, frontend
+   * @tags Carts
+   * @name V1CartsItemsCreate
+   * @summary 添加商品到购物车
+   * @request POST:/api/v1/carts/items
+   */
+  v1CartsItemsCreate = (
+    data: GfEshopApiCartsV1CartsAddItemReq,
+    params: RequestParams = {},
+  ) =>
+    this.request<V1CartsItemsCreateData, any>({
+      path: `/api/v1/carts/items`,
+      method: "POST",
+      body: data,
+      type: ContentType.Json,
+      format: "json",
+      ...params,
+    });
+  /**
+   * No description
+   *
+   * @tags Carts
    * @name V1CartsItemsUpdate
-   * @summary 更新购物车商品
+   * @summary 更新购物车商品数量
    * @request PUT:/api/v1/carts/items
-   * @secure
    */
   v1CartsItemsUpdate = (
-    request: TradeUpdateItemReq,
+    data: GfEshopApiCartsV1CartsUpdateItemReq,
     params: RequestParams = {},
   ) =>
     this.request<V1CartsItemsUpdateData, any>({
       path: `/api/v1/carts/items`,
       method: "PUT",
-      body: request,
-      secure: true,
+      body: data,
       type: ContentType.Json,
       format: "json",
       ...params,
@@ -90,43 +103,15 @@ export class Carts<
   /**
    * No description
    *
-   * @tags carts, frontend
-   * @name V1CartsItemsCreate
-   * @summary 添加商品到购物车
-   * @request POST:/api/v1/carts/items
-   * @secure
-   */
-  v1CartsItemsCreate = (request: TradeAddItemReq, params: RequestParams = {}) =>
-    this.request<V1CartsItemsCreateData, any>({
-      path: `/api/v1/carts/items`,
-      method: "POST",
-      body: request,
-      secure: true,
-      type: ContentType.Json,
-      format: "json",
-      ...params,
-    });
-  /**
-   * No description
-   *
-   * @tags carts, frontend
+   * @tags Carts
    * @name V1CartsItemsDelete
    * @summary 删除购物车商品
-   * @request DELETE:/api/v1/carts/items
-   * @secure
+   * @request DELETE:/api/v1/carts/items/{sku_id}
    */
-  v1CartsItemsDelete = (
-    query: {
-      /** SKU ID */
-      sku_id: number;
-    },
-    params: RequestParams = {},
-  ) =>
+  v1CartsItemsDelete = (skuId: number, params: RequestParams = {}) =>
     this.request<V1CartsItemsDeleteData, any>({
-      path: `/api/v1/carts/items`,
+      path: `/api/v1/carts/items/${skuId}`,
       method: "DELETE",
-      query: query,
-      secure: true,
       format: "json",
       ...params,
     });

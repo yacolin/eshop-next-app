@@ -1,8 +1,7 @@
 "use client";
 
 import { CheckCircle, XCircle, AlertTriangle } from "lucide-react";
-import type { ProductSKU } from "@/lib/api-gen/data-contracts";
-import type { ProductProductAttrResponse } from "@/lib/api-gen/data-contracts";
+import type { ProductSKU, ProductProductAttrResponse } from "@/types/product";
 
 /**
  * 商品规格选择器 —— 渲染属性按钮组 + 匹配 SKU 信息卡片。

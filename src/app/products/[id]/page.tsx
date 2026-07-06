@@ -17,7 +17,7 @@ import type {
   ProductSPUDetailResponse,
   ProductSKU,
   ProductProductAttrResponse,
-} from "@/lib/api-gen/data-contracts";
+} from "@/types/product";
 
 const productsApi = new Products({ baseUrl: "" });
 
@@ -114,7 +114,7 @@ export default function ProductDetailPage({ params }: Props) {
       try {
         const res = await productsApi.v1ProductsDetail(productId);
         if (cancelled) return;
-        const raw = res.data?.data;
+        const raw = (res.data as any)?.data;
         if (!raw) throw new Error("Product not found");
         const d = toDetail(raw, raw.skus ?? [], raw.attributes ?? []);
         setDetail(d);
