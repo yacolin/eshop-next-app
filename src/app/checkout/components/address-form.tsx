@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Addresses } from "@/lib/api-gen/Addresses";
+import { Address } from "@/lib/api-gen/Address";
 import {
   Sheet,
   SheetContent,
@@ -46,7 +46,7 @@ export function AddressForm({ open, onOpenChange, onSaved }: Props) {
     if (!consignee || !phone || !province || !city || !district || !detail) return;
     setSaving(true);
     try {
-      await new Addresses({ baseUrl: "" }).v1AddressesCreate({
+      await new Address({ baseUrl: "" }).v1AddressesCreate({
         consignee,
         phone,
         province,
@@ -54,7 +54,7 @@ export function AddressForm({ open, onOpenChange, onSaved }: Props) {
         district,
         detail,
         zip_code: zipCode || undefined,
-        is_default: isDefault || undefined,
+        is_default: isDefault ? 1 : undefined,
       });
       onSaved();
       onOpenChange(false);

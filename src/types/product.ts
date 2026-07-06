@@ -4,12 +4,21 @@ import type {
   GfEshopApiProductsV1SkuDetailItem,
   GfEshopApiProductsV1ProductAttrDetailResponse,
   GfEshopApiProductsV1ProductsDetailRes,
+  GfEshopApiUserAuthV1UserLoginReq,
+  GfEshopApiUserAuthV1UserLoginRes,
+  GfEshopInternalModelEntityAddresses,
+  GfEshopApiAddressV1AddressCreateReq,
 } from "@/lib/api-gen/data-contracts";
 
 export type ProductSPU = GfEshopInternalModelEntityProducts;
 export type ProductSKU = GfEshopApiProductsV1SkuDetailItem;
 export type ProductProductAttrResponse = GfEshopApiProductsV1ProductAttrDetailResponse;
 export type ProductSPUDetailResponse = GfEshopApiProductsV1ProductsDetailRes;
+
+export type UserPasswordLoginReq = GfEshopApiUserAuthV1UserLoginReq;
+export type UserPasswordLoginRes = GfEshopApiUserAuthV1UserLoginRes;
+export type UserAddress = GfEshopInternalModelEntityAddresses;
+export type UserCreateAddressReq = GfEshopApiAddressV1AddressCreateReq;
 
 export type Product = ProductSPU;
 export interface ProductDetailResponse {

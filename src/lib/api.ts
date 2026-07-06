@@ -2,7 +2,8 @@
 import { Products } from "@/lib/api-gen/Products";
 import { Orders } from "@/lib/api-gen/Orders";
 import { Carts } from "@/lib/api-gen/Carts";
-import type { ProductSKU, ProductProductAttrResponse } from "@/types/product";
+import { Address } from "@/lib/api-gen/Address";
+import type { ProductSKU, ProductProductAttrResponse, UserCreateAddressReq } from "@/types/product";
 import type {
   GfEshopApiCartsV1CartsAddItemReq,
   GfEshopApiCartsV1CartsUpdateItemReq,
@@ -11,6 +12,7 @@ import type {
 const pApi = new Products({ baseUrl: "" });
 const oApi = new Orders({ baseUrl: "" });
 const cApi = new Carts({ baseUrl: "" });
+const aApi = new Address({ baseUrl: "" });
 
 function authHeaders(): Record<string, string> {
   if (typeof window === "undefined") return {};
@@ -86,6 +88,16 @@ export async function removeCartItem(skuId: number) {
 
 export async function clearCart() {
   const res = await cApi.v1CartsClearCreate({} as any, { headers: authHeaders() });
+  return (res.data as any)?.data;
+}
+
+export async function fetchAddresses() {
+  const res = await aApi.v1AddressesList({ headers: authHeaders() });
+  return (res.data as any)?.data;
+}
+
+export async function createAddress(data: UserCreateAddressReq) {
+  const res = await aApi.v1AddressesCreate(data, { headers: authHeaders() });
   return (res.data as any)?.data;
 }
 

@@ -2,10 +2,10 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { Auth } from "@/lib/api-gen/Auth";
-import type { UserPasswordLoginReq } from "@/lib/api-gen/data-contracts";
+import { UserAuth } from "@/lib/api-gen/UserAuth";
+import type { UserPasswordLoginReq, UserPasswordLoginRes } from "@/types/product";
 
-const authApi = new Auth({ baseUrl: "" });
+const authApi = new UserAuth({ baseUrl: "" });
 
 interface AuthContextValue {
   isAuthenticated: boolean;
@@ -40,8 +40,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(
     async (data: UserPasswordLoginReq) => {
-      const res = await authApi.v1AuthLoginPasswordCreate(data);
-      const result = res.data?.data;
+      const res = await authApi.v1UserAuthLoginCreate(data);
+      const result = (res.data as any)?.data as UserPasswordLoginRes | undefined;
       if (!result) throw new Error("Login failed");
       localStorage.setItem("access_token", result.access_token ?? "");
       localStorage.setItem("refresh_token", result.refresh_token ?? "");

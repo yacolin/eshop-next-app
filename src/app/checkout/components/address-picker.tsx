@@ -8,8 +8,8 @@ function authHeaders(): Record<string, string> {
 
 import { useState, useEffect } from "react";
 import { MapPin, ChevronDown, ChevronRight, Plus, Loader2 } from "lucide-react";
-import { Addresses } from "@/lib/api-gen/Addresses";
-import type { UserAddress } from "@/lib/api-gen/data-contracts";
+import { Address } from "@/lib/api-gen/Address";
+import type { UserAddress } from "@/types/product";
 
 interface Props {
   onAddNew: () => void;
@@ -29,11 +29,11 @@ export function AddressPicker({ onAddNew, onSelect }: Props) {
       try {
         setLoading(true);
         setError(null);
-        const data = await new Addresses({ baseUrl: "" }).v1AddressesList({
+        const res = await new Address({ baseUrl: "" }).v1AddressesList({
           headers: authHeaders(),
         });
         if (cancelled) return;
-        setAddresses((data as any)?.data?.list ?? []);
+        setAddresses((res.data as any)?.data?.list ?? []);
         // Auto-select default, or first address
         const defaultAddr = addresses.find((a: any) => a.is_default) ?? addresses[0];
         if (defaultAddr) {
