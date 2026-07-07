@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useEffect, useCallback, type React
 import { useRouter } from "next/navigation";
 import { UserAuth } from "@/lib/api-gen/UserAuth";
 import type { UserPasswordLoginReq, UserPasswordLoginRes } from "@/types/product";
+import type { GfEshopApiUserAuthV1UserRegisterRes } from "@/lib/api-gen/data-contracts";
 
 const authApi = new UserAuth({ baseUrl: "" });
 
@@ -11,6 +12,7 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   username: string | null;
   login: (data: UserPasswordLoginReq) => Promise<void>;
+  register: (data: { username: string; password: string; email?: string }) => Promise<void>;
   logout: () => void;
   loading: boolean;
 }
@@ -38,20 +40,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(false);
   }, []);
 
-  const login = useCallback(
-    async (data: UserPasswordLoginReq) => {
-      const res = await authApi.v1UserAuthLoginCreate(data);
-      const result = (res.data as any)?.data as UserPasswordLoginRes | undefined;
-      if (!result) throw new Error("Login failed");
+  const saveAuth = useCallback(
+    (result: {
+      access_token?: string;
+      refresh_token?: string;
+      username?: string;
+      user_id?: number;
+    }) => {
       localStorage.setItem("access_token", result.access_token ?? "");
       localStorage.setItem("refresh_token", result.refresh_token ?? "");
       localStorage.setItem("username", result.username ?? "");
       localStorage.setItem("user_id", String(result.user_id ?? ""));
       setIsAuthenticated(true);
       setUsername(result.username ?? null);
+    },
+    [],
+  );
+
+  const login = useCallback(
+    async (data: UserPasswordLoginReq) => {
+      const res = await authApi.v1UserAuthLoginCreate(data);
+      const result = (res.data as any)?.data as UserPasswordLoginRes | undefined;
+      if (!result) throw new Error("Login failed");
+      saveAuth(result);
       router.push("/");
     },
-    [router],
+    [router, saveAuth],
+  );
+
+  const register = useCallback(
+    async (data: { username: string; password: string; email?: string }) => {
+      const res = await authApi.v1UserAuthRegisterCreate(data);
+      const result = (res.data as any)?.data as GfEshopApiUserAuthV1UserRegisterRes | undefined;
+      if (!result) throw new Error("Register failed");
+      saveAuth(result);
+      router.push("/");
+    },
+    [router, saveAuth],
   );
 
   const logout = useCallback(() => {
@@ -66,7 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [router]);
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, username, login, logout, loading }}>
+    <AuthContext.Provider value={{ isAuthenticated, username, login, register, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );

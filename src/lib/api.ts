@@ -4,6 +4,8 @@ import { Orders } from "@/lib/api-gen/Orders";
 import { Carts } from "@/lib/api-gen/Carts";
 import { Address } from "@/lib/api-gen/Address";
 import { Marketing } from "@/lib/api-gen/Marketing";
+import { User } from "@/lib/api-gen/User";
+import { UserAuth } from "@/lib/api-gen/UserAuth";
 import type { ProductSKU, ProductProductAttrResponse, UserCreateAddressReq } from "@/types/product";
 import type {
   GfEshopApiCartsV1CartsAddItemReq,
@@ -15,6 +17,8 @@ const oApi = new Orders({ baseUrl: "" });
 const cApi = new Carts({ baseUrl: "" });
 const aApi = new Address({ baseUrl: "" });
 const mApi = new Marketing({ baseUrl: "" });
+const uApi = new User({ baseUrl: "" });
+const authApi = new UserAuth({ baseUrl: "" });
 
 function authHeaders(): Record<string, string> {
   if (typeof window === "undefined") return {};
@@ -197,6 +201,50 @@ export async function claimCoupon(promotionId: number) {
     { promotion_id: promotionId },
     { headers: authHeaders() },
   );
+  return (res.data as any)?.data;
+}
+
+export async function fetchOrders(params?: { page?: number; page_size?: number; status?: string }) {
+  const uid = typeof window !== "undefined" ? localStorage.getItem("user_id") : null;
+  const res = await oApi.v1OrdersList(
+    { ...params, user_id: uid ? Number(uid) : undefined } as any,
+    { headers: authHeaders() },
+  );
+  return (res.data as any)?.data;
+}
+
+export async function fetchOrderDetail(orderNo: string) {
+  const res = await oApi.v1OrdersDetail(orderNo, { headers: authHeaders() });
+  return (res.data as any)?.data;
+}
+
+export async function fetchUpdateAddress(id: number, data: Record<string, unknown>) {
+  const res = await aApi.v1AddressesUpdate(id, data as any, { headers: authHeaders() });
+  return (res.data as any)?.data;
+}
+
+export async function fetchDeleteAddress(id: number) {
+  const res = await aApi.v1AddressesDelete(id, { headers: authHeaders() });
+  return (res.data as any)?.data;
+}
+
+export async function fetchRegister(data: {
+  username: string;
+  password: string;
+  email?: string;
+  phone?: string;
+}) {
+  const res = await authApi.v1UserAuthRegisterCreate(data);
+  return (res.data as any)?.data;
+}
+
+export async function fetchUserProfile() {
+  const res = await uApi.v1UserList({ headers: authHeaders() });
+  return (res.data as any)?.data;
+}
+
+export async function fetchUpdateProfile(data: Record<string, unknown>) {
+  const res = await uApi.v1UserUpdate(data as any, { headers: authHeaders() });
   return (res.data as any)?.data;
 }
 

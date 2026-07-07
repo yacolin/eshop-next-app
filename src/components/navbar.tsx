@@ -17,7 +17,9 @@ export function Navbar() {
         <nav className="flex items-center gap-2">
           {loading ? null : isAuthenticated ? (
             <>
-              <span className="text-sm text-muted-foreground">{username}</span>
+              <Link href="/profile" className="text-sm text-muted-foreground hover:text-foreground">
+                {username}
+              </Link>
               <Button variant="ghost" size="sm" onClick={logout}>
                 Logout
               </Button>

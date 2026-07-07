@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Address } from "@/lib/api-gen/Address";
 import {
   Sheet,
@@ -28,9 +28,10 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSaved: () => void;
+  address?: any;
 }
 
-export function AddressForm({ open, onOpenChange, onSaved }: Props) {
+export function AddressForm({ open, onOpenChange, onSaved, address }: Props) {
   const [consignee, setConsignee] = useState("");
   const [phone, setPhone] = useState("");
   const [province, setProvince] = useState("");
@@ -42,11 +43,26 @@ export function AddressForm({ open, onOpenChange, onSaved }: Props) {
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (open && address) {
+      setConsignee(address.consignee ?? "");
+      setPhone(address.phone ?? "");
+      setProvince(address.province ?? "");
+      setCity(address.city ?? "");
+      setDistrict(address.district ?? "");
+      setDetail(address.detail ?? "");
+      setZipCode(address.zip_code ?? "");
+      setIsDefault(!!address.is_default);
+    } else if (open) {
+      resetForm();
+    }
+  }, [open, address]);
+
   async function handleSave() {
     if (!consignee || !phone || !province || !city || !district || !detail) return;
     setSaving(true);
     try {
-      await new Address({ baseUrl: "" }).v1AddressesCreate({
+      const data = {
         consignee,
         phone,
         province,
@@ -55,7 +71,12 @@ export function AddressForm({ open, onOpenChange, onSaved }: Props) {
         detail,
         zip_code: zipCode || undefined,
         is_default: isDefault ? 1 : undefined,
-      });
+      };
+      if (address) {
+        await new Address({ baseUrl: "" }).v1AddressesUpdate(address.id, data);
+      } else {
+        await new Address({ baseUrl: "" }).v1AddressesCreate(data);
+      }
       onSaved();
       onOpenChange(false);
       resetForm();
@@ -84,8 +105,8 @@ export function AddressForm({ open, onOpenChange, onSaved }: Props) {
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent side="right" className="flex flex-col">
           <SheetHeader>
-            <SheetTitle>添加收货地址</SheetTitle>
-            <SheetDescription>请填写收货信息</SheetDescription>
+            <SheetTitle>{address ? "编辑收货地址" : "添加收货地址"}</SheetTitle>
+            <SheetDescription>{address ? "修改收货信息" : "请填写收货信息"}</SheetDescription>
           </SheetHeader>
 
           <div className="flex flex-1 flex-col gap-5 overflow-y-auto p-4 pt-2">

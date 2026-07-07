@@ -8,6 +8,8 @@ import type {
   GfEshopApiUserAuthV1UserLoginRes,
   GfEshopInternalModelEntityAddresses,
   GfEshopApiAddressV1AddressCreateReq,
+  GfEshopApiUserV1UserProfileRes,
+  GfEshopApiUserV1UserUpdateInfoReq,
 } from "@/lib/api-gen/data-contracts";
 
 export type ProductSPU = GfEshopInternalModelEntityProducts;
@@ -19,6 +21,8 @@ export type UserPasswordLoginReq = GfEshopApiUserAuthV1UserLoginReq;
 export type UserPasswordLoginRes = GfEshopApiUserAuthV1UserLoginRes;
 export type UserAddress = GfEshopInternalModelEntityAddresses;
 export type UserCreateAddressReq = GfEshopApiAddressV1AddressCreateReq;
+export type UserProfile = GfEshopApiUserV1UserProfileRes;
+export type UserUpdateProfileReq = GfEshopApiUserV1UserUpdateInfoReq;
 
 export type Product = ProductSPU;
 export interface ProductDetailResponse {
