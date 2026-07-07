@@ -6,7 +6,7 @@ import { InfiniteProductList } from "@/components/infinite-product-list";
 import { SearchBar } from "@/components/search-bar";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, ChevronRight } from "lucide-react";
-// import { FlashSaleSection } from "@/components/flash-sale";
+import { FlashSaleSection } from "@/components/flash-sale";
 import { Categories } from "@/lib/api-gen/Categories";
 import type { GfEshopInternalModelEntityCategories } from "@/lib/api-gen/data-contracts";
 
@@ -116,8 +116,7 @@ export default function Home() {
             </div>
           </section>
 
-          {/* Flash Sale */}
-          {/* <FlashSaleSection /> */}
+          <FlashSaleSection />
         </div>
       </div>
 

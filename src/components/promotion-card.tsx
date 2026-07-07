@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Percent, Gift, Truck, BadgePercent, ArrowRight } from "lucide-react";
-import type { MarketingPromotion } from "@/lib/api-gen/data-contracts";
+import type { GfEshopInternalModelEntityPromotions } from "@/lib/api-gen/data-contracts";
 
 const promoTypeConfig: Record<number, { label: string; icon: typeof Percent; gradient: string }> = {
   1: { label: "Spend & Save", icon: BadgePercent, gradient: "from-rose-500 to-pink-600" },
@@ -15,7 +15,7 @@ function formatDate(ts: string | number | undefined): string {
   return `${d.getMonth() + 1}/${d.getDate()}`;
 }
 
-export function PromotionCard({ promotion }: { promotion: MarketingPromotion }) {
+export function PromotionCard({ promotion }: { promotion: GfEshopInternalModelEntityPromotions }) {
   const config = promoTypeConfig[promotion.promo_type ?? 1] || promoTypeConfig[1];
   const Icon = config.icon;
 

@@ -4,10 +4,8 @@ import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { ChevronRight, Home, Percent, Gift, Truck, BadgePercent, Package } from "lucide-react";
 import { EmptyState } from "@/components/empty-state";
-import { Promotions } from "@/lib/api-gen/Promotions";
-import type { MarketingPromotionDetailResponse } from "@/lib/api-gen/data-contracts";
-
-const promoApi = new Promotions({ baseUrl: "" });
+import { fetchPromotionDetailList } from "@/lib/api";
+import type { GfEshopApiMarketingV1PromotionFullDetailRes } from "@/lib/api-gen/data-contracts";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -33,15 +31,15 @@ function formatDate(ts: string | number | undefined) {
 
 export default function PromotionDetailPage({ params }: Props) {
   const { id } = use(params);
-  const [detail, setDetail] = useState<MarketingPromotionDetailResponse | null>(null);
+  const [detail, setDetail] = useState<GfEshopApiMarketingV1PromotionFullDetailRes | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const res = await promoApi.v1PromotionsDetailList(Number(id));
-        if (!cancelled) setDetail(res.data?.data ?? null);
+        const data = await fetchPromotionDetailList(Number(id));
+        if (!cancelled) setDetail(data ?? null);
       } catch {
         // handled
       } finally {
@@ -86,7 +84,7 @@ export default function PromotionDetailPage({ params }: Props) {
     );
   }
 
-  const config = promoConfig[detail.promo_type ?? 1] || promoConfig[1];
+  const config = promoConfig[detail.promotion?.promo_type ?? 1] || promoConfig[1];
   const Icon = config.icon;
 
   return (
@@ -106,7 +104,7 @@ export default function PromotionDetailPage({ params }: Props) {
             Promotions
           </Link>
           <ChevronRight className="size-3.5" />
-          <span className="text-foreground">{detail.promo_name}</span>
+          <span className="text-foreground">{detail.promotion?.promo_name}</span>
         </nav>
 
         {/* Promo Banner */}
@@ -119,13 +117,15 @@ export default function PromotionDetailPage({ params }: Props) {
               <span className="rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-medium">
                 {config.label}
               </span>
-              <h1 className="mt-2 text-xl font-bold md:text-2xl">{detail.promo_name}</h1>
+              <h1 className="mt-2 text-xl font-bold md:text-2xl">{detail.promotion?.promo_name}</h1>
               <p className="mt-2 text-sm opacity-80">
-                {formatDate(detail.start_time)} – {formatDate(detail.end_time)}
+                {formatDate(detail.promotion?.start_time)} –{" "}
+                {formatDate(detail.promotion?.end_time)}
               </p>
-              {(detail.total_quantity ?? 0) > 0 && (
+              {(detail.promotion?.total_quantity ?? 0) > 0 && (
                 <p className="mt-1 text-xs opacity-60">
-                  Limited: {detail.used_quantity ?? 0}/{detail.total_quantity} claimed
+                  Limited: {detail.promotion?.used_quantity ?? 0}/{detail.promotion?.total_quantity}{" "}
+                  claimed
                 </p>
               )}
             </div>

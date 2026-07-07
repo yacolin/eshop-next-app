@@ -3,10 +3,8 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Percent, Gift, Truck, BadgePercent, ChevronRight, Home } from "lucide-react";
-import { Promotions } from "@/lib/api-gen/Promotions";
-import type { MarketingPromotion } from "@/lib/api-gen/data-contracts";
-
-const promoApi = new Promotions({ baseUrl: "" });
+import { fetchPromotions } from "@/lib/api";
+import type { GfEshopInternalModelEntityPromotions } from "@/lib/api-gen/data-contracts";
 
 const promoTypeConfig: Record<number, { label: string; icon: typeof Percent; gradient: string }> = {
   1: { label: "Spend & Save", icon: BadgePercent, gradient: "from-rose-500 to-pink-600" },
@@ -21,15 +19,15 @@ function formatDate(ts: string | number | undefined) {
 }
 
 export default function PromotionsPage() {
-  const [promotions, setPromotions] = useState<MarketingPromotion[]>([]);
+  const [promotions, setPromotions] = useState<GfEshopInternalModelEntityPromotions[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const res = await promoApi.v1PromotionsList({ size: 50, status: 2 } as any);
-        if (!cancelled) setPromotions(res.data?.data?.list ?? []);
+        const data = await fetchPromotions({ page_size: 50, status: 2 });
+        if (!cancelled) setPromotions(data?.list ?? []);
       } catch {
         // no promotions
       } finally {

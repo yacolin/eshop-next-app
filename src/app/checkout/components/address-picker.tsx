@@ -33,9 +33,10 @@ export function AddressPicker({ onAddNew, onSelect }: Props) {
           headers: authHeaders(),
         });
         if (cancelled) return;
-        setAddresses((res.data as any)?.data?.list ?? []);
+        const list = (res.data as any)?.data?.list ?? [];
+        setAddresses(list);
         // Auto-select default, or first address
-        const defaultAddr = addresses.find((a: any) => a.is_default) ?? addresses[0];
+        const defaultAddr = list.find((a: any) => a.is_default) ?? list[0];
         if (defaultAddr) {
           setSelectedId(defaultAddr.id ?? null);
           onSelect?.(defaultAddr.id ?? 0);

@@ -4,10 +4,8 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Percent, ChevronRight, Gift, Truck, BadgePercent } from "lucide-react";
 import { PromotionCard } from "@/components/promotion-card";
-import { Promotions } from "@/lib/api-gen/Promotions";
-import type { MarketingPromotion } from "@/lib/api-gen/data-contracts";
-
-const promoApi = new Promotions({ baseUrl: "" });
+import { fetchPromotions } from "@/lib/api";
+import type { GfEshopInternalModelEntityPromotions } from "@/lib/api-gen/data-contracts";
 
 const promoTypeIcons: Record<number, typeof Percent> = {
   1: BadgePercent, // 满减
@@ -24,15 +22,15 @@ const promoTypeLabels: Record<number, string> = {
 };
 
 export function FlashSaleSection() {
-  const [promotions, setPromotions] = useState<MarketingPromotion[]>([]);
+  const [promotions, setPromotions] = useState<GfEshopInternalModelEntityPromotions[]>([]);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const res = await promoApi.v1PromotionsList({ size: 4, promo_type: 3 } as any);
+        const data = await fetchPromotions({ page_size: 4, promo_type: 3 });
         if (!cancelled) {
-          setPromotions(res.data?.data?.list ?? []);
+          setPromotions(data?.list ?? []);
         }
       } catch {
         // fallback - no promotions to show

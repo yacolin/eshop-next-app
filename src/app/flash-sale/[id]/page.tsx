@@ -1,4 +1,4 @@
-// @ts-nocheck
+// @ts-nocheck — pre-existing product type mismatch
 "use client";
 
 import { useState, useEffect, useMemo, use, useCallback } from "react";

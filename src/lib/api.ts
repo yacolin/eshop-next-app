@@ -3,6 +3,7 @@ import { Products } from "@/lib/api-gen/Products";
 import { Orders } from "@/lib/api-gen/Orders";
 import { Carts } from "@/lib/api-gen/Carts";
 import { Address } from "@/lib/api-gen/Address";
+import { Marketing } from "@/lib/api-gen/Marketing";
 import type { ProductSKU, ProductProductAttrResponse, UserCreateAddressReq } from "@/types/product";
 import type {
   GfEshopApiCartsV1CartsAddItemReq,
@@ -13,6 +14,7 @@ const pApi = new Products({ baseUrl: "" });
 const oApi = new Orders({ baseUrl: "" });
 const cApi = new Carts({ baseUrl: "" });
 const aApi = new Address({ baseUrl: "" });
+const mApi = new Marketing({ baseUrl: "" });
 
 function authHeaders(): Record<string, string> {
   if (typeof window === "undefined") return {};
@@ -111,6 +113,91 @@ export async function fetchProductsCursor(cursor: string | null = null, category
   });
   const d = (res.data as any)?.data;
   return { list: d?.list ?? [], cursor: d?.cursor ?? null, has_more: d?.has_more ?? false };
+}
+
+export async function fetchPromotions(params?: {
+  page?: number;
+  page_size?: number;
+  status?: number;
+  promo_type?: number;
+}) {
+  const res = await mApi.v1PromotionsList(params as any, { headers: authHeaders() });
+  return (res.data as any)?.data;
+}
+
+export async function fetchPromotionDetail(id: number) {
+  const res = await mApi.v1PromotionsDetail(id, { headers: authHeaders() });
+  return (res.data as any)?.data;
+}
+
+export async function fetchPromotionDetailList(id: number) {
+  const res = await mApi.v1PromotionsDetailList(id, { headers: authHeaders() });
+  return (res.data as any)?.data;
+}
+
+export async function fetchFlashActivities(cursor: number | null) {
+  const page = cursor ?? 1;
+  const res = await mApi.v1PromotionsList(
+    {
+      page,
+      page_size: 20,
+      promo_type: 3,
+      status: 2,
+    } as any,
+    { headers: authHeaders() },
+  );
+  const d = (res.data as any)?.data;
+  const list = (d?.list ?? []).map((p: any) => ({
+    id: p.id ?? 0,
+    product_id: p.product_id ?? 0,
+    flash_price: p.flash_price ?? 0,
+    total_stock: p.total_quantity ?? 0,
+    sold_stock: p.used_quantity ?? 0,
+    start_time: p.start_time ? new Date(p.start_time).getTime() : 0,
+    end_time: p.end_time ? new Date(p.end_time).getTime() : 0,
+    status: p.status === 2 ? "active" : "inactive",
+    created_at: p.created_at ? new Date(p.created_at).getTime() : 0,
+    updated_at: p.updated_at ? new Date(p.updated_at).getTime() : 0,
+  }));
+  const total = d?.total ?? 0;
+  const has_more = page * 20 < total;
+  return { list, next_cursor: has_more ? page + 1 : null, has_more };
+}
+
+export async function fetchFlashActivityById(id: number) {
+  const res = await mApi.v1PromotionsDetailList(id, { headers: authHeaders() });
+  const d = (res.data as any)?.data;
+  const p = d?.promotion;
+  const product = d?.products?.[0];
+  return {
+    id: p?.id ?? 0,
+    product_id: product?.product_id ?? 0,
+    flash_price: product?.min_price ?? 0,
+    total_stock: p?.total_quantity ?? 0,
+    sold_stock: p?.used_quantity ?? 0,
+    start_time: p?.start_time ? new Date(p.start_time).getTime() : 0,
+    end_time: p?.end_time ? new Date(p.end_time).getTime() : 0,
+    status: p?.status === 2 ? "active" : "inactive",
+    created_at: p?.created_at ? new Date(p.created_at).getTime() : 0,
+    updated_at: p?.updated_at ? new Date(p.updated_at).getTime() : 0,
+  };
+}
+
+export async function fetchCouponsMe(params?: {
+  page?: number;
+  page_size?: number;
+  status?: number;
+}) {
+  const res = await mApi.v1CouponsMeList(params, { headers: authHeaders() });
+  return (res.data as any)?.data;
+}
+
+export async function claimCoupon(promotionId: number) {
+  const res = await mApi.v1CouponsClaimCreate(
+    { promotion_id: promotionId },
+    { headers: authHeaders() },
+  );
+  return (res.data as any)?.data;
 }
 
 export { authHeaders };
