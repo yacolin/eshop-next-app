@@ -80,18 +80,18 @@ export function SpecSelector({
           </p>
           <p className="mt-1 text-xs font-medium">
             {matchedSku.available_quantity !== undefined &&
-            matchedSku.inventory_status === "outofstock" ? (
+            matchedSku.inventory_status === "无货" ? (
               <span className="inline-flex items-center gap-1 text-destructive">
                 <XCircle className="size-3.5" />
                 Out of Stock
               </span>
             ) : matchedSku.available_quantity !== undefined &&
-              matchedSku.inventory_status === "lowstock" ? (
+              matchedSku.inventory_status === "缺货" ? (
               <span className="inline-flex items-center gap-1 text-amber-600">
                 <AlertTriangle className="size-3.5" />
                 Only {matchedSku.available_quantity} left
               </span>
-            ) : matchedSku.available_quantity !== undefined ? (
+            ) : matchedSku.inventory_status === "充足" ? (
               <span className="inline-flex items-center gap-1 text-emerald-600">
                 <CheckCircle className="size-3.5" />
                 In Stock
