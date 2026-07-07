@@ -1,14 +1,9 @@
 "use client";
 
-function authHeaders(): Record<string, string> {
-  if (typeof window === "undefined") return {};
-  const token = localStorage.getItem("access_token");
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
-
 import { useState, useEffect } from "react";
 import { MapPin, ChevronDown, ChevronRight, Plus, Loader2 } from "lucide-react";
 import { Address } from "@/lib/api-gen/Address";
+import { authFetch } from "@/lib/api";
 import type { UserAddress } from "@/types/product";
 
 interface Props {
@@ -29,9 +24,7 @@ export function AddressPicker({ onAddNew, onSelect }: Props) {
       try {
         setLoading(true);
         setError(null);
-        const res = await new Address({ baseUrl: "" }).v1AddressesList({
-          headers: authHeaders(),
-        });
+        const res = await new Address({ baseUrl: "", customFetch: authFetch }).v1AddressesList();
         if (cancelled) return;
         const list = (res.data as any)?.data?.list ?? [];
         setAddresses(list);

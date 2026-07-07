@@ -12,13 +12,9 @@ import type {
   GfEshopApiCategoryBrandsV1CategoryBrandItem,
 } from "@/lib/api-gen/data-contracts";
 
-function authHeaders(): Record<string, string> {
-  if (typeof window === "undefined") return {};
-  const token = localStorage.getItem("access_token");
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+import { authFetch } from "@/lib/api";
 
-const catApi = new Categories({ baseUrl: "" });
+const catApi = new Categories({ baseUrl: "", customFetch: authFetch });
 
 export default function CategoryPage() {
   const searchParams = useSearchParams();
@@ -98,9 +94,7 @@ export default function CategoryPage() {
     let cancelled = false;
     const brandTargetId = activeCategoryId ?? categoryId;
     (async () => {
-      const brandRes = await catApi.v1CategoriesBrandsList(brandTargetId, {
-        headers: authHeaders(),
-      });
+      const brandRes = await catApi.v1CategoriesBrandsList(brandTargetId);
       if (!cancelled) setBrands((brandRes.data as any)?.data?.list ?? []);
     })();
     return () => {

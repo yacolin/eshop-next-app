@@ -3,10 +3,11 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { UserAuth } from "@/lib/api-gen/UserAuth";
+import { authFetch } from "@/lib/api";
 import type { UserPasswordLoginReq, UserPasswordLoginRes } from "@/types/product";
 import type { GfEshopApiUserAuthV1UserRegisterRes } from "@/lib/api-gen/data-contracts";
 
-const authApi = new UserAuth({ baseUrl: "" });
+const authApi = new UserAuth({ baseUrl: "", customFetch: authFetch });
 
 interface AuthContextValue {
   isAuthenticated: boolean;
@@ -38,6 +39,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsAuthenticated(!!token);
     setUsername(stored);
     setLoading(false);
+
+    const handler = () => {
+      setIsAuthenticated(false);
+      setUsername(null);
+    };
+    window.addEventListener("auth:logout", handler);
+    return () => window.removeEventListener("auth:logout", handler);
   }, []);
 
   const saveAuth = useCallback(

@@ -12,19 +12,107 @@ import type {
   GfEshopApiCartsV1CartsUpdateItemReq,
 } from "@/lib/api-gen/data-contracts";
 
-const pApi = new Products({ baseUrl: "" });
-const oApi = new Orders({ baseUrl: "" });
-const cApi = new Carts({ baseUrl: "" });
-const aApi = new Address({ baseUrl: "" });
-const mApi = new Marketing({ baseUrl: "" });
-const uApi = new User({ baseUrl: "" });
-const authApi = new UserAuth({ baseUrl: "" });
+const origFetch =
+  typeof window !== "undefined" ? window.fetch.bind(window) : globalThis.fetch.bind(globalThis);
 
-function authHeaders(): Record<string, string> {
-  if (typeof window === "undefined") return {};
-  const token = localStorage.getItem("access_token");
-  return token ? { Authorization: `Bearer ${token}` } : {};
+let isRefreshing = false;
+let failedSubscribers: Array<{
+  resolve: (token: string) => void;
+  reject: (err: any) => void;
+}> = [];
+
+function onTokenRefreshed(token: string | null, error?: any) {
+  failedSubscribers.forEach((s) => {
+    if (error) s.reject(error);
+    else if (token) s.resolve(token);
+    else s.reject(new Error("Refresh failed"));
+  });
+  failedSubscribers = [];
 }
+
+async function doRefreshToken(): Promise<string | null> {
+  const refreshToken = localStorage.getItem("refresh_token");
+  if (!refreshToken) return null;
+  try {
+    const res = await origFetch("/api/v1/user/auth/refresh", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    });
+    if (!res.ok) return null;
+    const json = await res.json();
+    const data = json?.data;
+    if (data?.access_token) {
+      localStorage.setItem("access_token", data.access_token);
+      if (data.refresh_token) {
+        localStorage.setItem("refresh_token", data.refresh_token);
+      }
+      return data.access_token;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export const authFetch: typeof fetch = (input, init) => {
+  if (typeof window === "undefined") return origFetch(input, init);
+
+  const token = localStorage.getItem("access_token");
+  const headers = new Headers(init?.headers);
+  if (token) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+
+  const doFetch = (h: Headers) => origFetch(input, { ...init, headers: h });
+
+  return (async () => {
+    let res = await doFetch(headers);
+
+    if (res.status === 401 && token) {
+      if (!isRefreshing) {
+        isRefreshing = true;
+        const newToken = await doRefreshToken();
+        isRefreshing = false;
+
+        if (newToken) {
+          onTokenRefreshed(newToken);
+          const retryHeaders = new Headers(init?.headers);
+          retryHeaders.set("Authorization", `Bearer ${newToken}`);
+          res = await origFetch(input, { ...init, headers: retryHeaders });
+        } else {
+          onTokenRefreshed(null, new Error("Refresh failed"));
+          localStorage.removeItem("access_token");
+          localStorage.removeItem("refresh_token");
+          localStorage.removeItem("username");
+          localStorage.removeItem("user_id");
+          window.dispatchEvent(new CustomEvent("auth:logout"));
+        }
+      } else {
+        return new Promise<Response>((resolve, reject) => {
+          failedSubscribers.push({
+            resolve: (t: string) => {
+              const h = new Headers(init?.headers);
+              h.set("Authorization", `Bearer ${t}`);
+              origFetch(input, { ...init, headers: h }).then(resolve, reject);
+            },
+            reject,
+          });
+        });
+      }
+    }
+
+    return res;
+  })();
+};
+
+const pApi = new Products({ baseUrl: "", customFetch: authFetch });
+const oApi = new Orders({ baseUrl: "", customFetch: authFetch });
+const cApi = new Carts({ baseUrl: "", customFetch: authFetch });
+const aApi = new Address({ baseUrl: "", customFetch: authFetch });
+const mApi = new Marketing({ baseUrl: "", customFetch: authFetch });
+const uApi = new User({ baseUrl: "", customFetch: authFetch });
+const authApi = new UserAuth({ baseUrl: "", customFetch: authFetch });
 
 export async function fetchProductDetail(id: number) {
   const res = await pApi.v1ProductsDetail(id);
@@ -66,48 +154,47 @@ export async function fetchProductDetail(id: number) {
 }
 
 export async function submitOrder(data: Record<string, unknown>) {
-  const res = await oApi.v1OrdersCreate(data as any, { headers: authHeaders() });
+  const res = await oApi.v1OrdersCreate(data as any);
   return (res.data as any)?.data;
 }
 
 export async function fetchCart(userId?: number | null, sessionId?: string | null) {
   const res = await cApi.v1CartsList({
-    headers: { ...authHeaders(), ...(sessionId ? { "X-Session-Id": sessionId } : {}) },
+    headers: { ...(sessionId ? { "X-Session-Id": sessionId } : {}) },
   });
   return (res.data as any)?.data;
 }
 
 export async function addToCart(data: GfEshopApiCartsV1CartsAddItemReq) {
-  const res = await cApi.v1CartsItemsCreate(data, { headers: authHeaders() });
+  const res = await cApi.v1CartsItemsCreate(data);
   return (res.data as any)?.data;
 }
 
 export async function updateCartItem(itemId: number, data: GfEshopApiCartsV1CartsUpdateItemReq) {
-  const res = await cApi.v1CartsItemsUpdate(data, { headers: authHeaders() });
+  const res = await cApi.v1CartsItemsUpdate(data);
   return (res.data as any)?.data;
 }
 
 export async function removeCartItem(skuId: number) {
-  const res = await cApi.v1CartsItemsDelete(skuId, { headers: authHeaders() });
+  const res = await cApi.v1CartsItemsDelete(skuId);
   return (res.data as any)?.data;
 }
 
 export async function clearCart() {
-  const res = await cApi.v1CartsClearCreate({} as any, { headers: authHeaders() });
+  const res = await cApi.v1CartsClearCreate({} as any);
   return (res.data as any)?.data;
 }
 
 export async function fetchAddresses() {
-  const res = await aApi.v1AddressesList({ headers: authHeaders() });
+  const res = await aApi.v1AddressesList();
   return (res.data as any)?.data;
 }
 
 export async function createAddress(data: UserCreateAddressReq) {
-  const res = await aApi.v1AddressesCreate(data, { headers: authHeaders() });
+  const res = await aApi.v1AddressesCreate(data);
   return (res.data as any)?.data;
 }
 
-// Legacy — still used by flash-sale pages
 export async function fetchProductsCursor(cursor: string | null = null, categoryId?: number) {
   const res = await pApi.v1ProductsList({
     size: 20,
@@ -125,31 +212,28 @@ export async function fetchPromotions(params?: {
   status?: number;
   promo_type?: number;
 }) {
-  const res = await mApi.v1PromotionsList(params as any, { headers: authHeaders() });
+  const res = await mApi.v1PromotionsList(params as any);
   return (res.data as any)?.data;
 }
 
 export async function fetchPromotionDetail(id: number) {
-  const res = await mApi.v1PromotionsDetail(id, { headers: authHeaders() });
+  const res = await mApi.v1PromotionsDetail(id);
   return (res.data as any)?.data;
 }
 
 export async function fetchPromotionDetailList(id: number) {
-  const res = await mApi.v1PromotionsDetailList(id, { headers: authHeaders() });
+  const res = await mApi.v1PromotionsDetailList(id);
   return (res.data as any)?.data;
 }
 
 export async function fetchFlashActivities(cursor: number | null) {
   const page = cursor ?? 1;
-  const res = await mApi.v1PromotionsList(
-    {
-      page,
-      page_size: 20,
-      promo_type: 3,
-      status: 2,
-    } as any,
-    { headers: authHeaders() },
-  );
+  const res = await mApi.v1PromotionsList({
+    page,
+    page_size: 20,
+    promo_type: 3,
+    status: 2,
+  } as any);
   const d = (res.data as any)?.data;
   const list = (d?.list ?? []).map((p: any) => ({
     id: p.id ?? 0,
@@ -169,7 +253,7 @@ export async function fetchFlashActivities(cursor: number | null) {
 }
 
 export async function fetchFlashActivityById(id: number) {
-  const res = await mApi.v1PromotionsDetailList(id, { headers: authHeaders() });
+  const res = await mApi.v1PromotionsDetailList(id);
   const d = (res.data as any)?.data;
   const p = d?.promotion;
   const product = d?.products?.[0];
@@ -192,39 +276,33 @@ export async function fetchCouponsMe(params?: {
   page_size?: number;
   status?: number;
 }) {
-  const res = await mApi.v1CouponsMeList(params, { headers: authHeaders() });
+  const res = await mApi.v1CouponsMeList(params);
   return (res.data as any)?.data;
 }
 
 export async function claimCoupon(promotionId: number) {
-  const res = await mApi.v1CouponsClaimCreate(
-    { promotion_id: promotionId },
-    { headers: authHeaders() },
-  );
+  const res = await mApi.v1CouponsClaimCreate({ promotion_id: promotionId });
   return (res.data as any)?.data;
 }
 
 export async function fetchOrders(params?: { page?: number; page_size?: number; status?: string }) {
   const uid = typeof window !== "undefined" ? localStorage.getItem("user_id") : null;
-  const res = await oApi.v1OrdersList(
-    { ...params, user_id: uid ? Number(uid) : undefined } as any,
-    { headers: authHeaders() },
-  );
+  const res = await oApi.v1OrdersList({ ...params, user_id: uid ? Number(uid) : undefined } as any);
   return (res.data as any)?.data;
 }
 
 export async function fetchOrderDetail(orderNo: string) {
-  const res = await oApi.v1OrdersDetail(orderNo, { headers: authHeaders() });
+  const res = await oApi.v1OrdersDetail(orderNo);
   return (res.data as any)?.data;
 }
 
 export async function fetchUpdateAddress(id: number, data: Record<string, unknown>) {
-  const res = await aApi.v1AddressesUpdate(id, data as any, { headers: authHeaders() });
+  const res = await aApi.v1AddressesUpdate(id, data as any);
   return (res.data as any)?.data;
 }
 
 export async function fetchDeleteAddress(id: number) {
-  const res = await aApi.v1AddressesDelete(id, { headers: authHeaders() });
+  const res = await aApi.v1AddressesDelete(id);
   return (res.data as any)?.data;
 }
 
@@ -239,13 +317,11 @@ export async function fetchRegister(data: {
 }
 
 export async function fetchUserProfile() {
-  const res = await uApi.v1UserList({ headers: authHeaders() });
+  const res = await uApi.v1UserList();
   return (res.data as any)?.data;
 }
 
 export async function fetchUpdateProfile(data: Record<string, unknown>) {
-  const res = await uApi.v1UserUpdate(data as any, { headers: authHeaders() });
+  const res = await uApi.v1UserUpdate(data as any);
   return (res.data as any)?.data;
 }
-
-export { authHeaders };
