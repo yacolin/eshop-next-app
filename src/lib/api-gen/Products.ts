@@ -53,7 +53,7 @@ export class Products<
       category_id?: number;
       /** @format int64 */
       brand_id?: number;
-      /** @format int */
+      /** @format *int */
       status?: number;
       /** @format int64 */
       price_min?: number;

@@ -68,7 +68,7 @@ export class Marketing<
       page?: number;
       /** @format int */
       page_size?: number;
-      /** @format int */
+      /** @format *int */
       status?: number;
     },
     params: RequestParams = {},
@@ -154,7 +154,7 @@ export class Marketing<
       page?: number;
       /** @format int */
       page_size?: number;
-      /** @format int */
+      /** @format *int */
       status?: number;
       /** @format int */
       promo_type?: number;

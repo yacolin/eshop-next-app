@@ -11,8 +11,29 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { ChevronRight, Home, User, Package, Loader2, CheckCircle } from "lucide-react";
+import {
+  ChevronRight,
+  Home,
+  User,
+  Package,
+  Loader2,
+  CheckCircle,
+  Shield,
+  TrendingUp,
+  Search,
+} from "lucide-react";
 import AddressesTab from "@/app/profile/components/addresses-tab";
+import { authFetch } from "@/lib/api";
+import { UserLevels } from "@/lib/api-gen/UserLevels";
+import { UserPoints } from "@/lib/api-gen/UserPoints";
+import type {
+  GfEshopApiUserLevelsV1UserLevelRes,
+  GfEshopInternalModelEntityPoints,
+  GfEshopApiUserPointsV1PointsBalanceRes,
+} from "@/lib/api-gen/data-contracts";
+
+const levelsApi = new UserLevels({ baseUrl: "", customFetch: authFetch });
+const pointsApi = new UserPoints({ baseUrl: "", customFetch: authFetch });
 
 const genderLabels: Record<number, string> = {
   0: "Unknown",
@@ -44,6 +65,15 @@ const statusColors: Record<string, string> = {
   refunded: "bg-rose-100 text-rose-700",
 };
 
+const sourceLabels: Record<string, string> = {
+  order: "Order",
+  review: "Review",
+  signin: "Sign-in",
+  admin: "Admin Adjustment",
+  refund: "Refund Deduction",
+  expire: "Expiration",
+};
+
 function formatDate(ts: string | undefined) {
   if (!ts) return "";
   return new Date(ts).toLocaleDateString("zh-CN", {
@@ -69,6 +99,13 @@ function ProfileTab() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
+  const [levelInfo, setLevelInfo] = useState<GfEshopApiUserLevelsV1UserLevelRes | null>(null);
+  const [levelLoading, setLevelLoading] = useState(false);
+  const [pointsBalance, setPointsBalance] = useState<GfEshopApiUserPointsV1PointsBalanceRes | null>(
+    null,
+  );
+  const [balanceLoading, setBalanceLoading] = useState(false);
+
   useEffect(() => {
     if (authLoading) return;
     if (!isAuthenticated) {
@@ -88,6 +125,31 @@ function ProfileTab() {
         setNickname(data?.nickname ?? "");
         setBio(data?.info?.bio ?? "");
         setGender(data?.info?.gender ?? 0);
+
+        const uid = data?.id;
+        if (uid) {
+          setLevelLoading(true);
+          setBalanceLoading(true);
+          Promise.all([
+            levelsApi
+              .v1UserLevelsUserLevelList({ user_id: uid })
+              .then((r) => {
+                if (!cancelled) setLevelInfo((r.data as any)?.data ?? null);
+              })
+              .catch(() => {}),
+            pointsApi
+              .v1UserPointsBalanceList({ user_id: String(uid) })
+              .then((r) => {
+                if (!cancelled) setPointsBalance((r.data as any)?.data ?? null);
+              })
+              .catch(() => {}),
+          ]).finally(() => {
+            if (!cancelled) {
+              setLevelLoading(false);
+              setBalanceLoading(false);
+            }
+          });
+        }
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : "Failed to load profile");
       } finally {
@@ -165,128 +227,447 @@ function ProfileTab() {
   const info = profile.info ?? {};
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <User className="size-5" />
-          Profile
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {editing ? (
-          <form onSubmit={handleSave} className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="nickname">Nickname</Label>
-              <Input
-                id="nickname"
-                value={nickname}
-                onChange={(e) => setNickname(e.target.value)}
-                disabled={saving}
-              />
-            </div>
+    <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <User className="size-5" />
+            Profile
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {editing ? (
+            <form onSubmit={handleSave} className="space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="nickname">Nickname</Label>
+                <Input
+                  id="nickname"
+                  value={nickname}
+                  onChange={(e) => setNickname(e.target.value)}
+                  disabled={saving}
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="bio">Bio</Label>
-              <Input
-                id="bio"
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
-                disabled={saving}
-                placeholder="Tell us about yourself"
-              />
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="bio">Bio</Label>
+                <Input
+                  id="bio"
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  disabled={saving}
+                  placeholder="Tell us about yourself"
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label>Gender</Label>
+              <div className="space-y-2">
+                <Label>Gender</Label>
+                <div className="flex gap-3">
+                  {[0, 1, 2].map((v) => (
+                    <label
+                      key={v}
+                      className={`flex cursor-pointer items-center gap-2 rounded-lg border px-4 py-2 text-sm transition-colors ${
+                        gender === v ? "border-primary bg-primary/5 text-primary" : "hover:bg-muted"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="gender"
+                        value={v}
+                        checked={gender === v}
+                        onChange={() => setGender(v)}
+                        className="sr-only"
+                      />
+                      {genderLabels[v]}
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {error && <p className="text-sm text-destructive">{error}</p>}
+
               <div className="flex gap-3">
-                {[0, 1, 2].map((v) => (
-                  <label
-                    key={v}
-                    className={`flex cursor-pointer items-center gap-2 rounded-lg border px-4 py-2 text-sm transition-colors ${
-                      gender === v ? "border-primary bg-primary/5 text-primary" : "hover:bg-muted"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="gender"
-                      value={v}
-                      checked={gender === v}
-                      onChange={() => setGender(v)}
-                      className="sr-only"
-                    />
-                    {genderLabels[v]}
-                  </label>
-                ))}
+                <Button type="submit" className="cursor-pointer" disabled={saving}>
+                  {saving ? "Saving..." : "Save"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="cursor-pointer"
+                  onClick={() => setEditing(false)}
+                  disabled={saving}
+                >
+                  Cancel
+                </Button>
               </div>
-            </div>
 
-            {error && <p className="text-sm text-destructive">{error}</p>}
+              {saved && (
+                <p className="flex items-center gap-1.5 text-sm text-green-600">
+                  <CheckCircle className="size-4" />
+                  Saved successfully
+                </p>
+              )}
+            </form>
+          ) : (
+            <div className="space-y-5">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <p className="text-xs text-muted-foreground">Username</p>
+                  <p className="text-sm font-medium">{profile.username || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Nickname</p>
+                  <p className="text-sm font-medium">{profile.nickname || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Email</p>
+                  <p className="text-sm font-medium">
+                    {profile.email || "-"}
+                    {profile.email_verified ? (
+                      <span className="ml-2 text-[10px] text-green-600">Verified</span>
+                    ) : null}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Phone</p>
+                  <p className="text-sm font-medium">{profile.phone || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Gender</p>
+                  <p className="text-sm font-medium">
+                    {info.gender !== undefined ? genderLabels[info.gender] || "-" : "-"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Bio</p>
+                  <p className="text-sm font-medium">{info.bio || "-"}</p>
+                </div>
+              </div>
 
-            <div className="flex gap-3">
-              <Button type="submit" className="cursor-pointer" disabled={saving}>
-                {saving ? "Saving..." : "Save"}
+              <Button variant="outline" className="cursor-pointer" onClick={() => setEditing(true)}>
+                Edit Profile
               </Button>
-              <Button
-                type="button"
-                variant="outline"
-                className="cursor-pointer"
-                onClick={() => setEditing(false)}
-                disabled={saving}
-              >
-                Cancel
-              </Button>
             </div>
+          )}
+        </CardContent>
+      </Card>
 
-            {saved && (
-              <p className="flex items-center gap-1.5 text-sm text-green-600">
-                <CheckCircle className="size-4" />
-                Saved successfully
-              </p>
-            )}
-          </form>
-        ) : (
-          <div className="space-y-5">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="size-5" />
+            Level & Points
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {levelLoading || balanceLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="size-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
             <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <p className="text-xs text-muted-foreground">Username</p>
-                <p className="text-sm font-medium">{profile.username || "-"}</p>
+              <div className="rounded-lg border p-4">
+                <p className="text-xs text-muted-foreground">Current Level</p>
+                {levelInfo ? (
+                  <div className="mt-1">
+                    <p className="text-lg font-semibold">{levelInfo.name || "-"}</p>
+                    <p className="text-xs text-muted-foreground">Level {levelInfo.level ?? "-"}</p>
+                    {levelInfo.discount_rate && (
+                      <p className="mt-1 text-xs text-green-600">
+                        {(1000 - levelInfo.discount_rate) / 10}% off
+                      </p>
+                    )}
+                    {levelInfo.progress_percent != null && (
+                      <div className="mt-2">
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span>Progress</span>
+                          <span>{levelInfo.current_points?.toLocaleString()} pts</span>
+                        </div>
+                        <div className="mt-1 h-2 overflow-hidden rounded-full bg-muted">
+                          <div
+                            className="h-full rounded-full bg-primary transition-all"
+                            style={{ width: `${Math.min(levelInfo.progress_percent, 100)}%` }}
+                          />
+                        </div>
+                        {levelInfo.points_to_next != null && levelInfo.points_to_next > 0 && (
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            {levelInfo.points_to_next.toLocaleString()} pts to next level
+                          </p>
+                        )}
+                        {levelInfo.next_level && (
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            Next: {levelInfo.next_level.name} (Lv.{levelInfo.next_level.level})
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="mt-1 text-sm text-muted-foreground">-</p>
+                )}
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Nickname</p>
-                <p className="text-sm font-medium">{profile.nickname || "-"}</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Email</p>
-                <p className="text-sm font-medium">
-                  {profile.email || "-"}
-                  {profile.email_verified ? (
-                    <span className="ml-2 text-[10px] text-green-600">Verified</span>
-                  ) : null}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Phone</p>
-                <p className="text-sm font-medium">{profile.phone || "-"}</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Gender</p>
-                <p className="text-sm font-medium">
-                  {info.gender !== undefined ? genderLabels[info.gender] || "-" : "-"}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Bio</p>
-                <p className="text-sm font-medium">{info.bio || "-"}</p>
+              <div className="rounded-lg border p-4">
+                <p className="text-xs text-muted-foreground">Points</p>
+                {pointsBalance ? (
+                  <div className="mt-1">
+                    <p className="text-lg font-semibold tabular-nums">
+                      {pointsBalance.balance?.toLocaleString() ?? 0}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Available</p>
+                    <div className="mt-2 flex gap-3 text-xs text-muted-foreground">
+                      <span>
+                        Earned:{" "}
+                        <span className="text-green-600 tabular-nums">
+                          +{pointsBalance.total_in?.toLocaleString() ?? 0}
+                        </span>
+                      </span>
+                      <span>
+                        Spent:{" "}
+                        <span className="text-red-600 tabular-nums">
+                          -{pointsBalance.total_out?.toLocaleString() ?? 0}
+                        </span>
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="mt-1 text-sm text-muted-foreground">-</p>
+                )}
               </div>
             </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
 
-            <Button variant="outline" className="cursor-pointer" onClick={() => setEditing(true)}>
-              Edit Profile
-            </Button>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+function PointsTab() {
+  const { isAuthenticated, loading: authLoading } = useAuth();
+
+  const [userId, setUserId] = useState<number | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [profileLoadError, setProfileLoadError] = useState<string | null>(null);
+
+  const [balance, setBalance] = useState<GfEshopApiUserPointsV1PointsBalanceRes | null>(null);
+  const [balanceLoading, setBalanceLoading] = useState(true);
+
+  const [pointsList, setPointsList] = useState<GfEshopInternalModelEntityPoints[]>([]);
+  const [pointsTotal, setPointsTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [listLoading, setListLoading] = useState(true);
+  const pageSize = 10;
+
+  useEffect(() => {
+    if (authLoading) return;
+    if (!isAuthenticated) {
+      setProfileLoading(false);
+      setProfileLoadError("Please login first");
+      return;
+    }
+
+    let cancelled = false;
+    (async () => {
+      try {
+        setProfileLoading(true);
+        const data = await fetchUserProfile();
+        if (cancelled) return;
+        setUserId(data?.id ?? null);
+      } catch (e) {
+        if (!cancelled)
+          setProfileLoadError(e instanceof Error ? e.message : "Failed to load profile");
+      } finally {
+        if (!cancelled) setProfileLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated, authLoading]);
+
+  useEffect(() => {
+    if (!userId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        setBalanceLoading(true);
+        const res = await pointsApi.v1UserPointsBalanceList({ user_id: String(userId) });
+        if (!cancelled) setBalance((res.data as any)?.data ?? null);
+      } catch {
+        /* ignore */
+      } finally {
+        if (!cancelled) setBalanceLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
+
+  useEffect(() => {
+    if (!userId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        setListLoading(true);
+        const res = await pointsApi.v1UserPointsList({
+          user_id: String(userId),
+          page,
+          page_size: pageSize,
+        });
+        if (cancelled) return;
+        const data = (res.data as any)?.data as {
+          list?: GfEshopInternalModelEntityPoints[];
+          total?: number;
+        };
+        setPointsList(data?.list ?? []);
+        setPointsTotal(data?.total ?? 0);
+      } catch {
+        /* ignore */
+      } finally {
+        if (!cancelled) setListLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [userId, page]);
+
+  if (authLoading || profileLoading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <Loader2 className="size-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (profileLoadError === "Please login first") {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+        <User className="mb-4 size-12 text-muted-foreground/30" />
+        <p className="mb-1">Please login to view your points</p>
+        <Button variant="outline" className="mt-4 cursor-pointer" asChild>
+          <Link href="/login">Login</Link>
+        </Button>
+      </div>
+    );
+  }
+
+  const totalPages = Math.ceil(pointsTotal / pageSize);
+
+  return (
+    <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="size-5" />
+            Points Balance
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {balanceLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="size-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : balance ? (
+            <div className="text-center">
+              <p className="text-4xl font-bold tabular-nums">
+                {balance.balance?.toLocaleString() ?? 0}
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">Available Balance</p>
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <div className="rounded-lg bg-green-50 p-3 dark:bg-green-950/20">
+                  <p className="text-xl font-semibold text-green-600 tabular-nums">
+                    +{balance.total_in?.toLocaleString() ?? 0}
+                  </p>
+                  <p className="text-xs text-muted-foreground">Total Earned</p>
+                </div>
+                <div className="rounded-lg bg-red-50 p-3 dark:bg-red-950/20">
+                  <p className="text-xl font-semibold text-red-600 tabular-nums">
+                    -{balance.total_out?.toLocaleString() ?? 0}
+                  </p>
+                  <p className="text-xs text-muted-foreground">Total Spent</p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <p className="py-4 text-center text-sm text-muted-foreground">No points data</p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Search className="size-5" />
+            Points History
+            {pointsTotal > 0 && (
+              <span className="text-xs font-normal text-muted-foreground">
+                ({pointsTotal} records)
+              </span>
+            )}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {listLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="size-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : pointsList.length === 0 ? (
+            <p className="py-4 text-center text-sm text-muted-foreground">No points history</p>
+          ) : (
+            <div className="space-y-2">
+              {pointsList.map((p) => (
+                <div
+                  key={p.id}
+                  className="flex items-center justify-between rounded-lg border p-3 text-sm"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`font-medium tabular-nums ${(p.points ?? 0) >= 0 ? "text-green-600" : "text-red-600"}`}
+                      >
+                        {(p.points ?? 0) >= 0 ? "+" : ""}
+                        {p.points?.toLocaleString()}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {sourceLabels[p.source ?? ""] || p.source}
+                      </span>
+                    </div>
+                    {p.remark && <p className="mt-0.5 text-xs text-muted-foreground">{p.remark}</p>}
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      Balance: {p.balance_after?.toLocaleString()}
+                    </p>
+                  </div>
+                  <span className="shrink-0 text-xs text-muted-foreground">
+                    {formatDate(p.created_at)}
+                  </span>
+                </div>
+              ))}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 pt-3">
+                  <button
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page <= 1}
+                    className="cursor-pointer rounded-lg border px-3 py-1.5 text-xs transition-colors hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    Prev
+                  </button>
+                  <span className="text-xs text-muted-foreground">
+                    {page} / {totalPages}
+                  </span>
+                  <button
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={page >= totalPages}
+                    className="cursor-pointer rounded-lg border px-3 py-1.5 text-xs transition-colors hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 
@@ -302,6 +683,7 @@ function OrdersTab({
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [stats, setStats] = useState<Record<string, number>>({});
   const pageSize = 10;
 
   useEffect(() => {
@@ -329,6 +711,28 @@ function OrdersTab({
     };
   }, [page, status]);
 
+  useEffect(() => {
+    if (loading) return;
+    let cancelled = false;
+    (async () => {
+      const counts: Record<string, number> = {};
+      try {
+        const all = await fetchOrders({ page: 1, page_size: 100 });
+        if (cancelled) return;
+        for (const o of all?.list ?? []) {
+          const s = o.status || "unknown";
+          counts[s] = (counts[s] || 0) + 1;
+        }
+        if (!cancelled) setStats(counts);
+      } catch {
+        /* ignore */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const totalPages = Math.ceil(total / pageSize);
 
   if (loading) {
@@ -348,15 +752,32 @@ function OrdersTab({
     );
   }
 
+  const statKeys = Object.keys(stats);
+  const totalOrders = statKeys.reduce((sum, k) => sum + stats[k], 0);
+
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Package className="size-5" />
           My Orders
+          {totalOrders > 0 && (
+            <span className="text-xs font-normal text-muted-foreground">({totalOrders} total)</span>
+          )}
         </CardTitle>
       </CardHeader>
       <CardContent>
+        {statKeys.length > 0 && (
+          <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {statKeys.map((s) => (
+              <div key={s} className="rounded-lg border p-2.5 text-center">
+                <p className="text-lg font-semibold tabular-nums">{stats[s]}</p>
+                <p className="text-[10px] text-muted-foreground">{statusLabels[s] || s}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
         <div className="mb-4 flex flex-wrap gap-2">
           {[null, "pending", "paid", "shipped", "delivered", "completed", "cancelled"].map((s) => (
             <button
@@ -452,7 +873,14 @@ interface PageProps {
 export default function ProfilePage({ searchParams }: PageProps) {
   const { tab, status } = use(searchParams);
   const router = useRouter();
-  const activeTab = tab === "orders" ? "orders" : tab === "addresses" ? "addresses" : "profile";
+  const activeTab =
+    tab === "orders"
+      ? "orders"
+      : tab === "addresses"
+        ? "addresses"
+        : tab === "points"
+          ? "points"
+          : "profile";
 
   return (
     <div className="min-h-screen bg-zinc-50 py-6 dark:bg-black">
@@ -480,6 +908,7 @@ export default function ProfilePage({ searchParams }: PageProps) {
           <TabsList className="mb-6">
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="orders">My Orders</TabsTrigger>
+            <TabsTrigger value="points">Points</TabsTrigger>
             <TabsTrigger value="addresses">Addresses</TabsTrigger>
           </TabsList>
 
@@ -494,6 +923,10 @@ export default function ProfilePage({ searchParams }: PageProps) {
                 router.replace(`/profile?tab=orders${s ? `&status=${s}` : ""}`)
               }
             />
+          </TabsContent>
+
+          <TabsContent value="points">
+            <PointsTab />
           </TabsContent>
 
           <TabsContent value="addresses">

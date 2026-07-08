@@ -24,6 +24,7 @@ export default function AddressesTab() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editingAddr, setEditingAddr] = useState<any | null>(null);
+  const [creatingNew, setCreatingNew] = useState(false);
   const [defaultConfirmAddr, setDefaultConfirmAddr] = useState<any | null>(null);
   const [deleteConfirmAddr, setDeleteConfirmAddr] = useState<any | null>(null);
 
@@ -101,6 +102,12 @@ export default function AddressesTab() {
             <MapPin className="size-5" />
             Addresses
           </CardTitle>
+          <button
+            onClick={() => setCreatingNew(true)}
+            className="cursor-pointer rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+          >
+            + Add New
+          </button>
         </div>
       </CardHeader>
       <CardContent>
@@ -183,6 +190,16 @@ export default function AddressesTab() {
             load();
           }}
           address={editingAddr}
+        />
+        <AddressForm
+          open={creatingNew}
+          onOpenChange={(open) => {
+            if (!open) setCreatingNew(false);
+          }}
+          onSaved={() => {
+            setCreatingNew(false);
+            load();
+          }}
         />
       </CardContent>
 

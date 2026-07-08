@@ -11,44 +11,38 @@
  */
 
 import {
-  GfEshopApiRolesV1RoleCreateReq,
-  V1RolesCreateData,
-  V1RolesDeleteData,
-  V1RolesDetailData,
-  V1RolesListData,
-  V1RolesUpdateData,
-  V1RolesUpdatePayload,
+  GfEshopApiMerchantsV1MerchantsCreateReq,
+  V1MerchantsCreateData,
+  V1MerchantsDeleteData,
+  V1MerchantsDetailData,
+  V1MerchantsListData,
+  V1MerchantsUpdateData,
+  V1MerchantsUpdatePayload,
 } from "./data-contracts";
 import { ContentType, HttpClient, RequestParams } from "./http-client";
 
-export class Roles<
+export class Merchants<
   SecurityDataType = unknown,
 > extends HttpClient<SecurityDataType> {
   /**
    * No description
    *
-   * @tags Roles
-   * @name V1RolesList
-   * @summary 角色列表
-   * @request GET:/api/v1/roles
+   * @tags Merchants
+   * @name V1MerchantsList
+   * @summary 商家列表
+   * @request GET:/api/v1/merchants
    */
-  v1RolesList = (
+  v1MerchantsList = (
     query?: {
       /** @format int */
       page?: number;
       /** @format int */
       page_size?: number;
-      /** @format string */
-      name?: string;
-      /** @format string */
-      role_type?: string;
-      /** @format *int */
-      status?: number;
     },
     params: RequestParams = {},
   ) =>
-    this.request<V1RolesListData, any>({
-      path: `/api/v1/roles`,
+    this.request<V1MerchantsListData, any>({
+      path: `/api/v1/merchants`,
       method: "GET",
       query: query,
       format: "json",
@@ -57,17 +51,17 @@ export class Roles<
   /**
    * No description
    *
-   * @tags Roles
-   * @name V1RolesCreate
-   * @summary 新增角色
-   * @request POST:/api/v1/roles
+   * @tags Merchants
+   * @name V1MerchantsCreate
+   * @summary 新增商家
+   * @request POST:/api/v1/merchants
    */
-  v1RolesCreate = (
-    data: GfEshopApiRolesV1RoleCreateReq,
+  v1MerchantsCreate = (
+    data: GfEshopApiMerchantsV1MerchantsCreateReq,
     params: RequestParams = {},
   ) =>
-    this.request<V1RolesCreateData, any>({
-      path: `/api/v1/roles`,
+    this.request<V1MerchantsCreateData, any>({
+      path: `/api/v1/merchants`,
       method: "POST",
       body: data,
       type: ContentType.Json,
@@ -77,14 +71,14 @@ export class Roles<
   /**
    * No description
    *
-   * @tags Roles
-   * @name V1RolesDelete
-   * @summary 删除角色
-   * @request DELETE:/api/v1/roles/{id}
+   * @tags Merchants
+   * @name V1MerchantsDelete
+   * @summary 删除商家
+   * @request DELETE:/api/v1/merchants/{id}
    */
-  v1RolesDelete = (id: number, params: RequestParams = {}) =>
-    this.request<V1RolesDeleteData, any>({
-      path: `/api/v1/roles/${id}`,
+  v1MerchantsDelete = (id: number, params: RequestParams = {}) =>
+    this.request<V1MerchantsDeleteData, any>({
+      path: `/api/v1/merchants/${id}`,
       method: "DELETE",
       format: "json",
       ...params,
@@ -92,14 +86,14 @@ export class Roles<
   /**
    * No description
    *
-   * @tags Roles
-   * @name V1RolesDetail
-   * @summary 角色详情
-   * @request GET:/api/v1/roles/{id}
+   * @tags Merchants
+   * @name V1MerchantsDetail
+   * @summary 商家详情
+   * @request GET:/api/v1/merchants/{id}
    */
-  v1RolesDetail = (id: number, params: RequestParams = {}) =>
-    this.request<V1RolesDetailData, any>({
-      path: `/api/v1/roles/${id}`,
+  v1MerchantsDetail = (id: number, params: RequestParams = {}) =>
+    this.request<V1MerchantsDetailData, any>({
+      path: `/api/v1/merchants/${id}`,
       method: "GET",
       format: "json",
       ...params,
@@ -107,18 +101,18 @@ export class Roles<
   /**
    * No description
    *
-   * @tags Roles
-   * @name V1RolesUpdate
-   * @summary 更新角色
-   * @request PUT:/api/v1/roles/{id}
+   * @tags Merchants
+   * @name V1MerchantsUpdate
+   * @summary 更新商家
+   * @request PUT:/api/v1/merchants/{id}
    */
-  v1RolesUpdate = (
+  v1MerchantsUpdate = (
     id: number,
-    data: V1RolesUpdatePayload,
+    data: V1MerchantsUpdatePayload,
     params: RequestParams = {},
   ) =>
-    this.request<V1RolesUpdateData, any>({
-      path: `/api/v1/roles/${id}`,
+    this.request<V1MerchantsUpdateData, any>({
+      path: `/api/v1/merchants/${id}`,
       method: "PUT",
       body: data,
       type: ContentType.Json,

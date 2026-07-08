@@ -41,6 +41,12 @@ export class Notification<
       page?: number;
       /** @format int */
       page_size?: number;
+      /** @format string */
+      title?: string;
+      /** @format *int */
+      category?: number;
+      /** @format *bool */
+      is_read?: boolean;
     },
     params: RequestParams = {},
   ) =>

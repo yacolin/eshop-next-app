@@ -49,7 +49,7 @@ export class Categories<
       page_size?: number;
       /** @format int */
       parent_id?: number;
-      /** @format int */
+      /** @format *int */
       status?: number;
       /** @format string */
       name?: string;
@@ -155,7 +155,7 @@ export class Categories<
    */
   v1CategoriesTreeList = (
     query?: {
-      /** @format int */
+      /** @format *int */
       status?: number;
     },
     params: RequestParams = {},

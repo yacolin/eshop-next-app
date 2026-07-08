@@ -42,7 +42,7 @@ export class Brands<
       name?: string;
       /** @format string */
       first_letter?: string;
-      /** @format int */
+      /** @format *int */
       status?: number;
     },
     params: RequestParams = {},

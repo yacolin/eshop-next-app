@@ -49,7 +49,7 @@ export class Permissions<
       action?: string;
       /** @format string */
       category?: string;
-      /** @format int */
+      /** @format *int */
       status?: number;
     },
     params: RequestParams = {},
