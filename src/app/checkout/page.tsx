@@ -4,10 +4,9 @@ import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { submitOrder } from "@/lib/api";
 import { Products } from "@/lib/api-gen/Products";
+import { fetchProductDetail } from "@/lib/api";
 import type { ProductSKU } from "@/types/product";
 import type { CheckoutItem } from "@/types/order";
-
-const productsApi = new Products({ baseUrl: "" });
 import { CheckoutHeader } from "./components/checkout-header";
 import { AddressPicker } from "./components/address-picker";
 import { AddressForm } from "./components/address-form";
@@ -61,8 +60,7 @@ export default function CheckoutPage({ searchParams }: Props) {
       try {
         setLoading(true);
         setError(null);
-        const res = await productsApi.v1ProductsDetail(productId!);
-        const data = (res as any).data?.data;
+        const data = await fetchProductDetail(productId!);
         if (cancelled) return;
         setDetail(data);
       } catch (e) {
@@ -82,19 +80,16 @@ export default function CheckoutPage({ searchParams }: Props) {
     : null;
 
   // Unit price: flash_price > sku price > min_price
-  const unitPrice = flashPrice ?? matchedSku?.price ?? detail?.min_price ?? 0;
+  const unitPrice = flashPrice ?? matchedSku?.price ?? detail?.product?.min_price ?? 0;
 
   // Construct checkout item
   const checkoutItem: any =
     detail && matchedSku
       ? {
           sku_id: matchedSku.id ?? 0,
-          product_name: detail.name,
-          sku_name: (matchedSku as any).name ?? matchedSku.sku_code ?? "",
-          spec:
-            typeof matchedSku.spec === "string"
-              ? JSON.parse(matchedSku.spec)
-              : (matchedSku.spec ?? {}),
+          product_name: detail.product.name,
+          sku_name: matchedSku.sku_code ?? "",
+          spec: (matchedSku as any).spec ?? {},
           price: unitPrice,
           quantity,
           stock: matchedSku.available_quantity ?? 0,

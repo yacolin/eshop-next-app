@@ -76,7 +76,7 @@ export interface GfEshopInternalModelEntityAddresses {
    */
   tag?: string;
   /**
-   * 是否默认地址
+   * 是否默认地址（NULL=非默认, 1=默认）
    * @format int
    */
   is_default?: number;
@@ -214,7 +214,7 @@ export interface GfEshopApiAddressV1AddressGetDefaultRes {
    */
   tag?: string;
   /**
-   * 是否默认地址
+   * 是否默认地址（NULL=非默认, 1=默认）
    * @format int
    */
   is_default?: number;
@@ -304,7 +304,7 @@ export interface GfEshopApiAddressV1AddressDetailRes {
    */
   tag?: string;
   /**
-   * 是否默认地址
+   * 是否默认地址（NULL=非默认, 1=默认）
    * @format int
    */
   is_default?: number;
@@ -416,15 +416,15 @@ export interface GfEshopInternalModelEntityAttributes {
    */
   category_id?: number;
   /**
-   * 1-文本输入 2-单选 3-多选 4-数字
+   * 1-文本 2-数值 3-颜色
    * @format int
    */
-  input_type?: number;
+  value_type?: number;
   /**
-   * 可选值列表（如["A15","A16"]，仅单选/多选时使用）
-   * @format string
+   * 是否参与前台筛选
+   * @format int
    */
-  values?: string;
+  filterable?: number;
   /**
    * 单位（如：英寸、GB）
    * @format string
@@ -469,15 +469,15 @@ export interface GfEshopApiAttributesV1AttributesCreateReq {
    */
   category_id: number;
   /**
-   * 输入类型
+   * 值类型(1-文本 2-数值 3-颜色)
    * @format int
    */
-  input_type: GfEshopApiAttributesV1AttributesCreateReqInputTypeEnum;
+  value_type: GfEshopApiAttributesV1AttributesCreateReqValueTypeEnum;
   /**
-   * 可选值列表JSON
-   * @format string
+   * 是否参与前台筛选
+   * @format int
    */
-  values?: string;
+  filterable?: number;
   /**
    * 单位
    * @format string
@@ -561,15 +561,15 @@ export interface GfEshopApiAttributesV1AttributesDetailRes {
    */
   category_id?: number;
   /**
-   * 1-文本输入 2-单选 3-多选 4-数字
+   * 1-文本 2-数值 3-颜色
    * @format int
    */
-  input_type?: number;
+  value_type?: number;
   /**
-   * 可选值列表（如["A15","A16"]，仅单选/多选时使用）
-   * @format string
+   * 是否参与前台筛选
+   * @format int
    */
-  values?: string;
+  filterable?: number;
   /**
    * 单位（如：英寸、GB）
    * @format string
@@ -616,15 +616,15 @@ export interface GfEshopApiAttributesV1AttributesUpdateReq {
    */
   category_id?: number;
   /**
-   * 输入类型
+   * 值类型(1-文本 2-数值 3-颜色)
    * @format int
    */
-  input_type?: GfEshopApiAttributesV1AttributesUpdateReqInputTypeEnum;
+  value_type?: GfEshopApiAttributesV1AttributesUpdateReqValueTypeEnum;
   /**
-   * 可选值列表JSON
-   * @format string
+   * 是否参与前台筛选
+   * @format int
    */
-  values?: string;
+  filterable?: number;
   /**
    * 单位
    * @format string
@@ -1376,22 +1376,27 @@ export interface GfEshopInternalModelEntityUserPromotions {
    */
   acquire_time?: string;
   /**
-   * 过期时间（优惠券必填）
+   * 过期时间
    * @format *gtime.Time
    */
   expire_time?: string;
   /**
-   * 1-未使用 2-已使用 3-已过期 4-已作废
+   * 1-未使用 2-锁定中(下单未付) 3-已使用 4-已过期 5-已作废
    * @format int
    */
   status?: number;
+  /**
+   * 锁定的订单ID（用于回滚）
+   * @format int64
+   */
+  lock_order_id?: number;
   /**
    * 使用时间
    * @format *gtime.Time
    */
   used_time?: string;
   /**
-   * 使用的订单ID
+   * 最终使用的订单ID
    * @format int64
    */
   order_id?: number;
@@ -1400,30 +1405,11 @@ export interface GfEshopInternalModelEntityUserPromotions {
    * @format string
    */
   queue_token?: string;
-  /**
-   * 创建人
-   * @format int64
-   */
-  created_by?: number;
-  /**
-   * 更新人
-   * @format int64
-   */
-  updated_by?: number;
-  /**
-   * 创建时间
-   * @format *gtime.Time
-   */
+  /** @format *gtime.Time */
   created_at?: string;
-  /**
-   * 更新时间
-   * @format *gtime.Time
-   */
+  /** @format *gtime.Time */
   updated_at?: string;
-  /**
-   * 软删除时间
-   * @format *gtime.Time
-   */
+  /** @format *gtime.Time */
   deleted_at?: string;
 }
 
@@ -1508,6 +1494,251 @@ export interface GfEshopApiDashboardV1TopProductDTO {
   amount?: number;
 }
 
+export interface GfEshopApiDepartmentsV1ListReq {
+  /** @format int */
+  page?: number;
+  /** @format int */
+  page_size?: number;
+  /** @format int64 */
+  parent_id?: number;
+  /** @format string */
+  name?: string;
+  /** @format *int */
+  status?: number;
+}
+
+export interface GfEshopApiDepartmentsV1ListRes {
+  /** @format []*entity.Departments */
+  list?: GfEshopInternalModelEntityDepartments[];
+  /** @format int */
+  total?: number;
+}
+
+export interface GfEshopInternalModelEntityDepartments {
+  /**
+   * 主键
+   * @format int64
+   */
+  id?: number;
+  /**
+   * 部门名称
+   * @format string
+   */
+  name?: string;
+  /**
+   * 上级部门ID（0=根部门）
+   * @format int64
+   */
+  parent_id?: number;
+  /**
+   * 排序值
+   * @format int
+   */
+  sort_order?: number;
+  /**
+   * 1-启用 0-禁用
+   * @format int
+   */
+  status?: number;
+  /**
+   * 创建时间
+   * @format *gtime.Time
+   */
+  created_at?: string;
+  /**
+   * 更新时间
+   * @format *gtime.Time
+   */
+  updated_at?: string;
+  /**
+   * 删除时间
+   * @format *gtime.Time
+   */
+  deleted_at?: string;
+}
+
+export interface GfEshopApiDepartmentsV1CreateReq {
+  /**
+   * 部门名称
+   * @format string
+   */
+  name: string;
+  /**
+   * 上级部门ID（0=根部门）
+   * @format int64
+   */
+  parent_id?: number;
+  /**
+   * 排序值
+   * @format int
+   */
+  sort_order?: number;
+  /**
+   * 1-启用 0-禁用
+   * @format int
+   */
+  status?: number;
+}
+
+export interface GfEshopApiDepartmentsV1CreateRes {
+  /** @format int64 */
+  id?: number;
+}
+
+export type GfEshopApiDepartmentsV1AllReq = object;
+
+export interface GfEshopApiDepartmentsV1AllRes {
+  /** @format []*entity.Departments */
+  list?: GfEshopInternalModelEntityDepartments[];
+}
+
+export interface GfEshopApiDepartmentsV1TreeReq {
+  /** @format *int */
+  status?: number;
+}
+
+export interface GfEshopApiDepartmentsV1TreeRes {
+  /** @format []*v1.TreeItem */
+  tree?: GfEshopApiDepartmentsV1TreeItem[];
+}
+
+export interface GfEshopApiDepartmentsV1TreeItem {
+  /**
+   * 主键
+   * @format int64
+   */
+  id?: number;
+  /**
+   * 部门名称
+   * @format string
+   */
+  name?: string;
+  /**
+   * 上级部门ID（0=根部门）
+   * @format int64
+   */
+  parent_id?: number;
+  /**
+   * 排序值
+   * @format int
+   */
+  sort_order?: number;
+  /**
+   * 1-启用 0-禁用
+   * @format int
+   */
+  status?: number;
+  /**
+   * 创建时间
+   * @format *gtime.Time
+   */
+  created_at?: string;
+  /**
+   * 更新时间
+   * @format *gtime.Time
+   */
+  updated_at?: string;
+  /**
+   * 删除时间
+   * @format *gtime.Time
+   */
+  deleted_at?: string;
+  /** @format []*v1.TreeItem */
+  children?: GfEshopApiDepartmentsV1TreeItem[];
+}
+
+export interface GfEshopApiDepartmentsV1DeleteReq {
+  /** @format int64 */
+  id?: number;
+}
+
+export type GfEshopApiDepartmentsV1DeleteRes = object;
+
+export interface GfEshopApiDepartmentsV1DetailReq {
+  /** @format int64 */
+  id?: number;
+}
+
+export interface GfEshopApiDepartmentsV1DetailRes {
+  /**
+   * 主键
+   * @format int64
+   */
+  id?: number;
+  /**
+   * 部门名称
+   * @format string
+   */
+  name?: string;
+  /**
+   * 上级部门ID（0=根部门）
+   * @format int64
+   */
+  parent_id?: number;
+  /**
+   * 排序值
+   * @format int
+   */
+  sort_order?: number;
+  /**
+   * 1-启用 0-禁用
+   * @format int
+   */
+  status?: number;
+  /**
+   * 创建时间
+   * @format *gtime.Time
+   */
+  created_at?: string;
+  /**
+   * 更新时间
+   * @format *gtime.Time
+   */
+  updated_at?: string;
+  /**
+   * 删除时间
+   * @format *gtime.Time
+   */
+  deleted_at?: string;
+}
+
+export interface GfEshopApiDepartmentsV1UpdateReq {
+  /** @format int64 */
+  id: number;
+  /**
+   * 部门名称
+   * @format string
+   */
+  name?: string;
+  /**
+   * 上级部门ID（0=根部门）
+   * @format int64
+   */
+  parent_id?: number;
+  /**
+   * 排序值
+   * @format int
+   */
+  sort_order?: number;
+  /**
+   * 1-启用 0-禁用
+   * @format int
+   */
+  status?: number;
+}
+
+export type GfEshopApiDepartmentsV1UpdateRes = object;
+
+export interface GfEshopApiDepartmentsV1ChildrenReq {
+  /** @format int64 */
+  id?: number;
+}
+
+export interface GfEshopApiDepartmentsV1ChildrenRes {
+  /** @format []*entity.Departments */
+  list?: GfEshopInternalModelEntityDepartments[];
+}
+
 export interface GfEshopApiMarketingV1FlashBuyReq {
   /** @format int64 */
   promotion_id: number;
@@ -1582,11 +1813,6 @@ export interface GfEshopInternalModelEntityInventories {
    * @format int64
    */
   reserved?: number;
-  /**
-   * 可售库存（虚拟列，无需持久化）
-   * @format int64
-   */
-  available?: number;
   /**
    * 在途库存（采购中/调拨中）
    * @format int64
@@ -1708,11 +1934,6 @@ export interface GfEshopApiInventoriesV1InventoriesDeductRes {
    */
   reserved?: number;
   /**
-   * 可售库存（虚拟列，无需持久化）
-   * @format int64
-   */
-  available?: number;
-  /**
    * 在途库存（采购中/调拨中）
    * @format int64
    */
@@ -1804,11 +2025,6 @@ export interface GfEshopApiInventoriesV1InventoriesLockRes {
    * @format int64
    */
   reserved?: number;
-  /**
-   * 可售库存（虚拟列，无需持久化）
-   * @format int64
-   */
-  available?: number;
   /**
    * 在途库存（采购中/调拨中）
    * @format int64
@@ -1912,11 +2128,6 @@ export interface GfEshopApiInventoriesV1InventoriesRestockRes {
    */
   reserved?: number;
   /**
-   * 可售库存（虚拟列，无需持久化）
-   * @format int64
-   */
-  available?: number;
-  /**
    * 在途库存（采购中/调拨中）
    * @format int64
    */
@@ -1993,11 +2204,6 @@ export interface GfEshopApiInventoriesV1InventoriesGetStockRes {
    * @format int64
    */
   reserved?: number;
-  /**
-   * 可售库存（虚拟列，无需持久化）
-   * @format int64
-   */
-  available?: number;
   /**
    * 在途库存（采购中/调拨中）
    * @format int64
@@ -2091,11 +2297,6 @@ export interface GfEshopApiInventoriesV1InventoriesUnlockRes {
    */
   reserved?: number;
   /**
-   * 可售库存（虚拟列，无需持久化）
-   * @format int64
-   */
-  available?: number;
-  /**
    * 在途库存（采购中/调拨中）
    * @format int64
    */
@@ -2176,11 +2377,6 @@ export interface GfEshopApiInventoriesV1InventoriesDetailRes {
    * @format int64
    */
   reserved?: number;
-  /**
-   * 可售库存（虚拟列，无需持久化）
-   * @format int64
-   */
-  available?: number;
   /**
    * 在途库存（采购中/调拨中）
    * @format int64
@@ -2286,7 +2482,7 @@ export interface GfEshopInternalModelEntityInventoryLogs {
    */
   warehouse_id?: number;
   /**
-   * 变更类型：order_lock-下单预占 order_unlock-取消释放 order_dedut-支付扣减 inbound-入库 outbound-出库 return-退货入库 adjust-盘盈亏修正
+   * 变更类型：order_lock-下单预占 order_unlock-取消释放 order_deduct-支付扣减 inbound-入库 outbound-出库 return-退货入库 adjust-盘盈亏修正
    * @format string
    */
   change_type?: string;
@@ -2361,7 +2557,7 @@ export interface GfEshopApiInventoryLogsV1InventoryLogsDetailRes {
    */
   warehouse_id?: number;
   /**
-   * 变更类型：order_lock-下单预占 order_unlock-取消释放 order_dedut-支付扣减 inbound-入库 outbound-出库 return-退货入库 adjust-盘盈亏修正
+   * 变更类型：order_lock-下单预占 order_unlock-取消释放 order_deduct-支付扣减 inbound-入库 outbound-出库 return-退货入库 adjust-盘盈亏修正
    * @format string
    */
   change_type?: string;
@@ -2758,7 +2954,7 @@ export interface GfEshopInternalModelEntityMerchantBankAccounts {
    */
   account_type?: number;
   /**
-   * 是否默认结算账户 0-否 1-是
+   * 是否默认结算账户（NULL=非默认, 1=默认）
    * @format int
    */
   is_default?: number;
@@ -2873,7 +3069,7 @@ export interface GfEshopApiMerchantBankAccountsV1MerchantBankAccountsDetailRes {
    */
   account_type?: number;
   /**
-   * 是否默认结算账户 0-否 1-是
+   * 是否默认结算账户（NULL=非默认, 1=默认）
    * @format int
    */
   is_default?: number;
@@ -3310,6 +3506,333 @@ export interface GfEshopApiMerchantQualificationsV1MerchantQualificationsAuditRe
 
 export type GfEshopApiMerchantQualificationsV1MerchantQualificationsAuditRes =
   object;
+
+export interface GfEshopApiMerchantRolePermissionsV1MerchantRolePermissionsListReq {
+  /**
+   * 角色ID
+   * @format int64
+   */
+  role_id: number;
+}
+
+export interface GfEshopApiMerchantRolePermissionsV1MerchantRolePermissionsListRes {
+  /** @format []*entity.MerchantRolePermissions */
+  list?: GfEshopInternalModelEntityMerchantRolePermissions[];
+}
+
+export interface GfEshopInternalModelEntityMerchantRolePermissions {
+  /**
+   * 主键
+   * @format int64
+   */
+  id?: number;
+  /**
+   * 商家ID
+   * @format int64
+   */
+  merchant_id?: number;
+  /**
+   * 角色ID（关联 mch_merchant_roles.id）
+   * @format int64
+   */
+  role_id?: number;
+  /**
+   * 权限标识（对应 sys_permissions.name）
+   * @format string
+   */
+  permission_name?: string;
+  /** @format *gtime.Time */
+  created_at?: string;
+  /** @format *gtime.Time */
+  deleted_at?: string;
+}
+
+export interface GfEshopApiMerchantRolePermissionsV1MerchantRolePermissionsCreateReq {
+  /**
+   * 商家ID
+   * @format int64
+   */
+  merchant_id: number;
+  /**
+   * 角色ID
+   * @format int64
+   */
+  role_id: number;
+  /**
+   * 权限标识
+   * @format string
+   */
+  permission_name: string;
+}
+
+export type GfEshopApiMerchantRolePermissionsV1MerchantRolePermissionsCreateRes =
+  object;
+
+export interface GfEshopApiMerchantRolePermissionsV1MerchantRolePermissionsDeleteReq {
+  /** @format int64 */
+  id?: number;
+}
+
+export type GfEshopApiMerchantRolePermissionsV1MerchantRolePermissionsDeleteRes =
+  object;
+
+export interface GfEshopApiMerchantRolePermissionsV1MerchantRolePermissionsUpdateReq {
+  /**
+   * 角色ID
+   * @format int64
+   */
+  role_id: number;
+  /**
+   * 商家ID
+   * @format int64
+   */
+  merchant_id?: number;
+  /**
+   * 权限标识列表
+   * @format []string
+   */
+  permission_names?: string[];
+}
+
+export type GfEshopApiMerchantRolePermissionsV1MerchantRolePermissionsUpdateRes =
+  object;
+
+export interface GfEshopApiMerchantRolesV1MerchantRolesListReq {
+  /** @format int */
+  page?: number;
+  /** @format int */
+  page_size?: number;
+  /**
+   * 商家ID，可选筛选
+   * @format int64
+   */
+  merchant_id?: number;
+  /**
+   * 按角色名称模糊搜索
+   * @format string
+   */
+  name?: string;
+  /**
+   * 按状态筛选
+   * @format *int
+   */
+  status?: number;
+}
+
+export interface GfEshopApiMerchantRolesV1MerchantRolesListRes {
+  /** @format []*entity.MerchantRoles */
+  list?: GfEshopInternalModelEntityMerchantRoles[];
+  /** @format int */
+  total?: number;
+}
+
+export interface GfEshopInternalModelEntityMerchantRoles {
+  /**
+   * 主键
+   * @format int64
+   */
+  id?: number;
+  /**
+   * 商家ID（0=平台预置角色）
+   * @format int64
+   */
+  merchant_id?: number;
+  /**
+   * 角色名称（如店长/运营/财务）
+   * @format string
+   */
+  name?: string;
+  /**
+   * 角色显示名称
+   * @format string
+   */
+  display_name?: string;
+  /**
+   * 角色描述
+   * @format string
+   */
+  description?: string;
+  /**
+   * builtin-系统预置 custom-商家自定义
+   * @format string
+   */
+  role_type?: string;
+  /**
+   * 排序值
+   * @format int
+   */
+  sort_order?: number;
+  /**
+   * 1-启用 0-禁用
+   * @format int
+   */
+  status?: number;
+  /**
+   * 创建时间
+   * @format *gtime.Time
+   */
+  created_at?: string;
+  /**
+   * 更新时间
+   * @format *gtime.Time
+   */
+  updated_at?: string;
+  /**
+   * 删除时间
+   * @format *gtime.Time
+   */
+  deleted_at?: string;
+}
+
+export interface GfEshopApiMerchantRolesV1MerchantRolesCreateReq {
+  /**
+   * 商家ID
+   * @format int64
+   */
+  merchant_id: number;
+  /**
+   * 角色名称标识
+   * @format string
+   */
+  name: string;
+  /**
+   * 角色显示名称
+   * @format string
+   */
+  display_name: string;
+  /**
+   * 角色描述
+   * @format string
+   */
+  description?: string;
+  /**
+   * builtin-系统预置 custom-商家自定义
+   * @format string
+   */
+  role_type?: string;
+  /**
+   * 排序值
+   * @format int
+   */
+  sort_order?: number;
+  /**
+   * 1-启用 0-禁用
+   * @format int
+   */
+  status?: number;
+}
+
+export interface GfEshopApiMerchantRolesV1MerchantRolesCreateRes {
+  /** @format int64 */
+  id?: number;
+}
+
+export interface GfEshopApiMerchantRolesV1MerchantRolesDeleteReq {
+  /** @format int64 */
+  id?: number;
+}
+
+export type GfEshopApiMerchantRolesV1MerchantRolesDeleteRes = object;
+
+export interface GfEshopApiMerchantRolesV1MerchantRolesDetailReq {
+  /** @format int64 */
+  id?: number;
+}
+
+export interface GfEshopApiMerchantRolesV1MerchantRolesDetailRes {
+  /**
+   * 主键
+   * @format int64
+   */
+  id?: number;
+  /**
+   * 商家ID（0=平台预置角色）
+   * @format int64
+   */
+  merchant_id?: number;
+  /**
+   * 角色名称（如店长/运营/财务）
+   * @format string
+   */
+  name?: string;
+  /**
+   * 角色显示名称
+   * @format string
+   */
+  display_name?: string;
+  /**
+   * 角色描述
+   * @format string
+   */
+  description?: string;
+  /**
+   * builtin-系统预置 custom-商家自定义
+   * @format string
+   */
+  role_type?: string;
+  /**
+   * 排序值
+   * @format int
+   */
+  sort_order?: number;
+  /**
+   * 1-启用 0-禁用
+   * @format int
+   */
+  status?: number;
+  /**
+   * 创建时间
+   * @format *gtime.Time
+   */
+  created_at?: string;
+  /**
+   * 更新时间
+   * @format *gtime.Time
+   */
+  updated_at?: string;
+  /**
+   * 删除时间
+   * @format *gtime.Time
+   */
+  deleted_at?: string;
+}
+
+export interface GfEshopApiMerchantRolesV1MerchantRolesUpdateReq {
+  /** @format int64 */
+  id: number;
+  /**
+   * 角色名称标识
+   * @format string
+   */
+  name?: string;
+  /**
+   * 角色显示名称
+   * @format string
+   */
+  display_name?: string;
+  /**
+   * 角色描述
+   * @format string
+   */
+  description?: string;
+  /**
+   * builtin-系统预置 custom-商家自定义
+   * @format string
+   */
+  role_type?: string;
+  /**
+   * 排序值
+   * @format int
+   */
+  sort_order?: number;
+  /**
+   * 1-启用 0-禁用
+   * @format int
+   */
+  status?: number;
+}
+
+export type GfEshopApiMerchantRolesV1MerchantRolesUpdateRes = object;
 
 export interface GfEshopApiMerchantWithdrawalsV1ListReq {
   /** @format int */
@@ -4694,6 +5217,11 @@ export interface GfEshopInternalModelEntityOrderItems {
    */
   product_name?: string;
   /**
+   * 规格摘要（如：红色 / 256G）
+   * @format string
+   */
+  sku_spec_summary?: string;
+  /**
    * 规格JSON快照
    * @format string
    */
@@ -5389,6 +5917,11 @@ export interface GfEshopInternalModelEntityRefunds {
    */
   channel_response?: string;
   /**
+   * 退款幂等键
+   * @format string
+   */
+  idempotency_key?: string;
+  /**
    * 申请时间
    * @format *gtime.Time
    */
@@ -5496,6 +6029,11 @@ export interface GfEshopApiPaymentsV1RefundsCreateRes {
    */
   channel_response?: string;
   /**
+   * 退款幂等键
+   * @format string
+   */
+  idempotency_key?: string;
+  /**
    * 申请时间
    * @format *gtime.Time
    */
@@ -5590,6 +6128,11 @@ export interface GfEshopApiPaymentsV1RefundsDetailRes {
    */
   channel_response?: string;
   /**
+   * 退款幂等键
+   * @format string
+   */
+  idempotency_key?: string;
+  /**
    * 申请时间
    * @format *gtime.Time
    */
@@ -5666,6 +6209,11 @@ export interface GfEshopInternalModelEntityPermissions {
    */
   action?: string;
   /**
+   * 父级ID（0=根节点，支持菜单/按钮树形层级）
+   * @format int64
+   */
+  parent_id?: number;
+  /**
    * 分类（如 business/system/admin）
    * @format string
    */
@@ -5723,6 +6271,11 @@ export interface GfEshopApiPermissionsV1PermissionCreateReq {
    * @format string
    */
   action: string;
+  /**
+   * 父级ID（0=根节点）
+   * @format int64
+   */
+  parent_id?: number;
   /**
    * 分类
    * @format string
@@ -5821,6 +6374,11 @@ export interface GfEshopApiPermissionsV1PermissionDetailRes {
    */
   action?: string;
   /**
+   * 父级ID（0=根节点，支持菜单/按钮树形层级）
+   * @format int64
+   */
+  parent_id?: number;
+  /**
    * 分类（如 business/system/admin）
    * @format string
    */
@@ -5881,6 +6439,11 @@ export interface GfEshopApiPermissionsV1PermissionUpdateReq {
    */
   action?: string;
   /**
+   * 父级ID（0=根节点）
+   * @format int64
+   */
+  parent_id?: number;
+  /**
    * 分类
    * @format string
    */
@@ -5931,10 +6494,20 @@ export interface GfEshopInternalModelEntityPointsRules {
    */
   rule_key?: string;
   /**
-   * 规则值
+   * 整数值（如积分数量、天数）
+   * @format int
+   */
+  value_int?: number;
+  /**
+   * 小数值（如比例、倍数）
+   * @format float64
+   */
+  value_decimal?: number;
+  /**
+   * 字符串值（如配置json、文本）
    * @format string
    */
-  rule_value?: string;
+  value_string?: string;
   /**
    * 规则说明
    * @format string
@@ -5961,8 +6534,21 @@ export interface GfEshopApiPointsRulesV1PointsRulesCreateReq {
   name: string;
   /** @format string */
   rule_key: string;
-  /** @format string */
-  rule_value: string;
+  /**
+   * 整数值（如积分数量、天数）
+   * @format int
+   */
+  value_int?: number;
+  /**
+   * 小数值（如比例、倍数）
+   * @format float64
+   */
+  value_decimal?: number;
+  /**
+   * 字符串值（如配置json、文本）
+   * @format string
+   */
+  value_string?: string;
   /** @format string */
   description?: string;
   /** @format int */
@@ -6002,10 +6588,20 @@ export interface GfEshopApiPointsRulesV1PointsRulesDetailRes {
    */
   rule_key?: string;
   /**
-   * 规则值
+   * 整数值（如积分数量、天数）
+   * @format int
+   */
+  value_int?: number;
+  /**
+   * 小数值（如比例、倍数）
+   * @format float64
+   */
+  value_decimal?: number;
+  /**
+   * 字符串值（如配置json、文本）
    * @format string
    */
-  rule_value?: string;
+  value_string?: string;
   /**
    * 规则说明
    * @format string
@@ -6034,8 +6630,21 @@ export interface GfEshopApiPointsRulesV1PointsRulesUpdateReq {
   name?: string;
   /** @format string */
   rule_key?: string;
-  /** @format string */
-  rule_value?: string;
+  /**
+   * 整数值（如积分数量、天数）
+   * @format *int
+   */
+  value_int?: number;
+  /**
+   * 小数值（如比例、倍数）
+   * @format *float64
+   */
+  value_decimal?: number;
+  /**
+   * 字符串值（如配置json、文本）
+   * @format string
+   */
+  value_string?: string;
   /** @format string */
   description?: string;
   /** @format *int */
@@ -6263,15 +6872,15 @@ export interface GfEshopApiProductsV1ProductsListReq {
 }
 
 export interface GfEshopApiProductsV1ProductsListRes {
-  /** @format []*entity.Products */
-  list?: GfEshopInternalModelEntityProducts[];
+  /** @format []*v1.ProductsListItem */
+  list?: GfEshopApiProductsV1ProductsListItem[];
   /** @format string */
   cursor?: string;
   /** @format bool */
   has_more?: boolean;
 }
 
-export interface GfEshopInternalModelEntityProducts {
+export interface GfEshopApiProductsV1ProductsListItem {
   /**
    * SPU ID
    * @format int64
@@ -6322,21 +6931,6 @@ export interface GfEshopInternalModelEntityProducts {
    * @format string
    */
   video_url?: string;
-  /**
-   * SKU最低价（分）
-   * @format int64
-   */
-  min_price?: number;
-  /**
-   * SKU最高价（分）
-   * @format int64
-   */
-  max_price?: number;
-  /**
-   * 可售库存总和（SUM(quantity - reserved)）
-   * @format int
-   */
-  total_stock?: number;
   /**
    * 总销量（从订单明细聚合，每日更新）
    * @format int
@@ -6407,6 +7001,21 @@ export interface GfEshopInternalModelEntityProducts {
    * @format *gtime.Time
    */
   deleted_at?: string;
+  /**
+   * 最低销售价(分)
+   * @format int64
+   */
+  price_min?: number;
+  /**
+   * 最高销售价(分)
+   * @format int64
+   */
+  price_max?: number;
+  /**
+   * 总库存（可售）
+   * @format int64
+   */
+  total_stock?: number;
 }
 
 export interface GfEshopApiProductsV1ProductsCreateReq {
@@ -6557,10 +7166,10 @@ export interface GfEshopApiProductsV1CreateSKUItem {
    */
   barcode?: string;
   /**
-   * 规格JSON
+   * 规格文本快照（如：红色 / 256G）
    * @format string
    */
-  spec?: string;
+  spec_summary?: string;
   /**
    * 销售价(分)
    * @format int64
@@ -6692,21 +7301,6 @@ export interface GfEshopApiProductsV1ProductsDetailPureRes {
    * @format string
    */
   video_url?: string;
-  /**
-   * SKU最低价（分）
-   * @format int64
-   */
-  min_price?: number;
-  /**
-   * SKU最高价（分）
-   * @format int64
-   */
-  max_price?: number;
-  /**
-   * 可售库存总和（SUM(quantity - reserved)）
-   * @format int
-   */
-  total_stock?: number;
   /**
    * 总销量（从订单明细聚合，每日更新）
    * @format int
@@ -6843,21 +7437,6 @@ export interface GfEshopApiProductsV1ProductsDetailRes {
    */
   video_url?: string;
   /**
-   * SKU最低价（分）
-   * @format int64
-   */
-  min_price?: number;
-  /**
-   * SKU最高价（分）
-   * @format int64
-   */
-  max_price?: number;
-  /**
-   * 可售库存总和（SUM(quantity - reserved)）
-   * @format int
-   */
-  total_stock?: number;
-  /**
    * 总销量（从订单明细聚合，每日更新）
    * @format int
    */
@@ -6927,6 +7506,21 @@ export interface GfEshopApiProductsV1ProductsDetailRes {
    * @format *gtime.Time
    */
   deleted_at?: string;
+  /**
+   * 最低销售价(分)
+   * @format int64
+   */
+  price_min?: number;
+  /**
+   * 最高销售价(分)
+   * @format int64
+   */
+  price_max?: number;
+  /**
+   * 总库存（可售）
+   * @format int64
+   */
+  total_stock?: number;
   /** @format []v1.ProductAttrDetailResponse */
   attributes?: GfEshopApiProductsV1ProductAttrDetailResponse[];
   description?: GfEshopInternalModelEntityProductDescriptions;
@@ -6996,15 +7590,10 @@ export interface GfEshopApiProductsV1SkuDetailItem {
    */
   barcode?: string;
   /**
-   * 规格JSON（如{"颜色":"红色","内存":"256G"}）
+   * 规格文本快照（如：红色 / 256G）
    * @format string
    */
-  spec?: string;
-  /**
-   * 规格MD5签名（用于快速匹配，由应用层计算）
-   * @format string
-   */
-  spec_signature?: string;
+  spec_summary?: string;
   /**
    * 销售价（分）
    * @format int64
@@ -7210,6 +7799,11 @@ export interface GfEshopInternalModelEntityPromotions {
    */
   id?: number;
   /**
+   * 促销业务编号
+   * @format string
+   */
+  promotion_no?: string;
+  /**
    * 所属商家ID（0表示平台级活动）
    * @format int64
    */
@@ -7250,20 +7844,25 @@ export interface GfEshopInternalModelEntityPromotions {
    */
   per_user_limit?: number;
   /**
-   * 已使用/已售数量
+   * 已使用/已售数量（异步统计，非实时）
    * @format int
    */
   used_quantity?: number;
   /**
-   * 关联规则表（mkt_promotion_rules）
+   * 关联规则表ID
    * @format int64
    */
   rule_id?: number;
   /**
-   * 1-草稿 2-生效中 3-已结束 4-已作废
+   * 1-草稿 2-待生效 3-生效中 4-已暂停 5-已结束 6-已作废
    * @format int
    */
   status?: number;
+  /**
+   * 优先级（数字越大越优先，同类型互斥）
+   * @format int
+   */
+  priority?: number;
   /**
    * 创建人
    * @format int64
@@ -7274,20 +7873,11 @@ export interface GfEshopInternalModelEntityPromotions {
    * @format int64
    */
   updated_by?: number;
-  /**
-   * 创建时间
-   * @format *gtime.Time
-   */
+  /** @format *gtime.Time */
   created_at?: string;
-  /**
-   * 更新时间
-   * @format *gtime.Time
-   */
+  /** @format *gtime.Time */
   updated_at?: string;
-  /**
-   * 软删除时间
-   * @format *gtime.Time
-   */
+  /** @format *gtime.Time */
   deleted_at?: string;
 }
 
@@ -7348,6 +7938,11 @@ export interface GfEshopApiMarketingV1PromotionDetailRes {
    */
   id?: number;
   /**
+   * 促销业务编号
+   * @format string
+   */
+  promotion_no?: string;
+  /**
    * 所属商家ID（0表示平台级活动）
    * @format int64
    */
@@ -7388,20 +7983,25 @@ export interface GfEshopApiMarketingV1PromotionDetailRes {
    */
   per_user_limit?: number;
   /**
-   * 已使用/已售数量
+   * 已使用/已售数量（异步统计，非实时）
    * @format int
    */
   used_quantity?: number;
   /**
-   * 关联规则表（mkt_promotion_rules）
+   * 关联规则表ID
    * @format int64
    */
   rule_id?: number;
   /**
-   * 1-草稿 2-生效中 3-已结束 4-已作废
+   * 1-草稿 2-待生效 3-生效中 4-已暂停 5-已结束 6-已作废
    * @format int
    */
   status?: number;
+  /**
+   * 优先级（数字越大越优先，同类型互斥）
+   * @format int
+   */
+  priority?: number;
   /**
    * 创建人
    * @format int64
@@ -7412,20 +8012,11 @@ export interface GfEshopApiMarketingV1PromotionDetailRes {
    * @format int64
    */
   updated_by?: number;
-  /**
-   * 创建时间
-   * @format *gtime.Time
-   */
+  /** @format *gtime.Time */
   created_at?: string;
-  /**
-   * 更新时间
-   * @format *gtime.Time
-   */
+  /** @format *gtime.Time */
   updated_at?: string;
-  /**
-   * 软删除时间
-   * @format *gtime.Time
-   */
+  /** @format *gtime.Time */
   deleted_at?: string;
 }
 
@@ -7486,12 +8077,12 @@ export interface GfEshopInternalModelEntityPromotionRules {
    */
   promotion_id?: number;
   /**
-   * 所属商家ID（0表示平台级规则）
+   * 所属商家ID
    * @format int64
    */
   merchant_id?: number;
   /**
-   * 规则名称（便于理解）
+   * 规则名称
    * @format string
    */
   rule_name?: string;
@@ -7501,30 +8092,25 @@ export interface GfEshopInternalModelEntityPromotionRules {
    */
   condition_type?: number;
   /**
-   * 门槛值（分，满20000则存20000）
+   * 门槛值（分）
    * @format int64
    */
   condition_value?: number;
   /**
-   * 1-减固定金额 2-打折扣 3-赠品 4-免运费 5-送积分
-   * @format int
+   * 优惠配置JSON。例：{"type":1,"value":3000} 或 {"type":2,"steps":[{"limit":10000,"rate":900},{"limit":20000,"rate":800}]}
+   * @format string
    */
-  benefit_type?: number;
-  /**
-   * 优惠值（减固定金额填分如3000；打折扣填千分比如800=8折）
-   * @format int64
-   */
-  benefit_value?: number;
+  benefit_config?: string;
   /**
    * 是否可与其他促销叠加 0-否 1-是
    * @format int
    */
   is_stackable?: number;
   /**
-   * 叠加优先级（数字越小越优先计算）
+   * 叠加组ID（同组内互斥，不同组可叠加）
    * @format int
    */
-  stack_priority?: number;
+  stack_group?: number;
   /**
    * 创建人
    * @format int64
@@ -7535,20 +8121,11 @@ export interface GfEshopInternalModelEntityPromotionRules {
    * @format int64
    */
   updated_by?: number;
-  /**
-   * 创建时间
-   * @format *gtime.Time
-   */
+  /** @format *gtime.Time */
   created_at?: string;
-  /**
-   * 更新时间
-   * @format *gtime.Time
-   */
+  /** @format *gtime.Time */
   updated_at?: string;
-  /**
-   * 软删除时间
-   * @format *gtime.Time
-   */
+  /** @format *gtime.Time */
   deleted_at?: string;
 }
 
@@ -7559,8 +8136,6 @@ export interface GfEshopApiMarketingV1PromotionProductItem {
   product_type?: number;
   /** @format int64 */
   product_id?: number;
-  /** @format int64 */
-  category_id?: number;
   /** @format string */
   spu_name?: string;
   /** @format string */
@@ -7608,7 +8183,12 @@ export interface GfEshopInternalModelEntityReviews {
    */
   id?: number;
   /**
-   * 用户ID（冗余，便于查询）
+   * 评价业务单号（幂等键）
+   * @format string
+   */
+  review_no?: string;
+  /**
+   * 用户ID
    * @format int64
    */
   user_id?: number;
@@ -7628,7 +8208,7 @@ export interface GfEshopInternalModelEntityReviews {
    */
   spu_id?: number;
   /**
-   * 商品SKU ID（若评价具体规格则填）
+   * 商品SKU ID
    * @format int64
    */
   sku_id?: number;
@@ -7643,17 +8223,17 @@ export interface GfEshopInternalModelEntityReviews {
    */
   overall_rating?: number;
   /**
-   * 质量评分（1-5）
+   * 质量评分
    * @format int
    */
   quality_rating?: number;
   /**
-   * 物流评分（1-5）
+   * 物流评分
    * @format int
    */
   logistics_rating?: number;
   /**
-   * 服务评分（1-5）
+   * 服务评分
    * @format int
    */
   service_rating?: number;
@@ -7663,49 +8243,64 @@ export interface GfEshopInternalModelEntityReviews {
    */
   content?: string;
   /**
+   * 内容长度（冗余，用于筛选优质评价）
+   * @format int
+   */
+  content_length?: number;
+  /**
    * 是否匿名 0-否 1-是
    * @format int
    */
   is_anonymous?: number;
   /**
-   * 0-待审核 1-审核通过 2-审核拒绝 3-用户删除
+   * 是否包含媒体 0-否 1-是
+   * @format int
+   */
+  has_media?: number;
+  /**
+   * 0-待审核 1-审核通过 2-审核拒绝 3-用户删除 4-平台屏蔽
    * @format int
    */
   status?: number;
   /**
-   * 拒绝原因（审核不通过时填写）
+   * 风险等级 0-正常 1-低风险 2-高风险
+   * @format int
+   */
+  risk_level?: number;
+  /**
+   * 拒绝原因
    * @format string
    */
   reject_reason?: string;
   /**
-   * 最新回复ID
+   * 审核人ID
    * @format int64
    */
-  latest_reply_id?: number;
+  audited_by?: number;
   /**
-   * 回复总数
-   * @format int
+   * 审核时间
+   * @format *gtime.Time
    */
-  reply_count?: number;
+  audited_at?: string;
   /**
-   * 点赞数
+   * 点赞数（异步校准）
    * @format int
    */
   like_count?: number;
   /**
-   * 有用数
+   * 有用数（异步校准）
    * @format int
    */
   helpful_count?: number;
+  /**
+   * 回复总数（异步校准）
+   * @format int
+   */
+  reply_count?: number;
   /** @format *gtime.Time */
   created_at?: string;
   /** @format *gtime.Time */
   updated_at?: string;
-  /**
-   * 软删除
-   * @format *gtime.Time
-   */
-  deleted_at?: string;
 }
 
 export interface GfEshopApiReviewsV1ReviewsCreateReq {
@@ -7755,7 +8350,12 @@ export interface GfEshopApiReviewsV1ReviewsDetailRes {
    */
   id?: number;
   /**
-   * 用户ID（冗余，便于查询）
+   * 评价业务单号（幂等键）
+   * @format string
+   */
+  review_no?: string;
+  /**
+   * 用户ID
    * @format int64
    */
   user_id?: number;
@@ -7775,7 +8375,7 @@ export interface GfEshopApiReviewsV1ReviewsDetailRes {
    */
   spu_id?: number;
   /**
-   * 商品SKU ID（若评价具体规格则填）
+   * 商品SKU ID
    * @format int64
    */
   sku_id?: number;
@@ -7790,17 +8390,17 @@ export interface GfEshopApiReviewsV1ReviewsDetailRes {
    */
   overall_rating?: number;
   /**
-   * 质量评分（1-5）
+   * 质量评分
    * @format int
    */
   quality_rating?: number;
   /**
-   * 物流评分（1-5）
+   * 物流评分
    * @format int
    */
   logistics_rating?: number;
   /**
-   * 服务评分（1-5）
+   * 服务评分
    * @format int
    */
   service_rating?: number;
@@ -7810,49 +8410,64 @@ export interface GfEshopApiReviewsV1ReviewsDetailRes {
    */
   content?: string;
   /**
+   * 内容长度（冗余，用于筛选优质评价）
+   * @format int
+   */
+  content_length?: number;
+  /**
    * 是否匿名 0-否 1-是
    * @format int
    */
   is_anonymous?: number;
   /**
-   * 0-待审核 1-审核通过 2-审核拒绝 3-用户删除
+   * 是否包含媒体 0-否 1-是
+   * @format int
+   */
+  has_media?: number;
+  /**
+   * 0-待审核 1-审核通过 2-审核拒绝 3-用户删除 4-平台屏蔽
    * @format int
    */
   status?: number;
   /**
-   * 拒绝原因（审核不通过时填写）
+   * 风险等级 0-正常 1-低风险 2-高风险
+   * @format int
+   */
+  risk_level?: number;
+  /**
+   * 拒绝原因
    * @format string
    */
   reject_reason?: string;
   /**
-   * 最新回复ID
+   * 审核人ID
    * @format int64
    */
-  latest_reply_id?: number;
+  audited_by?: number;
   /**
-   * 回复总数
-   * @format int
+   * 审核时间
+   * @format *gtime.Time
    */
-  reply_count?: number;
+  audited_at?: string;
   /**
-   * 点赞数
+   * 点赞数（异步校准）
    * @format int
    */
   like_count?: number;
   /**
-   * 有用数
+   * 有用数（异步校准）
    * @format int
    */
   helpful_count?: number;
+  /**
+   * 回复总数（异步校准）
+   * @format int
+   */
+  reply_count?: number;
   /** @format *gtime.Time */
   created_at?: string;
   /** @format *gtime.Time */
   updated_at?: string;
-  /**
-   * 软删除
-   * @format *gtime.Time
-   */
-  deleted_at?: string;
 }
 
 export interface GfEshopApiReviewsV1ReviewsUpdateReq {
@@ -7907,7 +8522,7 @@ export interface GfEshopInternalModelEntityReviewAuditLogs {
    */
   review_id?: number;
   /**
-   * 操作：submit/approve/reject/delete
+   * 操作：submit/approve/reject/delete/shield
    * @format string
    */
   action?: string;
@@ -7917,10 +8532,30 @@ export interface GfEshopInternalModelEntityReviewAuditLogs {
    */
   operator_id?: number;
   /**
+   * 操作人名称
+   * @format string
+   */
+  operator_name?: string;
+  /**
+   * 变更前状态
+   * @format int
+   */
+  before_status?: number;
+  /**
+   * 变更后状态
+   * @format int
+   */
+  after_status?: number;
+  /**
    * 操作备注
    * @format string
    */
   remark?: string;
+  /**
+   * 评价快照（用于回溯）
+   * @format string
+   */
+  snapshot?: string;
   /** @format *gtime.Time */
   created_at?: string;
 }
@@ -7947,7 +8582,12 @@ export interface GfEshopInternalModelEntityReviewReplies {
    */
   review_id?: number;
   /**
-   * 父级回复ID（支持多级回复）
+   * 根回复ID（一级回复为NULL）
+   * @format int64
+   */
+  root_reply_id?: number;
+  /**
+   * 父级回复ID（支持二级回复）
    * @format int64
    */
   parent_id?: number;
@@ -7966,10 +8606,20 @@ export interface GfEshopInternalModelEntityReviewReplies {
    * @format int64
    */
   operator_id?: number;
+  /**
+   * 操作人名称（冗余，避免JOIN用户表）
+   * @format string
+   */
+  operator_name?: string;
+  /**
+   * 1-正常 2-隐藏 3-删除
+   * @format int
+   */
+  status?: number;
   /** @format *gtime.Time */
   created_at?: string;
   /** @format *gtime.Time */
-  deleted_at?: string;
+  updated_at?: string;
 }
 
 export interface GfEshopApiReviewsV1ReviewsCreateReplyReq {
@@ -7979,6 +8629,11 @@ export interface GfEshopApiReviewsV1ReviewsCreateReplyReq {
   content: string;
   /** @format int */
   reply_type?: number;
+  /**
+   * 父级回复ID（二级回复时传入）
+   * @format int64
+   */
+  parent_id?: number;
 }
 
 export interface GfEshopApiReviewsV1ReviewsCreateReplyRes {
@@ -8251,15 +8906,10 @@ export interface GfEshopInternalModelEntitySkus {
    */
   barcode?: string;
   /**
-   * 规格JSON（如{"颜色":"红色","内存":"256G"}）
+   * 规格文本快照（如：红色 / 256G）
    * @format string
    */
-  spec?: string;
-  /**
-   * 规格MD5签名（用于快速匹配，由应用层计算）
-   * @format string
-   */
-  spec_signature?: string;
+  spec_summary?: string;
   /**
    * 销售价（分）
    * @format int64
@@ -8345,10 +8995,10 @@ export interface GfEshopApiSkusV1SkusCreateReq {
    */
   barcode?: string;
   /**
-   * 规格JSON
+   * 规格文本快照（如：红色 / 256G）
    * @format string
    */
-  spec: string;
+  spec_summary?: string;
   /**
    * 销售价(分)
    * @format int64
@@ -8443,15 +9093,10 @@ export interface GfEshopApiSkusV1SkusGetByCodeRes {
    */
   barcode?: string;
   /**
-   * 规格JSON（如{"颜色":"红色","内存":"256G"}）
+   * 规格文本快照（如：红色 / 256G）
    * @format string
    */
-  spec?: string;
-  /**
-   * 规格MD5签名（用于快速匹配，由应用层计算）
-   * @format string
-   */
-  spec_signature?: string;
+  spec_summary?: string;
   /**
    * 销售价（分）
    * @format int64
@@ -8563,15 +9208,10 @@ export interface GfEshopApiSkusV1SkusDetailRes {
    */
   barcode?: string;
   /**
-   * 规格JSON（如{"颜色":"红色","内存":"256G"}）
+   * 规格文本快照（如：红色 / 256G）
    * @format string
    */
-  spec?: string;
-  /**
-   * 规格MD5签名（用于快速匹配，由应用层计算）
-   * @format string
-   */
-  spec_signature?: string;
+  spec_summary?: string;
   /**
    * 销售价（分）
    * @format int64
@@ -8807,6 +9447,16 @@ export interface GfEshopApiStaffV1StaffListItem {
    * @format []string
    */
   role_names?: string[];
+  /**
+   * 所属部门ID列表
+   * @format []int64
+   */
+  department_ids?: number[];
+  /**
+   * 所属部门名称列表
+   * @format []string
+   */
+  department_names?: string[];
 }
 
 export interface GfEshopApiStaffV1StaffLoginReq {
@@ -8922,6 +9572,16 @@ export interface GfEshopApiStaffV1StaffProfileRes {
    * @format string
    */
   last_login_ip?: string;
+  /**
+   * 所属部门ID列表
+   * @format []int64
+   */
+  department_ids?: number[];
+  /**
+   * 所属部门名称列表
+   * @format []string
+   */
+  department_names?: string[];
 }
 
 export interface GfEshopApiStaffV1StaffRefreshTokenReq {
@@ -9207,25 +9867,20 @@ export interface GfEshopInternalModelEntityLevels {
    */
   name?: string;
   /**
-   * 等级图标URL
-   * @format string
-   */
-  icon?: string;
-  /**
    * 等级数值（1=青铜 2=白银 3=黄金 4=钻石）
    * @format int
    */
   level?: number;
   /**
+   * 等级图标URL
+   * @format string
+   */
+  icon?: string;
+  /**
    * 该等级所需最低累计积分
    * @format int64
    */
   min_points?: number;
-  /**
-   * 该等级所需最高累计积分（0表示无上限）
-   * @format int64
-   */
-  max_points?: number;
   /**
    * 折扣率（千分比，1000=无折扣，900=九折）
    * @format int64
@@ -9286,11 +9941,6 @@ export interface GfEshopApiUserLevelsV1LevelsCreateReq {
    */
   min_points?: number;
   /**
-   * 最高累计积分（0无上限）
-   * @format int64
-   */
-  max_points?: number;
-  /**
    * 折扣率（千分比，1000=无折扣）
    * @format int64
    */
@@ -9344,25 +9994,20 @@ export interface GfEshopApiUserLevelsV1UserLevelRes {
    */
   name?: string;
   /**
-   * 等级图标URL
-   * @format string
-   */
-  icon?: string;
-  /**
    * 等级数值（1=青铜 2=白银 3=黄金 4=钻石）
    * @format int
    */
   level?: number;
   /**
+   * 等级图标URL
+   * @format string
+   */
+  icon?: string;
+  /**
    * 该等级所需最低累计积分
    * @format int64
    */
   min_points?: number;
-  /**
-   * 该等级所需最高累计积分（0表示无上限）
-   * @format int64
-   */
-  max_points?: number;
   /**
    * 折扣率（千分比，1000=无折扣，900=九折）
    * @format int64
@@ -9432,25 +10077,20 @@ export interface GfEshopApiUserLevelsV1LevelsDetailRes {
    */
   name?: string;
   /**
-   * 等级图标URL
-   * @format string
-   */
-  icon?: string;
-  /**
    * 等级数值（1=青铜 2=白银 3=黄金 4=钻石）
    * @format int
    */
   level?: number;
   /**
+   * 等级图标URL
+   * @format string
+   */
+  icon?: string;
+  /**
    * 该等级所需最低累计积分
    * @format int64
    */
   min_points?: number;
-  /**
-   * 该等级所需最高累计积分（0表示无上限）
-   * @format int64
-   */
-  max_points?: number;
   /**
    * 折扣率（千分比，1000=无折扣，900=九折）
    * @format int64
@@ -9512,11 +10152,6 @@ export interface GfEshopApiUserLevelsV1LevelsUpdateReq {
    * @format int64
    */
   min_points?: number;
-  /**
-   * 最高累计积分（0无上限）
-   * @format int64
-   */
-  max_points?: number;
   /**
    * 折扣率（千分比，1000=无折扣）
    * @format int64
@@ -9950,6 +10585,11 @@ export interface GfEshopInternalModelEntityWarehouses {
    */
   warehouse_type?: number;
   /**
+   * 仓库编码
+   * @format string
+   */
+  warehouse_code?: string;
+  /**
    * 1-启用 2-禁用
    * @format int
    */
@@ -10059,6 +10699,11 @@ export interface GfEshopApiInventoriesV1WarehousesDetailRes {
    */
   warehouse_type?: number;
   /**
+   * 仓库编码
+   * @format string
+   */
+  warehouse_code?: string;
+  /**
    * 1-启用 2-禁用
    * @format int
    */
@@ -10163,25 +10808,23 @@ export type GfEshopApiHelloV1HelloReq = object;
 export type GfEshopApiHelloV1HelloRes = object;
 
 /**
- * 输入类型
+ * 值类型(1-文本 2-数值 3-颜色)
  * @format int
  */
-export enum GfEshopApiAttributesV1AttributesCreateReqInputTypeEnum {
+export enum GfEshopApiAttributesV1AttributesCreateReqValueTypeEnum {
   Value1 = 1,
   Value2 = 2,
   Value3 = 3,
-  Value4 = 4,
 }
 
 /**
- * 输入类型
+ * 值类型(1-文本 2-数值 3-颜色)
  * @format int
  */
-export enum GfEshopApiAttributesV1AttributesUpdateReqInputTypeEnum {
+export enum GfEshopApiAttributesV1AttributesUpdateReqValueTypeEnum {
   Value1 = 1,
   Value2 = 2,
   Value3 = 3,
-  Value4 = 4,
 }
 
 /**
@@ -10233,15 +10876,20 @@ export type V1AddressesDetailData = GfEshopApiAddressV1AddressDetailRes;
 
 export interface V1AddressesUpdatePayload {
   /**
-   * 邮编
-   * @format *string
-   */
-  zip_code?: string;
-  /**
    * 地址标签
    * @format *string
    */
   tag?: string;
+  /**
+   * 市
+   * @format *string
+   */
+  city?: string;
+  /**
+   * 详细地址
+   * @format *string
+   */
+  detail?: string;
   /**
    * 是否默认地址
    * @format *int
@@ -10252,16 +10900,6 @@ export interface V1AddressesUpdatePayload {
    * @format *string
    */
   consignee?: string;
-  /**
-   * 区/县
-   * @format *string
-   */
-  district?: string;
-  /**
-   * 详细地址
-   * @format *string
-   */
-  detail?: string;
   /**
    * 联系电话
    * @format *string
@@ -10278,10 +10916,15 @@ export interface V1AddressesUpdatePayload {
    */
   province?: string;
   /**
-   * 市
+   * 区/县
    * @format *string
    */
-  city?: string;
+  district?: string;
+  /**
+   * 邮编
+   * @format *string
+   */
+  zip_code?: string;
 }
 
 export type V1AddressesUpdateData = GfEshopApiAddressV1AddressUpdateRes;
@@ -10301,17 +10944,26 @@ export type V1AttributesDeleteData = GfEshopApiAttributesV1AttributesDeleteRes;
 export type V1AttributesDetailData = GfEshopApiAttributesV1AttributesDetailRes;
 
 /**
- * 输入类型
+ * 值类型(1-文本 2-数值 3-颜色)
  * @format int
  */
-export enum V1AttributesUpdatePayloadInputTypeEnum {
+export enum V1AttributesUpdatePayloadValueTypeEnum {
   Value1 = 1,
   Value2 = 2,
   Value3 = 3,
-  Value4 = 4,
 }
 
 export interface V1AttributesUpdatePayload {
+  /**
+   * 值类型(1-文本 2-数值 3-颜色)
+   * @format int
+   */
+  value_type?: V1AttributesUpdatePayloadValueTypeEnum;
+  /**
+   * 是否必填
+   * @format int
+   */
+  required?: number;
   /**
    * 是否可搜索
    * @format int
@@ -10323,6 +10975,26 @@ export interface V1AttributesUpdatePayload {
    */
   is_sku_spec?: number;
   /**
+   * 属性名称
+   * @format string
+   */
+  name?: string;
+  /**
+   * 所属类目ID
+   * @format int64
+   */
+  category_id?: number;
+  /**
+   * 是否参与前台筛选
+   * @format int
+   */
+  filterable?: number;
+  /**
+   * 单位
+   * @format string
+   */
+  unit?: string;
+  /**
    * 排序
    * @format int
    */
@@ -10332,36 +11004,6 @@ export interface V1AttributesUpdatePayload {
    * @format int
    */
   status?: number;
-  /**
-   * 所属类目ID
-   * @format int64
-   */
-  category_id?: number;
-  /**
-   * 输入类型
-   * @format int
-   */
-  input_type?: V1AttributesUpdatePayloadInputTypeEnum;
-  /**
-   * 可选值列表JSON
-   * @format string
-   */
-  values?: string;
-  /**
-   * 单位
-   * @format string
-   */
-  unit?: string;
-  /**
-   * 是否必填
-   * @format int
-   */
-  required?: number;
-  /**
-   * 属性名称
-   * @format string
-   */
-  name?: string;
 }
 
 export type V1AttributesUpdateData = GfEshopApiAttributesV1AttributesUpdateRes;
@@ -10375,6 +11017,21 @@ export type V1BrandsDeleteData = GfEshopApiBrandsV1BrandsDeleteRes;
 export type V1BrandsDetailData = GfEshopApiBrandsV1BrandsDetailRes;
 
 export interface V1BrandsUpdatePayload {
+  /**
+   * 品牌名称
+   * @format string
+   */
+  name?: string;
+  /**
+   * 英文名
+   * @format string
+   */
+  english_name?: string;
+  /**
+   * 品牌Logo
+   * @format string
+   */
+  logo_url?: string;
   /**
    * 首字母
    * @format string
@@ -10395,21 +11052,6 @@ export interface V1BrandsUpdatePayload {
    * @format string
    */
   description?: string;
-  /**
-   * 品牌名称
-   * @format string
-   */
-  name?: string;
-  /**
-   * 英文名
-   * @format string
-   */
-  english_name?: string;
-  /**
-   * 品牌Logo
-   * @format string
-   */
-  logo_url?: string;
 }
 
 export type V1BrandsUpdateData = GfEshopApiBrandsV1BrandsUpdateRes;
@@ -10511,6 +11153,45 @@ export type V1CouponsUseCreateData = GfEshopApiMarketingV1CouponUseRes;
 
 export type V1DashboardStatsListData = GfEshopApiDashboardV1DashboardStatsRes;
 
+export type V1DepartmentsListData = GfEshopApiDepartmentsV1ListRes;
+
+export type V1DepartmentsCreateData = GfEshopApiDepartmentsV1CreateRes;
+
+export type V1DepartmentsAllListData = GfEshopApiDepartmentsV1AllRes;
+
+export type V1DepartmentsTreeListData = GfEshopApiDepartmentsV1TreeRes;
+
+export type V1DepartmentsDeleteData = GfEshopApiDepartmentsV1DeleteRes;
+
+export type V1DepartmentsDetailData = GfEshopApiDepartmentsV1DetailRes;
+
+export interface V1DepartmentsUpdatePayload {
+  /**
+   * 上级部门ID（0=根部门）
+   * @format int64
+   */
+  parent_id?: number;
+  /**
+   * 排序值
+   * @format int
+   */
+  sort_order?: number;
+  /**
+   * 1-启用 0-禁用
+   * @format int
+   */
+  status?: number;
+  /**
+   * 部门名称
+   * @format string
+   */
+  name?: string;
+}
+
+export type V1DepartmentsUpdateData = GfEshopApiDepartmentsV1UpdateRes;
+
+export type V1DepartmentsChildrenListData = GfEshopApiDepartmentsV1ChildrenRes;
+
 export type V1FlashBuyCreateData = GfEshopApiMarketingV1FlashBuyRes;
 
 export type V1FlashConfirmCreateData = GfEshopApiMarketingV1FlashConfirmRes;
@@ -10583,50 +11264,50 @@ export type V1LevelRulesDetailData = GfEshopApiLevelRulesV1LevelRulesDetailRes;
 
 export interface V1LevelRulesUpdatePayload {
   /**
-   * 规则类型
-   * @format string
-   */
-  rule_type?: string;
-  /**
-   * 源等级ID
-   * @format int64
-   */
-  from_level_id?: number;
-  /**
-   * 目标等级ID
-   * @format int64
-   */
-  to_level_id?: number;
-  /**
-   * 条件阈值
-   * @format int64
-   */
-  condition_value?: number;
-  /**
-   * 规则说明
-   * @format string
-   */
-  description?: string;
-  /**
    * 排序
    * @format *int
    */
   sort_order?: number;
-  /**
-   * 条件类型
-   * @format string
-   */
-  condition_type?: string;
   /**
    * 状态
    * @format *int
    */
   status?: number;
   /**
+   * 源等级ID
+   * @format int64
+   */
+  from_level_id?: number;
+  /**
+   * 条件阈值
+   * @format int64
+   */
+  condition_value?: number;
+  /**
    * 规则名称
    * @format string
    */
   name?: string;
+  /**
+   * 规则类型
+   * @format string
+   */
+  rule_type?: string;
+  /**
+   * 目标等级ID
+   * @format int64
+   */
+  to_level_id?: number;
+  /**
+   * 条件类型
+   * @format string
+   */
+  condition_type?: string;
+  /**
+   * 规则说明
+   * @format string
+   */
+  description?: string;
 }
 
 export type V1LevelRulesUpdateData = GfEshopApiLevelRulesV1LevelRulesUpdateRes;
@@ -10739,6 +11420,11 @@ export type V1MerchantQualificationsDetailData =
 
 export interface V1MerchantQualificationsUpdatePayload {
   /**
+   * 有效期
+   * @format *gtime.Time
+   */
+  expire_at?: string;
+  /**
    * 资质名称
    * @format string
    */
@@ -10748,11 +11434,6 @@ export interface V1MerchantQualificationsUpdatePayload {
    * @format string
    */
   file_url?: string;
-  /**
-   * 有效期
-   * @format *gtime.Time
-   */
-  expire_at?: string;
 }
 
 export type V1MerchantQualificationsUpdateData =
@@ -10782,6 +11463,79 @@ export interface V1MerchantQualificationsAuditUpdatePayload {
 
 export type V1MerchantQualificationsAuditUpdateData =
   GfEshopApiMerchantQualificationsV1MerchantQualificationsAuditRes;
+
+export type V1MerchantRolePermissionsListData =
+  GfEshopApiMerchantRolePermissionsV1MerchantRolePermissionsListRes;
+
+export type V1MerchantRolePermissionsCreateData =
+  GfEshopApiMerchantRolePermissionsV1MerchantRolePermissionsCreateRes;
+
+export type V1MerchantRolePermissionsDeleteData =
+  GfEshopApiMerchantRolePermissionsV1MerchantRolePermissionsDeleteRes;
+
+export interface V1MerchantRolePermissionsUpdatePayload {
+  /**
+   * 商家ID
+   * @format int64
+   */
+  merchant_id?: number;
+  /**
+   * 权限标识列表
+   * @format []string
+   */
+  permission_names?: string[];
+}
+
+export type V1MerchantRolePermissionsUpdateData =
+  GfEshopApiMerchantRolePermissionsV1MerchantRolePermissionsUpdateRes;
+
+export type V1MerchantRolesListData =
+  GfEshopApiMerchantRolesV1MerchantRolesListRes;
+
+export type V1MerchantRolesCreateData =
+  GfEshopApiMerchantRolesV1MerchantRolesCreateRes;
+
+export type V1MerchantRolesDeleteData =
+  GfEshopApiMerchantRolesV1MerchantRolesDeleteRes;
+
+export type V1MerchantRolesDetailData =
+  GfEshopApiMerchantRolesV1MerchantRolesDetailRes;
+
+export interface V1MerchantRolesUpdatePayload {
+  /**
+   * 角色名称标识
+   * @format string
+   */
+  name?: string;
+  /**
+   * 角色显示名称
+   * @format string
+   */
+  display_name?: string;
+  /**
+   * 角色描述
+   * @format string
+   */
+  description?: string;
+  /**
+   * builtin-系统预置 custom-商家自定义
+   * @format string
+   */
+  role_type?: string;
+  /**
+   * 排序值
+   * @format int
+   */
+  sort_order?: number;
+  /**
+   * 1-启用 0-禁用
+   * @format int
+   */
+  status?: number;
+}
+
+export type V1MerchantRolesUpdateData =
+  GfEshopApiMerchantRolesV1MerchantRolesUpdateRes;
 
 export type V1MerchantWithdrawalsListData =
   GfEshopApiMerchantWithdrawalsV1ListRes;
@@ -10815,30 +11569,40 @@ export type V1MerchantsDetailData = GfEshopApiMerchantsV1MerchantsDetailRes;
 
 export interface V1MerchantsUpdatePayload {
   /**
-   * 商家名称
-   * @format string
-   */
-  merchant_name?: string;
-  /**
-   * 经营范围
-   * @format string
-   */
-  business_scope?: string;
-  /**
    * 店铺Banner图
    * @format string
    */
   banner_url?: string;
   /**
-   * 平台抽佣比例（千分比）
-   * @format int64
+   * 店铺简介
+   * @format string
    */
-  commission_rate?: number;
+  shop_description?: string;
   /**
-   * 结算周期 1-T+1 2-T+7 3-月结
+   * 0-待审核 1-正常 2-冻结 3-已注销
    * @format int
    */
-  settlement_cycle?: number;
+  status?: number;
+  /**
+   * 审核时间
+   * @format *gtime.Time
+   */
+  audited_at?: string;
+  /**
+   * 冻结原因
+   * @format string
+   */
+  frozen_reason?: string;
+  /**
+   * 0-待审核 1-审核通过 2-审核拒绝
+   * @format int
+   */
+  audit_status?: number;
+  /**
+   * 审核拒绝原因
+   * @format string
+   */
+  audit_reason?: string;
   /**
    * 合同到期时间
    * @format *gtime.Time
@@ -10855,60 +11619,50 @@ export interface V1MerchantsUpdatePayload {
    */
   merchant_level?: number;
   /**
-   * 联系邮箱
+   * 主要联系人
    * @format string
    */
-  contact_email?: string;
+  contact_person?: string;
   /**
    * 联系电话
    * @format string
    */
   contact_phone?: string;
   /**
+   * 商家名称
+   * @format string
+   */
+  merchant_name?: string;
+  /**
    * 店铺Logo
    * @format string
    */
   logo_url?: string;
   /**
-   * 0-待审核 1-正常 2-冻结 3-已注销
+   * 平台抽佣比例（千分比）
+   * @format int64
+   */
+  commission_rate?: number;
+  /**
+   * 结算周期 1-T+1 2-T+7 3-月结
    * @format int
    */
-  status?: number;
+  settlement_cycle?: number;
   /**
-   * 审核拒绝原因
+   * 经营范围
    * @format string
    */
-  audit_reason?: string;
+  business_scope?: string;
   /**
    * 经营年限
    * @format int
    */
   business_years?: number;
   /**
-   * 主要联系人
+   * 联系邮箱
    * @format string
    */
-  contact_person?: string;
-  /**
-   * 店铺简介
-   * @format string
-   */
-  shop_description?: string;
-  /**
-   * 0-待审核 1-审核通过 2-审核拒绝
-   * @format int
-   */
-  audit_status?: number;
-  /**
-   * 审核时间
-   * @format *gtime.Time
-   */
-  audited_at?: string;
-  /**
-   * 冻结原因
-   * @format string
-   */
-  frozen_reason?: string;
+  contact_email?: string;
 }
 
 export type V1MerchantsUpdateData = GfEshopApiMerchantsV1MerchantsUpdateRes;
@@ -11009,10 +11763,30 @@ export type V1PermissionsDetailData =
 
 export interface V1PermissionsUpdatePayload {
   /**
+   * 描述
+   * @format string
+   */
+  description?: string;
+  /**
+   * 操作
+   * @format string
+   */
+  action?: string;
+  /**
+   * 父级ID（0=根节点）
+   * @format int64
+   */
+  parent_id?: number;
+  /**
    * 分类
    * @format string
    */
   category?: string;
+  /**
+   * 排序
+   * @format int
+   */
+  sort_order?: number;
   /**
    * 状态
    * @format int
@@ -11029,25 +11803,10 @@ export interface V1PermissionsUpdatePayload {
    */
   display_name?: string;
   /**
-   * 描述
-   * @format string
-   */
-  description?: string;
-  /**
    * 资源
    * @format string
    */
   resource?: string;
-  /**
-   * 操作
-   * @format string
-   */
-  action?: string;
-  /**
-   * 排序
-   * @format int
-   */
-  sort_order?: number;
 }
 
 export type V1PermissionsUpdateData =
@@ -11066,17 +11825,30 @@ export type V1PointsRulesDetailData =
 
 export interface V1PointsRulesUpdatePayload {
   /** @format string */
-  rule_value?: string;
+  rule_key?: string;
+  /**
+   * 整数值（如积分数量、天数）
+   * @format *int
+   */
+  value_int?: number;
+  /**
+   * 字符串值（如配置json、文本）
+   * @format string
+   */
+  value_string?: string;
   /** @format string */
   description?: string;
   /** @format *int */
   sort_order?: number;
-  /** @format *int */
-  status?: number;
   /** @format string */
   name?: string;
-  /** @format string */
-  rule_key?: string;
+  /**
+   * 小数值（如比例、倍数）
+   * @format *float64
+   */
+  value_decimal?: number;
+  /** @format *int */
+  status?: number;
 }
 
 export type V1PointsRulesUpdateData =
@@ -11113,45 +11885,30 @@ export type V1ProductsDetailData = GfEshopApiProductsV1ProductsDetailRes;
 
 export interface V1ProductsUpdatePayload {
   /**
-   * 商品名称
+   * 更新人
    * @format string
    */
-  name?: string;
-  /**
-   * 副标题
-   * @format string
-   */
-  subtitle?: string;
+  updated_by?: string;
   /**
    * 类目ID
    * @format int64
    */
   category_id?: number;
   /**
+   * 品牌ID
+   * @format int64
+   */
+  brand_id?: number;
+  /**
    * 单位
    * @format string
    */
   unit?: string;
   /**
-   * 主图
-   * @format string
-   */
-  main_image?: string;
-  /**
    * 附图JSON
    * @format string
    */
   images?: string;
-  /**
-   * 更新人
-   * @format string
-   */
-  updated_by?: string;
-  /**
-   * 品牌ID
-   * @format int64
-   */
-  brand_id?: number;
   /**
    * 视频URL
    * @format string
@@ -11162,6 +11919,21 @@ export interface V1ProductsUpdatePayload {
    * @format int
    */
   sort_order?: number;
+  /**
+   * 商品名称
+   * @format string
+   */
+  name?: string;
+  /**
+   * 副标题
+   * @format string
+   */
+  subtitle?: string;
+  /**
+   * 主图
+   * @format string
+   */
+  main_image?: string;
   /**
    * 状态
    * @format int
@@ -11200,31 +11972,31 @@ export type V1PromotionsDetailData = GfEshopApiMarketingV1PromotionDetailRes;
 
 export interface V1PromotionsUpdatePayload {
   /** @format int */
-  total_quantity?: number;
-  /** @format string */
-  rule_name?: string;
-  /** @format int */
-  condition_type?: number;
-  /** @format int64 */
-  condition_value?: number;
-  /** @format int */
-  per_user_limit?: number;
-  /** @format int */
-  status?: number;
-  /** @format int */
   benefit_type?: number;
   /** @format int64 */
   benefit_value?: number;
   /** @format int */
   is_stackable?: number;
-  /** @format int */
-  stack_priority?: number;
   /** @format string */
   promo_name?: string;
+  /** @format int */
+  total_quantity?: number;
+  /** @format int */
+  per_user_limit?: number;
+  /** @format int */
+  condition_type?: number;
+  /** @format int64 */
+  condition_value?: number;
+  /** @format int */
+  stack_priority?: number;
   /** @format string */
   start_time?: string;
   /** @format string */
   end_time?: string;
+  /** @format int */
+  status?: number;
+  /** @format string */
+  rule_name?: string;
 }
 
 export type V1PromotionsUpdateData = GfEshopApiMarketingV1PromotionUpdateRes;
@@ -11242,17 +12014,17 @@ export type V1ReviewsDetailData = GfEshopApiReviewsV1ReviewsDetailRes;
 
 export interface V1ReviewsUpdatePayload {
   /** @format int */
-  overall_rating?: number;
-  /** @format int */
-  quality_rating?: number;
-  /** @format int */
-  logistics_rating?: number;
-  /** @format int */
   service_rating?: number;
   /** @format string */
   content?: string;
   /** @format int */
   is_anonymous?: number;
+  /** @format int */
+  overall_rating?: number;
+  /** @format int */
+  quality_rating?: number;
+  /** @format int */
+  logistics_rating?: number;
 }
 
 export type V1ReviewsUpdateData = GfEshopApiReviewsV1ReviewsUpdateRes;
@@ -11264,10 +12036,10 @@ export enum V1ReviewsAuditUpdatePayloadStatusEnum {
 }
 
 export interface V1ReviewsAuditUpdatePayload {
-  /** @format int */
-  status: V1ReviewsAuditUpdatePayloadStatusEnum;
   /** @format string */
   reject_reason?: string;
+  /** @format int */
+  status: V1ReviewsAuditUpdatePayloadStatusEnum;
 }
 
 export type V1ReviewsAuditUpdateData = GfEshopApiReviewsV1ReviewsAuditRes;
@@ -11282,6 +12054,11 @@ export interface V1ReviewsRepliesCreatePayload {
   content: string;
   /** @format int */
   reply_type?: number;
+  /**
+   * 父级回复ID（二级回复时传入）
+   * @format int64
+   */
+  parent_id?: number;
 }
 
 export type V1ReviewsRepliesCreateData =
@@ -11345,15 +12122,40 @@ export type V1SkusDetailData = GfEshopApiSkusV1SkusDetailRes;
 
 export interface V1SkusUpdatePayload {
   /**
-   * 划线价(分)
+   * 成本价(分)
    * @format *int64
    */
-  market_price?: number;
+  cost_price?: number;
   /**
    * 1-正常 0-禁用
    * @format *int
    */
   status?: number;
+  /**
+   * 重量(克)
+   * @format *float64
+   */
+  weight?: number;
+  /**
+   * 宽(cm)
+   * @format *float64
+   */
+  width?: number;
+  /**
+   * 高(cm)
+   * @format *float64
+   */
+  height?: number;
+  /**
+   * 最大购买数量
+   * @format *int
+   */
+  max_purchase_qty?: number;
+  /**
+   * 销售价(分)
+   * @format *int64
+   */
+  price?: number;
   /**
    * SKU图
    * @format *string
@@ -11365,21 +12167,6 @@ export interface V1SkusUpdatePayload {
    */
   barcode?: string;
   /**
-   * 重量(克)
-   * @format *float64
-   */
-  weight?: number;
-  /**
-   * 高(cm)
-   * @format *float64
-   */
-  height?: number;
-  /**
-   * 成本价(分)
-   * @format *int64
-   */
-  cost_price?: number;
-  /**
    * 体积(cm³)
    * @format *float64
    */
@@ -11390,25 +12177,15 @@ export interface V1SkusUpdatePayload {
    */
   length?: number;
   /**
-   * 宽(cm)
-   * @format *float64
-   */
-  width?: number;
-  /**
    * 最少购买数量
    * @format *int
    */
   min_purchase_qty?: number;
   /**
-   * 最大购买数量
-   * @format *int
-   */
-  max_purchase_qty?: number;
-  /**
-   * 销售价(分)
+   * 划线价(分)
    * @format *int64
    */
-  price?: number;
+  market_price?: number;
 }
 
 export type V1SkusUpdateData = GfEshopApiSkusV1SkusUpdateRes;
@@ -11456,30 +12233,25 @@ export interface V1UserLevelsUpdatePayload {
    */
   name?: string;
   /**
-   * 等级数值
-   * @format int
+   * 最低累计积分
+   * @format int64
    */
-  level?: number;
+  min_points?: number;
+  /**
+   * 折扣率（千分比，1000=无折扣）
+   * @format int64
+   */
+  discount_rate?: number;
   /**
    * 1-免运费
    * @format int
    */
   free_shipping?: number;
   /**
-   * 消费积分倍数
-   * @format float64
-   */
-  points_multiplier?: number;
-  /**
    * 扩展权益JSON
    * @format string
    */
   benefits?: string;
-  /**
-   * 1-启用 0-禁用
-   * @format int
-   */
-  status?: number;
   /**
    * 排序
    * @format int
@@ -11491,20 +12263,20 @@ export interface V1UserLevelsUpdatePayload {
    */
   icon?: string;
   /**
-   * 最低累计积分
-   * @format int64
+   * 等级数值
+   * @format int
    */
-  min_points?: number;
+  level?: number;
   /**
-   * 最高累计积分（0无上限）
-   * @format int64
+   * 消费积分倍数
+   * @format float64
    */
-  max_points?: number;
+  points_multiplier?: number;
   /**
-   * 折扣率（千分比，1000=无折扣）
-   * @format int64
+   * 1-启用 0-禁用
+   * @format int
    */
-  discount_rate?: number;
+  status?: number;
 }
 
 export type V1UserLevelsUpdateData = GfEshopApiUserLevelsV1LevelsUpdateRes;
@@ -11538,6 +12310,11 @@ export type V1WarehousesDetailData = GfEshopApiInventoriesV1WarehousesDetailRes;
 
 export interface V1WarehousesUpdatePayload {
   /**
+   * 状态
+   * @format int
+   */
+  status?: number;
+  /**
    * 仓库名称
    * @format string
    */
@@ -11567,11 +12344,6 @@ export interface V1WarehousesUpdatePayload {
    * @format string
    */
   address?: string;
-  /**
-   * 状态
-   * @format int
-   */
-  status?: number;
 }
 
 export type V1WarehousesUpdateData = GfEshopApiInventoriesV1WarehousesUpdateRes;

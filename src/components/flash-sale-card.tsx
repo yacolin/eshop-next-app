@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Zap, Clock } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
+import type { ProductSPU } from "@/types/product";
 
 const palettes = [
   "from-blue-500/20 via-purple-500/10 to-pink-500/20",
@@ -20,7 +21,7 @@ export function FlashSaleCard({
   activity,
   showStatus = false,
 }: {
-  product: { id: number; name: string; min_price: number };
+  product: ProductSPU;
   activity: {
     id: number;
     product_id: number;
@@ -46,7 +47,7 @@ export function FlashSaleCard({
       className="group rounded-xl bg-card p-3 shadow-xs transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:ring-1 hover:ring-primary/20"
     >
       <div
-        className={`mb-2 flex aspect-square items-center justify-center rounded-lg bg-linear-to-br ${palettes[product.id % 8]}`}
+        className={`mb-2 flex aspect-square items-center justify-center rounded-lg bg-linear-to-br ${palettes[(product.id ?? 0) % 8]}`}
       >
         <div className="flex size-10 items-center justify-center rounded-lg bg-background/40 backdrop-blur-sm">
           <Zap className="size-5 text-foreground/30" />
@@ -58,7 +59,7 @@ export function FlashSaleCard({
           {formatPrice(activity.flash_price)}
         </span>
         <span className="text-xs text-muted-foreground line-through">
-          {formatPrice(product.min_price)}
+          {formatPrice(product.price_min ?? 0)}
         </span>
       </div>
 

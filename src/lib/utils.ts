@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import type { ProductSKU } from "@/types/product";
+import type { ProductProductAttrResponse, ProductSKU } from "@/types/product";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -14,6 +14,27 @@ export function cn(...inputs: ClassValue[]) {
  *
  * @param cents - 以分为单位的价格（如 9900 表示 ¥99.00）
  */
+/**
+ * Parse spec_summary into a structured spec object by matching values to attribute names.
+ *
+ * The backend constructs spec_summary by concatenating attribute values in the same
+ * order as the product's attribute definitions. This function reverses that by
+ * splitting on " / " and pairing each part with the corresponding attribute name.
+ */
+export function parseSkuSpec(
+  specSummary: string | undefined,
+  attrNames: string[],
+): Record<string, string> {
+  if (!specSummary || attrNames.length === 0) return {};
+  const parts = specSummary.split(" / ");
+  if (parts.length !== attrNames.length) return {};
+  const spec: Record<string, string> = {};
+  attrNames.forEach((name, i) => {
+    spec[name] = parts[i].trim();
+  });
+  return spec;
+}
+
 export function formatPrice(cents: number) {
   return `¥${(cents / 100).toLocaleString("zh-CN", {
     minimumFractionDigits: 2,
@@ -36,11 +57,11 @@ export function formatPrice(cents: number) {
  * @param selected - 已选属性映射 { attrName: value }
  * @param hasAttrs - 是否存在带 spec 的 SKU，用于判断是否需要规格选择
  */
-export function findMatchingSku(
-  skus: ProductSKU[],
+export function findMatchingSku<T extends { spec?: Record<string, string> }>(
+  skus: T[],
   selected: Record<string, string>,
   hasAttrs: boolean,
-): ProductSKU | null {
+): T | null {
   const keys = Object.keys(selected);
   if (keys.length === 0 && !hasAttrs) {
     return skus.find((sku) => !sku.spec || Object.keys(sku.spec).length === 0) ?? null;
@@ -49,11 +70,7 @@ export function findMatchingSku(
   return (
     skus.find((sku) => {
       if (!sku.spec) return false;
-      return keys.every(
-        (key) =>
-          (typeof sku.spec === "string" ? JSON.parse(sku.spec) : (sku.spec ?? {}))[key] ===
-          selected[key],
-      );
+      return keys.every((key) => sku.spec![key] === selected[key]);
     }) ?? null
   );
 }

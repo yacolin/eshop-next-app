@@ -1,7 +1,14 @@
 "use client";
 
 import { CheckCircle, XCircle, AlertTriangle } from "lucide-react";
-import type { ProductSKU, ProductProductAttrResponse } from "@/types/product";
+import type { ProductSKU } from "@/types/product";
+
+interface AttrOption {
+  attribute_id: number;
+  attribute_name: string;
+  values: { value_id: number; value: string }[];
+  sort_order?: number;
+}
 
 /**
  * 商品规格选择器 —— 渲染属性按钮组 + 匹配 SKU 信息卡片。
@@ -31,13 +38,15 @@ export function SpecSelector({
   skus,
   onAttrSelect,
   matchedSku,
+  allSelected,
 }: {
   hasSpecSkus: boolean;
-  attrOptions: ProductProductAttrResponse[];
+  attrOptions: AttrOption[];
   selectedAttrs: Record<string, string>;
   skus: ProductSKU[];
   onAttrSelect: (attrName: string, value: string) => void;
   matchedSku: ProductSKU | null;
+  allSelected: boolean;
 }) {
   if (!hasSpecSkus || attrOptions.length === 0) return null;
 
@@ -72,32 +81,47 @@ export function SpecSelector({
           </div>
         </div>
       ))}
-      {matchedSku && (
+      {allSelected && (
         <div className="rounded-lg bg-primary/5 px-4 py-3">
-          <p className="text-sm font-semibold text-foreground">{matchedSku.sku_code ?? ""}</p>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            SKU: <span className="font-mono">{matchedSku.sku_code}</span>
-          </p>
-          <p className="mt-1 text-xs font-medium">
-            {matchedSku.available_quantity !== undefined &&
-            matchedSku.inventory_status === "无货" ? (
-              <span className="inline-flex items-center gap-1 text-destructive">
-                <XCircle className="size-3.5" />
-                Out of Stock
-              </span>
-            ) : matchedSku.available_quantity !== undefined &&
-              matchedSku.inventory_status === "缺货" ? (
-              <span className="inline-flex items-center gap-1 text-amber-600">
-                <AlertTriangle className="size-3.5" />
-                Only {matchedSku.available_quantity} left
-              </span>
-            ) : matchedSku.inventory_status === "充足" ? (
-              <span className="inline-flex items-center gap-1 text-emerald-600">
-                <CheckCircle className="size-3.5" />
-                In Stock
-              </span>
-            ) : null}
-          </p>
+          {matchedSku ? (
+            <>
+              <p className="text-sm font-semibold text-foreground">{matchedSku.sku_code ?? ""}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                SKU: <span className="font-mono">{matchedSku.sku_code}</span>
+              </p>
+              <p className="mt-1 text-xs font-medium">
+                {matchedSku.inventory_status === "无货" ? (
+                  <span className="inline-flex items-center gap-1 text-destructive">
+                    <XCircle className="size-3.5" />
+                    Out of Stock
+                  </span>
+                ) : matchedSku.inventory_status === "缺货" ? (
+                  <span className="inline-flex items-center gap-1 text-amber-600">
+                    <AlertTriangle className="size-3.5" />
+                    Only {matchedSku.available_quantity} left
+                  </span>
+                ) : matchedSku.inventory_status === "充足" ? (
+                  <span className="inline-flex items-center gap-1 text-emerald-600">
+                    <CheckCircle className="size-3.5" />
+                    In Stock
+                  </span>
+                ) : null}
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-sm font-semibold text-foreground">—</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                SKU: <span className="font-mono">—</span>
+              </p>
+              <p className="mt-1 text-xs font-medium">
+                <span className="inline-flex items-center gap-1 text-destructive">
+                  <XCircle className="size-3.5" />
+                  Not Available
+                </span>
+              </p>
+            </>
+          )}
         </div>
       )}
     </div>

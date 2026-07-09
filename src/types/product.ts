@@ -1,6 +1,6 @@
 // Legacy types bridge — maps generated types to friendly names
 import type {
-  GfEshopInternalModelEntityProducts,
+  GfEshopApiProductsV1ProductsListItem,
   GfEshopApiProductsV1SkuDetailItem,
   GfEshopApiProductsV1ProductAttrDetailResponse,
   GfEshopApiProductsV1ProductsDetailRes,
@@ -12,7 +12,7 @@ import type {
   GfEshopApiUserV1UserUpdateInfoReq,
 } from "@/lib/api-gen/data-contracts";
 
-export type ProductSPU = GfEshopInternalModelEntityProducts;
+export type ProductSPU = GfEshopApiProductsV1ProductsListItem;
 export type ProductSKU = GfEshopApiProductsV1SkuDetailItem;
 export type ProductProductAttrResponse = GfEshopApiProductsV1ProductAttrDetailResponse;
 export type ProductSPUDetailResponse = GfEshopApiProductsV1ProductsDetailRes;
@@ -25,17 +25,30 @@ export type UserProfile = GfEshopApiUserV1UserProfileRes;
 export type UserUpdateProfileReq = GfEshopApiUserV1UserUpdateInfoReq;
 
 export type Product = ProductSPU;
+
+export interface SkuWithSpec extends ProductSKU {
+  spec: Record<string, string>;
+  spec_summary: string;
+  name: string;
+  available_quantity: number;
+  inventory_status: string;
+}
+
 export interface ProductDetailResponse {
   product: {
     id: number;
     name: string;
     description: string;
     min_price: number;
-    created_at: number | string;
-    updated_at: number | string;
+    created_at: string;
+    updated_at: string;
   };
-  skus: (ProductSKU & { spec: Record<string, string> })[];
-  attributes: ProductProductAttrResponse[];
+  skus: SkuWithSpec[];
+  attributes: {
+    attribute_id: number;
+    attribute_name: string;
+    values: { value_id: number; value: string }[];
+  }[];
 }
 export interface FlashActivity {
   id: number;

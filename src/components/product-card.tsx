@@ -38,7 +38,7 @@ export function ProductCard({ product }: { product: ProductSPU }) {
           </p>
           <div className="flex items-baseline gap-1.5">
             <span className="text-sm font-bold text-primary">
-              {formatPrice(product.min_price ?? 0)}
+              {formatPrice(product.price_min ?? 0)}
             </span>
           </div>
           <p className="pt-1 text-[11px] text-muted-foreground">Free shipping</p>

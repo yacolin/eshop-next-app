@@ -114,42 +114,92 @@ const mApi = new Marketing({ baseUrl: "", customFetch: authFetch });
 const uApi = new User({ baseUrl: "", customFetch: authFetch });
 const authApi = new UserAuth({ baseUrl: "", customFetch: authFetch });
 
+function computeSkuSpec(
+  specSummary: string | undefined,
+  attrNames: string[],
+): Record<string, string> {
+  if (!specSummary || attrNames.length === 0) return {};
+  const parts = specSummary.split(" / ");
+  const spec: Record<string, string> = {};
+  attrNames.forEach((name, i) => {
+    if (i < parts.length) {
+      spec[name] = parts[i].trim();
+    }
+  });
+  return spec;
+}
+
 export async function fetchProductDetail(id: number) {
   const res = await pApi.v1ProductsDetail(id);
   const raw = (res.data as any)?.data;
   if (!raw) throw new Error("Product not found");
+
+  const rawAttrs = (raw.attributes ?? []) as ProductProductAttrResponse[];
+  const rawSkus = (raw.skus ?? []) as any[];
+
+  // 1. Determine how many spec attributes exist from spec_summary parts
+  const specPartCounts = rawSkus.map(
+    (s: any) => (s.spec_summary ?? "").split(" / ").filter(Boolean).length,
+  );
+  const specCount = Math.max(0, ...specPartCounts);
+
+  // 2. Use first N attributes as spec attribute names
+  const specAttrNames = rawAttrs.slice(0, specCount).map((a) => a.attribute_name ?? "");
+
+  // 3. Collect actual spec values from all SKUs' spec_summaries
+  const specAttrValues = new Map<string, Set<string>>();
+  for (const s of rawSkus) {
+    const parts = (s.spec_summary ?? "").split(" / ");
+    specAttrNames.forEach((name, i) => {
+      if (i < parts.length && parts[i].trim()) {
+        if (!specAttrValues.has(name)) specAttrValues.set(name, new Set());
+        specAttrValues.get(name)!.add(parts[i].trim());
+      }
+    });
+  }
+
+  // 4. Build attributes with actual SKU values
+  const attributes = rawAttrs.slice(0, specCount).map((a, i) => {
+    const name = a.attribute_name ?? "";
+    const values = Array.from(specAttrValues.get(name) ?? []);
+    return {
+      attribute_id: a.attribute_id ?? 0,
+      attribute_name: name,
+      values: values.map((v, j) => ({
+        value_id: (a.attribute_id ?? 0) * 100 + j + 1,
+        value: v,
+      })),
+    };
+  });
+
+  // 5. Build SKUs with computed spec
+  const skus = rawSkus.map((s: any) => ({
+    id: s.id ?? 0,
+    product_id: s.product_id ?? 0,
+    name: s.sku_code ?? "",
+    price: s.price ?? 0,
+    sku_code: s.sku_code ?? "",
+    image: s.image ?? undefined,
+    market_price: s.market_price,
+    spec: computeSkuSpec(s.spec_summary, specAttrNames),
+    spec_summary: s.spec_summary ?? "",
+    available_quantity: s.available_quantity,
+    inventory_status: s.inventory_status,
+    created_at: s.created_at ?? "",
+    updated_at: s.updated_at ?? "",
+  }));
+
   return {
     product: {
       id: raw.id ?? 0,
       name: raw.name ?? "",
       description: raw.description?.description ?? raw.description?.mobile_description ?? "",
-      min_price: raw.min_price ?? 0,
+      min_price: raw.price_min ?? 0,
       created_at: raw.created_at ?? "",
       updated_at: raw.updated_at ?? "",
     },
-    skus: ((raw.skus ?? []) as ProductSKU[]).map((s: ProductSKU) => ({
-      id: s.id ?? 0,
-      product_id: s.product_id ?? 0,
-      name: s.sku_code ?? "",
-      price: s.price ?? 0,
-      sku_code: s.sku_code ?? "",
-      image: s.image ?? undefined,
-      spec: typeof s.spec === "string" ? JSON.parse(s.spec) : (s.spec ?? {}),
-      available_quantity: s.available_quantity,
-      inventory_status: s.inventory_status,
-      created_at: s.created_at ?? 0,
-      updated_at: s.updated_at ?? 0,
-    })),
-    attributes: ((raw.attributes ?? []) as ProductProductAttrResponse[]).map(
-      (a: ProductProductAttrResponse, i: number) => ({
-        attribute_id: a.attribute_id ?? 0,
-        attribute_name: a.attribute_name ?? "",
-        values: (a.values ?? []).map((v: string, j: number) => ({
-          value_id: (a.attribute_id ?? 0) * 100 + j + 1,
-          value: v,
-        })),
-      }),
-    ),
+    skus,
+    attributes,
   };
 }
 

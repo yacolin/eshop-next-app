@@ -12,63 +12,8 @@ import { SpecSelector } from "@/components/spec-selector";
 import { QuantitySelector } from "@/components/quantity-selector";
 import { ServicePromises } from "@/components/service-promises";
 import { SkuTable } from "@/components/sku-table";
-import { Products } from "@/lib/api-gen/Products";
-import type {
-  ProductSPUDetailResponse,
-  ProductSKU,
-  ProductProductAttrResponse,
-} from "@/types/product";
-
-const productsApi = new Products({ baseUrl: "" });
-
-// Transform flat SPUDetailResponse → nested shape expected by template
-function toDetail(
-  spu: ProductSPUDetailResponse,
-  skus: ProductSKU[],
-  attrs: ProductProductAttrResponse[],
-) {
-  return {
-    product: {
-      id: spu.id ?? 0,
-      name: spu.name ?? "",
-      description: "",
-      min_price: spu.min_price ?? 0,
-      created_at: spu.created_at ?? "",
-      updated_at: spu.updated_at ?? "",
-    },
-    skus: skus.map((s) => ({
-      id: s.id ?? 0,
-      product_id: s.product_id ?? 0,
-      name: s.sku_code ?? "",
-      price: s.price ?? 0,
-      sku_code: s.sku_code ?? "",
-      image: s.image ?? undefined,
-      spec: typeof s.spec === "string" ? JSON.parse(s.spec) : (s.spec ?? {}),
-      available_quantity: s.available_quantity,
-      inventory_status: s.inventory_status,
-      created_at: s.created_at ?? 0,
-      updated_at: s.updated_at ?? 0,
-    })),
-    attributes: (() => {
-      // Only keep attributes that appear in SKU specs
-      const specKeys = new Set<string>();
-      for (const s of skus) {
-        const spec = typeof s.spec === "string" ? JSON.parse(s.spec) : (s.spec ?? {});
-        Object.keys(spec).forEach((k) => specKeys.add(k));
-      }
-      return attrs
-        .filter((a) => specKeys.has(a.attribute_name ?? ""))
-        .map((a) => ({
-          attribute_id: a.attribute_id ?? 0,
-          attribute_name: a.attribute_name ?? "",
-          values: (a.values ?? []).map((v: string, i: number) => ({
-            value_id: (a.attribute_id ?? 0) * 100 + i + 1,
-            value: v,
-          })),
-        }));
-    })(),
-  };
-}
+import { fetchProductDetail } from "@/lib/api";
+import type { ProductDetailResponse } from "@/types/product";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -92,7 +37,7 @@ export default function ProductDetailPage({ params }: Props) {
     window.scrollTo(0, 0);
   }, []);
 
-  const [detail, setDetail] = useState<ReturnType<typeof toDetail> | null>(null);
+  const [detail, setDetail] = useState<ProductDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
@@ -112,11 +57,8 @@ export default function ProductDetailPage({ params }: Props) {
       setLoading(true);
       setError(null);
       try {
-        const res = await productsApi.v1ProductsDetail(productId);
+        const d = await fetchProductDetail(productId);
         if (cancelled) return;
-        const raw = (res.data as any)?.data;
-        if (!raw) throw new Error("Product not found");
-        const d = toDetail(raw, raw.skus ?? [], raw.attributes ?? []);
         setDetail(d);
         // Only auto-select when SKUs actually have spec data
         const skusHaveSpec = d.skus.some(
@@ -148,7 +90,7 @@ export default function ProductDetailPage({ params }: Props) {
     : false;
 
   const matchedSku = useMemo(
-    () => (detail ? findMatchingSku(detail.skus as any, selectedAttrs, hasSpecSkus) : null),
+    () => (detail ? findMatchingSku(detail.skus, selectedAttrs, hasSpecSkus) : null),
     [detail, selectedAttrs, hasSpecSkus],
   );
 
@@ -177,7 +119,7 @@ export default function ProductDetailPage({ params }: Props) {
     if (!detail || !matchedSku || adding) return;
     setAdding(true);
     try {
-      await addItem((matchedSku as any).id, quantity);
+      await addItem(matchedSku.id!, quantity);
     } finally {
       setAdding(false);
     }
@@ -186,7 +128,7 @@ export default function ProductDetailPage({ params }: Props) {
   function handleBuyNow() {
     if (!matchedSku || !detail) return;
     router.push(
-      `/checkout?product_id=${detail.product.id}&sku_id=${(matchedSku as any).id}&quantity=${quantity}`,
+      `/checkout?product_id=${detail.product.id}&sku_id=${matchedSku.id!}&quantity=${quantity}`,
     );
   }
 
@@ -234,8 +176,7 @@ export default function ProductDetailPage({ params }: Props) {
     );
   }
 
-  const { product } = detail;
-  const skus: any = detail.skus;
+  const { product, skus } = detail;
   const canAddToCart = matchedSku != null;
 
   return (
@@ -284,6 +225,7 @@ export default function ProductDetailPage({ params }: Props) {
                 skus={skus}
                 onAttrSelect={handleAttrSelect}
                 matchedSku={matchedSku}
+                allSelected={allSelected}
               />
             </div>
 
@@ -413,7 +355,7 @@ export default function ProductDetailPage({ params }: Props) {
         </div>
 
         {/* All SKU table */}
-        <SkuTable skus={skus as any} />
+        <SkuTable skus={skus} />
 
         {/* Back link */}
         <div className="mt-8 text-center">

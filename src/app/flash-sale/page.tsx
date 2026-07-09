@@ -1,4 +1,3 @@
-// @ts-nocheck — pre-existing product type mismatch
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
@@ -32,7 +31,7 @@ export default function FlashSalePage() {
         return prodMap.has(a.product_id);
       })
       .map((a) => ({
-        product: prodMap.get((a as any).product_id) as any,
+        product: prodMap.get(a.product_id) as Product,
         activity: a,
       }));
   }, []);

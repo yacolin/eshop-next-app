@@ -1,4 +1,3 @@
-// @ts-nocheck — pre-existing product type mismatch
 "use client";
 
 import { useState, useEffect, useMemo, use, useCallback } from "react";
@@ -136,7 +135,7 @@ export default function FlashSaleDetailPage({ params }: Props) {
     if (!detail || !matchedSku || adding) return;
     setAdding(true);
     try {
-      await addItem(matchedSku.id, quantity);
+      await addItem(matchedSku.id ?? 0, quantity);
     } finally {
       setAdding(false);
     }
@@ -291,6 +290,7 @@ export default function FlashSaleDetailPage({ params }: Props) {
                 skus={skus}
                 onAttrSelect={handleAttrSelect}
                 matchedSku={matchedSku}
+                allSelected={allSelected}
               />
             </div>
 
