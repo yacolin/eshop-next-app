@@ -6,7 +6,7 @@ import { Address } from "@/lib/api-gen/Address";
 import { Marketing } from "@/lib/api-gen/Marketing";
 import { User } from "@/lib/api-gen/User";
 import { UserAuth } from "@/lib/api-gen/UserAuth";
-import type { ProductSKU, ProductProductAttrResponse, UserCreateAddressReq } from "@/types/product";
+import type { ProductProductAttrResponse, UserCreateAddressReq } from "@/types/product";
 import type {
   GfEshopApiCartsV1CartsAddItemReq,
   GfEshopApiCartsV1CartsUpdateItemReq,
@@ -134,46 +134,11 @@ export async function fetchProductDetail(id: number) {
   const raw = (res.data as any)?.data;
   if (!raw) throw new Error("Product not found");
 
-  const rawAttrs = (raw.attributes ?? []) as ProductProductAttrResponse[];
-  const rawSkus = (raw.skus ?? []) as any[];
+  const selectableAttrs = (raw.specs?.selectable ?? []) as ProductProductAttrResponse[];
+  const selectableNames = selectableAttrs.map((a) => a.attribute_name ?? "");
 
-  // 1. Determine how many spec attributes exist from spec_summary parts
-  const specPartCounts = rawSkus.map(
-    (s: any) => (s.spec_summary ?? "").split(" / ").filter(Boolean).length,
-  );
-  const specCount = Math.max(0, ...specPartCounts);
-
-  // 2. Use first N attributes as spec attribute names
-  const specAttrNames = rawAttrs.slice(0, specCount).map((a) => a.attribute_name ?? "");
-
-  // 3. Collect actual spec values from all SKUs' spec_summaries
-  const specAttrValues = new Map<string, Set<string>>();
-  for (const s of rawSkus) {
-    const parts = (s.spec_summary ?? "").split(" / ");
-    specAttrNames.forEach((name, i) => {
-      if (i < parts.length && parts[i].trim()) {
-        if (!specAttrValues.has(name)) specAttrValues.set(name, new Set());
-        specAttrValues.get(name)!.add(parts[i].trim());
-      }
-    });
-  }
-
-  // 4. Build attributes with actual SKU values
-  const attributes = rawAttrs.slice(0, specCount).map((a, i) => {
-    const name = a.attribute_name ?? "";
-    const values = Array.from(specAttrValues.get(name) ?? []);
-    return {
-      attribute_id: a.attribute_id ?? 0,
-      attribute_name: name,
-      values: values.map((v, j) => ({
-        value_id: (a.attribute_id ?? 0) * 100 + j + 1,
-        value: v,
-      })),
-    };
-  });
-
-  // 5. Build SKUs with computed spec
-  const skus = rawSkus.map((s: any) => ({
+  // Build SKU spec from spec_summary mapped to selectable attribute names in order
+  const skus = ((raw.skus ?? []) as any[]).map((s: any) => ({
     id: s.id ?? 0,
     product_id: s.product_id ?? 0,
     name: s.sku_code ?? "",
@@ -181,12 +146,22 @@ export async function fetchProductDetail(id: number) {
     sku_code: s.sku_code ?? "",
     image: s.image ?? undefined,
     market_price: s.market_price,
-    spec: computeSkuSpec(s.spec_summary, specAttrNames),
+    spec: computeSkuSpec(s.spec_summary, selectableNames),
     spec_summary: s.spec_summary ?? "",
     available_quantity: s.available_quantity,
     inventory_status: s.inventory_status,
     created_at: s.created_at ?? "",
     updated_at: s.updated_at ?? "",
+  }));
+
+  // Build selectable attributes with value_id
+  const attributes = selectableAttrs.map((a, i) => ({
+    attribute_id: a.attribute_id ?? 0,
+    attribute_name: a.attribute_name ?? "",
+    values: (a.values ?? []).map((v: string, j: number) => ({
+      value_id: (a.attribute_id ?? 0) * 100 + j + 1,
+      value: v,
+    })),
   }));
 
   return {
